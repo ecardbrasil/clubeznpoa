@@ -90,7 +90,8 @@ A plataforma tem 3 perfis principais:
 
 ## 7) Identidade visual (diretriz atual)
 - Estilo **2D flat**
-- Cor principal verde da marca ClubeZN
+- Cor oficial da identidade visual ClubeZN: **#C9F549**
+- Aplicar o verde **#C9F549** em banners e seções de destaque
 - Evitar gradientes e excesso de efeitos
 - Aplicacao consistente da logomarca em cabecalho e rodape
 

@@ -427,7 +427,7 @@ export default function LandingPage() {
         Pular para ofertas
       </a>
       <section className="grid gap-5">
-        <div className="flex items-center justify-center rounded-2xl border border-[#d9e6db] bg-[#f4faf5] px-4 py-2.5 text-center text-xs font-semibold text-[#255f33] md:text-sm">
+        <div className="flex items-center justify-center rounded-2xl border border-[#a4c83a] bg-[var(--brand-accent)] px-4 py-2.5 text-center text-xs font-semibold text-[#102113] md:text-sm">
           Ganhe ate 25% OFF em parceiros selecionados da Zona Norte
         </div>
 
@@ -596,12 +596,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 rounded-2xl border border-[#d4e4d8] bg-white p-5 md:p-6">
+      <section className="grid gap-4 rounded-2xl border border-[#a4c83a] bg-[var(--brand-accent)] p-5 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="m-0 text-xl font-extrabold text-[#102113] md:text-2xl">Quem usa, recomenda</h3>
           <div className="flex flex-wrap gap-2">
             {trustBadges.map((badge) => (
-              <span key={badge} className="rounded-full border border-[#d1dfd1] bg-[#edf8ef] px-3 py-1 text-xs font-bold text-[#1f5f30]">
+              <span key={badge} className="rounded-full border border-[#8eac2d] bg-[#efffbd] px-3 py-1 text-xs font-bold text-[#17301b]">
                 {badge}
               </span>
             ))}
@@ -815,7 +815,7 @@ export default function LandingPage() {
           </div>
         </article>
 
-        <article className="card !grid !gap-3 !rounded-2xl !bg-[#edf8ef]">
+        <article className="card !grid !gap-3 !rounded-2xl !border-[#a4c83a] !bg-[var(--brand-accent)]">
           <h3 className="m-0 text-xl font-extrabold text-[#102113]">Pronto para economizar no seu bairro?</h3>
           <p className="m-0 text-sm text-[#486048]">Entre agora no ClubeZN e comece a usar os descontos locais.</p>
           <Link href="/auth" className="btn btn-primary !w-full text-center">
