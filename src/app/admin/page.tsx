@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminDashboardSidebar, AdminSection } from "@/components/admin/dashboard-sidebar";
 import { useToast } from "@/components/ui/toast";
+import { isSupabaseMode } from "@/lib/runtime-config";
 import { AppData, Company, Offer, Redemption } from "@/lib/types";
 import {
   approveCompany,
@@ -55,15 +56,33 @@ export default function AdminPage() {
     return stored === "1";
   });
   const [nowTimestamp, setNowTimestamp] = useState(0);
+  const [loadingData, setLoadingData] = useState(true);
   const user = getCurrentUser();
-  const [data, setData] = useState<AppData | null>(() => {
-    syncRedemptionExpirations();
-    return getData();
-  });
+  const [data, setData] = useState<AppData | null>(null);
 
-  const refresh = () => {
-    syncRedemptionExpirations();
-    setData(getData());
+  const refresh = async () => {
+    if (!user) return;
+
+    if (!isSupabaseMode) {
+      syncRedemptionExpirations();
+      setData(getData());
+      return;
+    }
+
+    const response = await fetch("/api/admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "getDashboardData",
+        userId: user.id,
+      }),
+    });
+
+    if (!response.ok) return;
+    const payload = (await response.json()) as { data?: AppData };
+    if (payload.data) {
+      setData(payload.data);
+    }
   };
 
   useEffect(() => {
@@ -89,6 +108,57 @@ export default function AdminPage() {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("clubezn_admin_sidebar_open_v1", sidebarOpen ? "1" : "0");
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const userId = user?.id;
+
+    const load = async () => {
+      if (!userId) return;
+      setLoadingData(true);
+
+      if (!isSupabaseMode) {
+        syncRedemptionExpirations();
+        if (!cancelled) {
+          setData(getData());
+          setLoadingData(false);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "getDashboardData",
+            userId,
+          }),
+        });
+
+        const payload = (await response.json()) as { data?: AppData; error?: string };
+        if (!response.ok || payload.error || !payload.data) {
+          throw new Error(payload.error || "Falha ao carregar painel do administrador.");
+        }
+
+        if (!cancelled) {
+          setData(payload.data);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setData(null);
+          showToast(error instanceof Error ? error.message : "Falha ao carregar painel do administrador.", "error");
+        }
+      } finally {
+        if (!cancelled) setLoadingData(false);
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [showToast, user?.id]);
 
   const dashboard = useMemo(() => {
     if (!data) return null;
@@ -189,7 +259,7 @@ export default function AdminPage() {
     };
   }, [data, nowTimestamp]);
 
-  if (!user || !data || !dashboard) return <main className="clubezn-shell">Carregando...</main>;
+  if (!user || loadingData || !data || !dashboard) return <main className="clubezn-shell">Carregando...</main>;
 
   return (
     <main className="clubezn-shell grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)] lg:items-start">
@@ -306,9 +376,25 @@ export default function AdminPage() {
         {section === "companies" && (
           <ApprovalCompanies
             pendingCompanies={dashboard.pendingCompanies}
-            onApprove={(companyId) => {
-              approveCompany(companyId);
-              refresh();
+            onApprove={async (companyId) => {
+              if (isSupabaseMode) {
+                const response = await fetch("/api/admin", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    action: "approveCompany",
+                    userId: user.id,
+                    companyId,
+                  }),
+                });
+                if (!response.ok) {
+                  showToast("Não foi possível aprovar empresa.", "error");
+                  return;
+                }
+              } else {
+                approveCompany(companyId);
+              }
+              await refresh();
               showToast("Empresa aprovada com sucesso.", "success");
             }}
           />
@@ -318,14 +404,46 @@ export default function AdminPage() {
           <ApprovalOffers
             pendingOffers={dashboard.pendingOffers}
             companies={data.companies}
-            onApprove={(offerId) => {
-              approveOffer(offerId);
-              refresh();
+            onApprove={async (offerId) => {
+              if (isSupabaseMode) {
+                const response = await fetch("/api/admin", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    action: "approveOffer",
+                    userId: user.id,
+                    offerId,
+                  }),
+                });
+                if (!response.ok) {
+                  showToast("Não foi possível aprovar oferta.", "error");
+                  return;
+                }
+              } else {
+                approveOffer(offerId);
+              }
+              await refresh();
               showToast("Oferta aprovada com sucesso.", "success");
             }}
-            onReject={(offerId) => {
-              rejectOffer(offerId);
-              refresh();
+            onReject={async (offerId) => {
+              if (isSupabaseMode) {
+                const response = await fetch("/api/admin", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    action: "rejectOffer",
+                    userId: user.id,
+                    offerId,
+                  }),
+                });
+                if (!response.ok) {
+                  showToast("Não foi possível rejeitar oferta.", "error");
+                  return;
+                }
+              } else {
+                rejectOffer(offerId);
+              }
+              await refresh();
               showToast("Oferta rejeitada com sucesso.", "info");
             }}
           />

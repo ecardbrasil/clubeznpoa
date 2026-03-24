@@ -236,6 +236,7 @@ const seedData = (): AppData => {
 const ensureClient = () => typeof window !== "undefined";
 
 export const initStorage = () => {
+  if (isSupabaseMode) return;
   if (!ensureClient()) return;
   const existing = window.localStorage.getItem(STORAGE_KEY);
   if (!existing) {
@@ -304,6 +305,7 @@ export const getData = (): AppData => {
 };
 
 export const saveData = (data: AppData) => {
+  if (isSupabaseMode) return;
   if (!ensureClient()) return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 };
@@ -701,6 +703,7 @@ export const validateCode = (
 };
 
 export const resetDemoData = () => {
+  if (isSupabaseMode) return;
   if (!ensureClient()) return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seedData()));
   window.localStorage.removeItem(SESSION_KEY);

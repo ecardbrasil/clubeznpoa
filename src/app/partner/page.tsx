@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PartnerDashboardSidebar, PartnerSection } from "@/components/partner/dashboard-sidebar";
 import { useToast } from "@/components/ui/toast";
-import { AppData, Offer } from "@/lib/types";
+import { AppData, Company, Offer } from "@/lib/types";
+import { isSupabaseMode } from "@/lib/runtime-config";
 import {
   clearSession,
   createOffer,
@@ -50,12 +51,10 @@ export default function PartnerPage() {
   const [profileFeedback, setProfileFeedback] = useState("");
   const [redemptionFilter, setRedemptionFilter] = useState<RedemptionFilter>("all");
   const [nowTimestamp, setNowTimestamp] = useState(0);
+  const [loadingData, setLoadingData] = useState(true);
 
   const user = getCurrentUser();
-  const [data, setData] = useState<AppData | null>(() => {
-    syncRedemptionExpirations();
-    return getData();
-  });
+  const [data, setData] = useState<AppData | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -74,10 +73,38 @@ export default function PartnerPage() {
   const [whatsapp, setWhatsapp] = useState<string | null>(null);
   const [logoImage, setLogoImage] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [supabaseCompany, setSupabaseCompany] = useState<Company | null>(null);
 
-  const refresh = () => {
-    syncRedemptionExpirations();
-    setData(getData());
+  const refresh = async () => {
+    if (!user) return;
+    if (!isSupabaseMode) {
+      syncRedemptionExpirations();
+      setData(getData());
+      return;
+    }
+    if (!user.companyId) return;
+
+    const response = await fetch("/api/partner", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "getDashboardData",
+        companyId: user.companyId,
+        ownerUserId: user.id,
+      }),
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const payload = (await response.json()) as { data?: AppData };
+    if (payload.data) {
+      setData(payload.data);
+      if (payload.data.companies[0]) {
+        setSupabaseCompany(payload.data.companies[0]);
+      }
+    }
   };
 
   useEffect(() => {
@@ -103,10 +130,71 @@ export default function PartnerPage() {
     window.localStorage.setItem("clubezn_partner_sidebar_open_v1", sidebarOpen ? "1" : "0");
   }, [sidebarOpen]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const userId = user?.id;
+    const companyId = user?.companyId;
+
+    const load = async () => {
+      if (!userId) return;
+      setLoadingData(true);
+      if (!isSupabaseMode) {
+        syncRedemptionExpirations();
+        if (!cancelled) {
+          setData(getData());
+          setLoadingData(false);
+        }
+        return;
+      }
+
+      if (!companyId) {
+        if (!cancelled) setLoadingData(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/partner", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "getDashboardData",
+            companyId,
+            ownerUserId: userId,
+          }),
+        });
+
+        const payload = (await response.json()) as { data?: AppData; error?: string };
+        if (!response.ok || payload.error || !payload.data) {
+          throw new Error(payload.error || "Falha ao carregar painel do parceiro.");
+        }
+
+        if (!cancelled) {
+          setData(payload.data);
+          setSupabaseCompany(payload.data.companies[0] ?? null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setData(null);
+          showToast(error instanceof Error ? error.message : "Falha ao carregar painel do parceiro.", "error");
+        }
+      } finally {
+        if (!cancelled) setLoadingData(false);
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [showToast, user?.companyId, user?.id]);
+
   const company = useMemo(() => {
+    if (isSupabaseMode) {
+      return supabaseCompany ?? undefined;
+    }
     if (!data || !user?.companyId) return undefined;
     return data.companies.find((item) => item.id === user.companyId);
-  }, [data, user?.companyId]);
+  }, [data, supabaseCompany, user?.companyId]);
 
   const companyOffers = useMemo(() => {
     if (!data || !company?.id) return [];
@@ -178,8 +266,6 @@ export default function PartnerPage() {
 
     return {
       offersTotal: companyOffers.length,
-      offersApproved: companyOffers.filter((offer) => offer.approved).length,
-      offersPending: companyOffers.filter((offer) => !offer.approved && !offer.rejected).length,
       redemptionsToday,
       redemptionsWeek,
       statusCount,
@@ -266,29 +352,91 @@ export default function PartnerPage() {
 
   const unreadNotifications = partnerNotifications.filter((item) => !item.read).length;
 
-  const validate = () => {
+  const validate = async () => {
     setFeedback("");
     if (!company) {
       setFeedback("Empresa não encontrada.");
       showToast("Empresa não encontrada.", "error");
       return;
     }
+
+    if (isSupabaseMode) {
+      if (!user) return;
+      const response = await fetch("/api/partner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "validateCode",
+          companyId: company.id,
+          ownerUserId: user.id,
+          code,
+        }),
+      });
+      const payload = (await response.json()) as { message?: string };
+      const message = payload.message ?? "Falha ao validar código.";
+      const ok = response.ok;
+      setFeedback(message);
+      showToast(message, ok ? "success" : "error");
+      setCode("");
+      await refresh();
+      return;
+    }
+
     const result = validateCode(code, company.id);
     setFeedback(result.message);
     showToast(result.message, result.ok ? "success" : "error");
     setCode("");
-    refresh();
+    await refresh();
   };
 
-  const saveProfile = (event: FormEvent) => {
+  const saveProfile = async (event: FormEvent) => {
     event.preventDefault();
-    if (!company) {
+    const companyId = company?.id ?? user?.companyId;
+
+    if (!companyId || !user?.id) {
       setProfileFeedback("Empresa não encontrada.");
       showToast("Empresa não encontrada.", "error");
       return;
     }
 
-    updateCompanyProfile(company.id, {
+    if (isSupabaseMode) {
+      const response = await fetch("/api/partner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updateProfile",
+          companyId,
+          ownerUserId: user.id,
+          payload: {
+            publicName: effectivePublicName,
+            addressLine: effectiveAddressLine,
+            bio: effectiveBio,
+            instagram: effectiveInstagram,
+            facebook: effectiveFacebook,
+            website: effectiveWebsite,
+            whatsapp: effectiveWhatsapp,
+            logoImage: effectiveLogoImage || undefined,
+            coverImage: effectiveCoverImage || undefined,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        setProfileFeedback("Não foi possível salvar o perfil público.");
+        showToast("Não foi possível salvar o perfil público.", "error");
+        return;
+      }
+
+      const payload = (await response.json()) as { company?: Company };
+      if (payload.company) {
+        setSupabaseCompany(payload.company);
+      }
+      setProfileFeedback("Perfil público atualizado com sucesso.");
+      showToast("Perfil público atualizado com sucesso.", "success");
+      return;
+    }
+
+    updateCompanyProfile(companyId, {
       publicName: effectivePublicName,
       addressLine: effectiveAddressLine,
       bio: effectiveBio,
@@ -302,7 +450,7 @@ export default function PartnerPage() {
 
     setProfileFeedback("Perfil público atualizado com sucesso.");
     showToast("Perfil público atualizado com sucesso.", "success");
-    refresh();
+    await refresh();
   };
 
   const onSelectProfileImage = async (
@@ -324,7 +472,7 @@ export default function PartnerPage() {
     }
   };
 
-  const createPartnerOffer = (event: FormEvent) => {
+  const createPartnerOffer = async (event: FormEvent) => {
     event.preventDefault();
     setOfferFeedback("");
 
@@ -340,15 +488,43 @@ export default function PartnerPage() {
       return;
     }
 
-    createOffer({
-      companyId: company.id,
-      title,
-      description,
-      discountLabel,
-      category,
-      neighborhood,
-      images,
-    });
+    if (isSupabaseMode) {
+      if (!user) return;
+      const response = await fetch("/api/partner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "createOffer",
+          companyId: company.id,
+          ownerUserId: user.id,
+          payload: {
+            title,
+            description,
+            discountLabel,
+            category,
+            neighborhood,
+            images,
+          },
+        }),
+      });
+
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok || payload.error) {
+        setOfferFeedback(payload.error || "Falha ao publicar oferta.");
+        showToast(payload.error || "Falha ao publicar oferta.", "error");
+        return;
+      }
+    } else {
+      createOffer({
+        companyId: company.id,
+        title,
+        description,
+        discountLabel,
+        category,
+        neighborhood,
+        images,
+      });
+    }
 
     setTitle("");
     setDescription("");
@@ -358,7 +534,7 @@ export default function PartnerPage() {
     setImageFeedback("");
     setOfferFeedback("Oferta publicada com sucesso.");
     showToast("Oferta publicada com sucesso.", "success");
-    refresh();
+    await refresh();
   };
 
   const onSelectImages = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -416,7 +592,7 @@ export default function PartnerPage() {
     }
   };
 
-  if (!user || !data) return <main className="clubezn-shell">Carregando...</main>;
+  if (!user || loadingData || !data) return <main className="clubezn-shell">Carregando...</main>;
 
   return (
     <main className="clubezn-shell grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
@@ -464,9 +640,26 @@ export default function PartnerPage() {
 
         {section === "overview" && (
           <>
-            <section className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="card grid gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18 }}>Ações rápidas</h2>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+                    A validação de código está disponível aqui para uso frequente.
+                  </p>
+                </div>
+                <button
+                  className="btn btn-primary !w-auto"
+                  onClick={() => selectSection("validate")}
+                  type="button"
+                >
+                  Validar código agora
+                </button>
+              </div>
+            </section>
+
+            <section className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
               <MetricCard label="Ofertas totais" value={dashboard.offersTotal} helper="Cadastradas pela empresa" />
-              <MetricCard label="Ofertas aprovadas" value={dashboard.offersApproved} helper="Publicadas ao consumidor" />
               <MetricCard label="Resgates hoje" value={dashboard.redemptionsToday} helper="Gerados no dia atual" />
               <MetricCard label="Resgates 7 dias" value={dashboard.redemptionsWeek} helper="Janela móvel semanal" />
             </section>
@@ -477,9 +670,6 @@ export default function PartnerPage() {
                 <StatusLine label="Códigos gerados" value={dashboard.statusCount.generated} tone="pending" />
                 <StatusLine label="Códigos usados" value={dashboard.statusCount.used} tone="ok" />
                 <StatusLine label="Códigos expirados" value={dashboard.statusCount.expired} tone="danger" />
-                <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                  Ofertas pendentes de aprovação: <strong>{dashboard.offersPending}</strong>
-                </p>
               </section>
 
               <section className="card grid gap-2">
@@ -775,10 +965,22 @@ export default function PartnerPage() {
                 </span>
                 <button
                   className="btn btn-ghost !w-auto !px-3 !py-1.5"
-                  onClick={() => {
+                  onClick={async () => {
                     if (!user) return;
-                    markAllNotificationsAsRead(user.id);
-                    refresh();
+                    if (isSupabaseMode) {
+                      await fetch("/api/partner", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          action: "markAllNotificationsAsRead",
+                          companyId: company?.id ?? user.companyId,
+                          ownerUserId: user.id,
+                        }),
+                      });
+                    } else {
+                      markAllNotificationsAsRead(user.id);
+                    }
+                    await refresh();
                     showToast("Todas as notificações foram marcadas como lidas.", "success");
                   }}
                   type="button"
@@ -801,10 +1003,23 @@ export default function PartnerPage() {
                 {!notification.read && (
                   <button
                     className="btn btn-ghost !w-auto !px-3 !py-1.5"
-                    onClick={() => {
+                    onClick={async () => {
                       if (!user) return;
-                      markNotificationAsRead(notification.id, user.id);
-                      refresh();
+                      if (isSupabaseMode) {
+                        await fetch("/api/partner", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            action: "markNotificationAsRead",
+                            companyId: company?.id ?? user.companyId,
+                            ownerUserId: user.id,
+                            notificationId: notification.id,
+                          }),
+                        });
+                      } else {
+                        markNotificationAsRead(notification.id, user.id);
+                      }
+                      await refresh();
                     }}
                     type="button"
                   >

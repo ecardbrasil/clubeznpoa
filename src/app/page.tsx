@@ -445,10 +445,10 @@ export default function LandingPage() {
 
             <div className="flex items-center gap-2">
               <Link href="/auth" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
-                Entrar
+                Já tenho conta
               </Link>
               <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
-                Comecar
+                Começar por Cadastro
               </Link>
             </div>
           </div>
@@ -535,7 +535,7 @@ export default function LandingPage() {
 
       <section id="categorias" className="grid gap-3 rounded-[24px] border border-[#dbdee3] bg-[#f2f4f7] p-4 md:p-5">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-extrabold text-[#25303b] md:text-2xl">Explore nossas colecoes</h3>
+          <h3 className="m-0 text-xl font-extrabold text-[#25303b] md:text-2xl">Explore nossas coleções</h3>
           <Link href="/ofertas" className="text-sm font-bold text-[#2487ff] hover:underline">
             Ver tudo
           </Link>
@@ -564,6 +564,35 @@ export default function LandingPage() {
           >
             <ChevronRight size={22} />
           </button>
+        </div>
+      </section>
+
+      <section id="ofertas" className="grid gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Ofertas em destaque</h3>
+          <Link href="/ofertas" className="text-sm font-bold text-[#1f5f30] hover:underline">
+            Ver todas
+          </Link>
+        </div>
+
+        {offersLoadingError ? (
+          <article className="rounded-2xl border border-[#f0c8c8] bg-[#fff2f2] px-3 py-2 text-sm text-[#7c2323]">
+            Não foi possível carregar as ofertas da home. Detalhe: {offersLoadingError}
+          </article>
+        ) : null}
+
+        <div className="grid grid-flow-col auto-cols-[85%] gap-3 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-4 md:auto-cols-auto md:overflow-visible">
+          {featuredOffers.map((offer) => (
+            <OfferCard
+              key={offer.id}
+              actionHref="/auth"
+              actionLabel="Quero essa oferta"
+              offer={offer}
+            />
+          ))}
+          {featuredOffers.length === 0 && (
+            <p className="card">As ofertas aprovadas aparecerao aqui assim que forem publicadas.</p>
+          )}
         </div>
       </section>
 
@@ -703,35 +732,6 @@ export default function LandingPage() {
           </article>
         </div>
 
-      </section>
-
-      <section id="ofertas" className="grid gap-3">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Ofertas em destaque</h3>
-          <Link href="/ofertas" className="text-sm font-bold text-[#1f5f30] hover:underline">
-            Ver todas
-          </Link>
-        </div>
-
-        {offersLoadingError ? (
-          <article className="rounded-2xl border border-[#f0c8c8] bg-[#fff2f2] px-3 py-2 text-sm text-[#7c2323]">
-            Não foi possível carregar as ofertas da home. Detalhe: {offersLoadingError}
-          </article>
-        ) : null}
-
-        <div className="grid grid-flow-col auto-cols-[85%] gap-3 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-4 md:auto-cols-auto md:overflow-visible">
-          {featuredOffers.map((offer) => (
-            <OfferCard
-              key={offer.id}
-              actionHref="/auth"
-              actionLabel="Quero essa oferta"
-              offer={offer}
-            />
-          ))}
-          {featuredOffers.length === 0 && (
-            <p className="card">As ofertas aprovadas aparecerao aqui assim que forem publicadas.</p>
-          )}
-        </div>
       </section>
 
       <section id="como-funciona" className="grid gap-3">
