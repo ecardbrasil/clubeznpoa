@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
+import { useToast } from "@/components/ui/toast";
 import { isSupabaseMode } from "@/lib/runtime-config";
-import { getData, initStorage } from "@/lib/storage";
+import { clearSession, generateRedemption, getCurrentUser, getData, initStorage, routeByRole } from "@/lib/storage";
 import { getSupabaseBrowserClient, hasSupabaseEnv } from "@/lib/supabase/client";
+import { User } from "@/lib/types";
 import { getHotOfferIds } from "@/lib/utils";
 
 type SortOption = "recentes" | "desconto" | "bairro";
@@ -148,10 +151,17 @@ const mapSupabaseOffers = async (): Promise<PublicOffer[]> => {
 };
 
 function OffersPageContent() {
+  const router = useRouter();
+  const { showToast } = useToast();
   const searchParams = useSearchParams();
   const [allOffers, setAllOffers] = useState<PublicOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingError, setLoadingError] = useState("");
+  const [viewer, setViewer] = useState<User | null>(null);
+
+  useEffect(() => {
+    setViewer(getCurrentUser());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -268,21 +278,89 @@ function OffersPageContent() {
     setSortBy("recentes");
   };
 
+  const handleGenerateCode = async (offerId: string) => {
+    if (!viewer || viewer.role !== "consumer") return;
+
+    try {
+      if (isSupabaseMode) {
+        const response = await fetch("/api/consumer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "generateCode",
+            userId: viewer.id,
+            offerId,
+          }),
+        });
+        const payload = (await response.json()) as { error?: string };
+        if (!response.ok || payload.error) {
+          throw new Error(payload.error || "Falha ao gerar código de resgate.");
+        }
+      } else {
+        generateRedemption(viewer.id, offerId);
+      }
+
+      showToast("Código de resgate gerado com sucesso.", "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Falha ao gerar código de resgate.", "error");
+    }
+  };
+
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <header className="rounded-2xl border border-[#d9e6db] bg-white px-3 py-3 md:px-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="grid gap-1">
             <BrandLogo />
-            <p className="m-0 text-xs font-semibold uppercase tracking-[0.08em] text-[#486048]">Vitrine publica de ofertas</p>
+            <p className="m-0 text-xs font-semibold uppercase tracking-[0.08em] text-[#486048]">
+              {viewer?.role === "consumer" ? "Vitrine de ofertas - Cliente logado" : "Vitrine publica de ofertas"}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
               Voltar para home
             </Link>
-            <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
-              Entrar
-            </Link>
+            {viewer?.role === "consumer" ? (
+              <>
+                <span className="badge badge-ok">Olá, {viewer.name}</span>
+                <button
+                  className="btn btn-ghost !w-auto !px-4 !py-2 text-sm"
+                  onClick={() => {
+                    clearSession();
+                    setViewer(null);
+                    router.push("/auth");
+                  }}
+                  type="button"
+                >
+                  Sair
+                </button>
+              </>
+            ) : viewer ? (
+              <>
+                <button
+                  className="btn btn-ghost !w-auto !px-4 !py-2 text-sm"
+                  onClick={() => router.push(routeByRole(viewer.role))}
+                  type="button"
+                >
+                  Ir para painel
+                </button>
+                <button
+                  className="btn btn-ghost !w-auto !px-4 !py-2 text-sm"
+                  onClick={() => {
+                    clearSession();
+                    setViewer(null);
+                    router.push("/auth");
+                  }}
+                  type="button"
+                >
+                  Sair
+                </button>
+              </>
+            ) : (
+              <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
+                Entrar
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -366,9 +444,13 @@ function OffersPageContent() {
             <p className="m-0 text-sm font-semibold text-[#1f5f30]">
               {loading ? "Carregando ofertas..." : `${filteredOffers.length} oferta(s) encontrada(s) com os filtros atuais`}
             </p>
-            <Link href="/auth" className="text-sm font-bold text-[#1f5f30] hover:underline">
-              Quero acessar com login
-            </Link>
+            {viewer?.role === "consumer" ? (
+              <span className="text-sm font-semibold text-[#1f5f30]">Você está logado e já pode resgatar códigos.</span>
+            ) : (
+              <Link href="/auth" className="text-sm font-bold text-[#1f5f30] hover:underline">
+                Quero acessar com login
+              </Link>
+            )}
           </div>
 
           {loadingError ? (
@@ -379,7 +461,13 @@ function OffersPageContent() {
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {filteredOffers.map((offer) => (
-              <OfferCard key={offer.id} actionHref="/auth" actionLabel="Quero essa oferta" offer={offer} />
+              <OfferCard
+                key={offer.id}
+                actionHref={viewer?.role === "consumer" ? undefined : "/auth"}
+                actionLabel={viewer?.role === "consumer" ? "Gerar código de resgate" : "Quero essa oferta"}
+                onAction={viewer?.role === "consumer" ? () => handleGenerateCode(offer.id) : undefined}
+                offer={offer}
+              />
             ))}
           </div>
 
