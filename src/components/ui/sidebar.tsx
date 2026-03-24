@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import React, { createContext, useContext, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
 
 interface SidebarContextProps {
   open: boolean;
@@ -58,11 +58,15 @@ export const Sidebar = ({
   );
 };
 
-export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => {
+type SidebarBodyProps = Omit<React.ComponentProps<typeof motion.div>, "children"> & {
+  children: React.ReactNode;
+};
+
+export const SidebarBody = ({ children, ...props }: SidebarBodyProps) => {
   return (
     <>
-      <DesktopSidebar {...props} />
-      <MobileSidebar {...(props as React.ComponentProps<"div">)} />
+      <DesktopSidebar {...props}>{children}</DesktopSidebar>
+      <MobileSidebar {...(props as React.ComponentProps<"div">)}>{children}</MobileSidebar>
     </>
   );
 };
@@ -71,21 +75,28 @@ export const DesktopSidebar = ({
   className,
   children,
   ...props
-}: React.ComponentProps<typeof motion.div>) => {
+}: Omit<React.ComponentProps<typeof motion.div>, "children"> & { children: React.ReactNode }) => {
   const { open, setOpen, animate } = useSidebar();
   return (
     <motion.div
       className={cn(
-        "hidden h-full flex-col border border-[#d1dfd1] bg-white px-3 py-3 md:flex md:flex-shrink-0",
+        "relative hidden h-full flex-col border border-[#d1dfd1] bg-white px-3 py-3 md:flex md:flex-shrink-0",
         className,
       )}
       animate={{
         width: animate ? (open ? "250px" : "66px") : "250px",
       }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
       {...props}
     >
+      <button
+        type="button"
+        className="absolute right-2 top-2 z-10 hidden h-8 w-8 items-center justify-center rounded-md border border-[#d1dfd1] bg-white text-[#1f5f30] md:inline-flex"
+        onClick={() => setOpen((current) => !current)}
+        aria-label={open ? "Minimizar menu lateral" : "Expandir menu lateral"}
+        title={open ? "Minimizar" : "Expandir"}
+      >
+        {open ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+      </button>
       {children}
     </motion.div>
   );

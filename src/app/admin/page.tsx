@@ -48,7 +48,12 @@ export default function AdminPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const [section, setSection] = useState<AdminSection>("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const stored = window.localStorage.getItem("clubezn_admin_sidebar_open_v1");
+    if (stored === null) return true;
+    return stored === "1";
+  });
   const [nowTimestamp, setNowTimestamp] = useState(0);
   const user = getCurrentUser();
   const [data, setData] = useState<AppData | null>(() => {
@@ -79,6 +84,11 @@ export default function AdminPage() {
     const timer = window.setInterval(updateNow, 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("clubezn_admin_sidebar_open_v1", sidebarOpen ? "1" : "0");
+  }, [sidebarOpen]);
 
   const dashboard = useMemo(() => {
     if (!data) return null;
@@ -189,7 +199,9 @@ export default function AdminPage() {
         section={section}
         onSectionChange={(nextSection) => {
           setSection(nextSection);
-          setSidebarOpen(false);
+          if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+            setSidebarOpen(false);
+          }
         }}
         pendingCompanies={dashboard.pendingCompanies.length}
         pendingOffers={dashboard.pendingOffers.length}

@@ -37,7 +37,12 @@ type RedemptionFilter = "all" | "generated" | "used" | "expired";
 export default function PartnerPage() {
   const router = useRouter();
   const { showToast } = useToast();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const stored = window.localStorage.getItem("clubezn_partner_sidebar_open_v1");
+    if (stored === null) return true;
+    return stored === "1";
+  });
   const [section, setSection] = useState<PartnerSection>("overview");
   const [code, setCode] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -92,6 +97,11 @@ export default function PartnerPage() {
     const timer = window.setInterval(updateNow, 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("clubezn_partner_sidebar_open_v1", sidebarOpen ? "1" : "0");
+  }, [sidebarOpen]);
 
   const company = useMemo(() => {
     if (!data || !user?.companyId) return undefined;
@@ -401,7 +411,9 @@ export default function PartnerPage() {
 
   const selectSection = (nextSection: PartnerSection) => {
     setSection(nextSection);
-    setSidebarOpen(false);
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+      setSidebarOpen(false);
+    }
   };
 
   if (!user || !data) return <main className="clubezn-shell">Carregando...</main>;
