@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
 import { OfferCard } from "@/components/offer-card";
+import { useToast } from "@/components/ui/toast";
+import { isSupabaseMode } from "@/lib/runtime-config";
 import { AppData, Offer, Redemption } from "@/lib/types";
 import {
   clearSession,
@@ -22,17 +24,147 @@ const formatDate = (value?: string) => {
 
 export default function ConsumerPage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [search, setSearch] = useState("");
   const user = getCurrentUser();
+  const [supabaseModeData, setSupabaseModeData] = useState<{
+    offers: Offer[];
+    companiesById: Map<string, AppData["companies"][number]>;
+    redemptions: Redemption[];
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState<AppData | null>(() => {
     syncRedemptionExpirations();
     return getData();
   });
 
   const refresh = () => {
+    if (isSupabaseMode) return;
     syncRedemptionExpirations();
     setData(getData());
   };
+
+  const fetchConsumerDataFromSupabase = useCallback(async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/consumer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "getData",
+          userId: user.id,
+        }),
+      });
+
+      const payload = (await response.json()) as {
+        error?: string;
+        offers?: Array<{
+          id: string;
+          company_id: string;
+          title: string;
+          description: string;
+          discount_label: string;
+          category: string;
+          neighborhood: string;
+          images: string[] | null;
+          approved: boolean;
+          rejected: boolean;
+          created_at: string;
+        }>;
+        companies?: Array<{
+          id: string;
+          name: string;
+          public_name: string | null;
+          category: string;
+          neighborhood: string;
+          city: string;
+          state: string;
+          owner_user_id: string;
+          approved: boolean;
+          logo_image: string | null;
+          cover_image: string | null;
+          address_line: string | null;
+          bio: string | null;
+          instagram: string | null;
+          facebook: string | null;
+          website: string | null;
+          whatsapp: string | null;
+          created_at: string;
+        }>;
+        redemptions?: Array<{
+          id: string;
+          user_id: string;
+          offer_id: string;
+          code: string;
+          status: "generated" | "used" | "expired";
+          created_at: string;
+          expires_at: string;
+          used_at: string | null;
+        }>;
+      };
+
+      if (!response.ok || payload.error) {
+        throw new Error(payload.error || "Falha ao carregar dados do consumidor.");
+      }
+
+      const offers: Offer[] = (payload.offers ?? []).map((offer) => ({
+        id: offer.id,
+        companyId: offer.company_id,
+        title: offer.title,
+        description: offer.description,
+        discountLabel: offer.discount_label,
+        category: offer.category,
+        neighborhood: offer.neighborhood,
+        images: Array.isArray(offer.images) ? offer.images : [],
+        approved: offer.approved,
+        rejected: offer.rejected,
+        createdAt: offer.created_at,
+      }));
+
+      const companies = (payload.companies ?? []).map((company) => ({
+        id: company.id,
+        name: company.name,
+        publicName: company.public_name ?? undefined,
+        category: company.category,
+        neighborhood: company.neighborhood,
+        city: company.city,
+        state: company.state,
+        ownerUserId: company.owner_user_id,
+        approved: company.approved,
+        logoImage: company.logo_image ?? undefined,
+        coverImage: company.cover_image ?? undefined,
+        addressLine: company.address_line ?? undefined,
+        bio: company.bio ?? undefined,
+        instagram: company.instagram ?? undefined,
+        facebook: company.facebook ?? undefined,
+        website: company.website ?? undefined,
+        whatsapp: company.whatsapp ?? undefined,
+        createdAt: company.created_at,
+      }));
+
+      const redemptions: Redemption[] = (payload.redemptions ?? []).map((item) => ({
+        id: item.id,
+        userId: item.user_id,
+        offerId: item.offer_id,
+        code: item.code,
+        status: item.status,
+        createdAt: item.created_at,
+        expiresAt: item.expires_at,
+        usedAt: item.used_at ?? undefined,
+      }));
+
+      setSupabaseModeData({
+        offers,
+        companiesById: new Map(companies.map((company) => [company.id, company])),
+        redemptions,
+      });
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Falha ao carregar dados do consumidor.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showToast, user]);
 
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -47,16 +179,40 @@ export default function ConsumerPage() {
 
   }, [router]);
 
+  useEffect(() => {
+    if (!user) return;
+    if (!isSupabaseMode) return;
+    fetchConsumerDataFromSupabase();
+  }, [fetchConsumerDataFromSupabase, user]);
+
   const activeCode = useMemo<Redemption | null>(() => {
-    if (!data || !user) return null;
+    if (!user) return null;
+    if (isSupabaseMode) {
+      return (
+        (supabaseModeData?.redemptions ?? [])
+          .filter((r) => r.userId === user.id && r.status === "generated")
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ?? null
+      );
+    }
+    if (!data) return null;
     return (
       data.redemptions
         .filter((r) => r.userId === user.id && r.status === "generated")
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] ?? null
     );
-  }, [data, user]);
+  }, [data, supabaseModeData, user]);
 
   const approvedOffers = useMemo(() => {
+    if (isSupabaseMode) {
+      if (!supabaseModeData) return [];
+      const companiesById = supabaseModeData.companiesById;
+      return supabaseModeData.offers
+        .filter((offer) => offer.approved)
+        .filter((offer) => {
+          const company = companiesById.get(offer.companyId);
+          return company?.approved;
+        });
+    }
     if (!data) return [];
     const companiesById = new Map(data.companies.map((c) => [c.id, c]));
     return data.offers
@@ -65,7 +221,7 @@ export default function ConsumerPage() {
         const company = companiesById.get(offer.companyId);
         return company?.approved;
       });
-  }, [data]);
+  }, [data, supabaseModeData]);
 
   const filteredOffers = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -78,24 +234,64 @@ export default function ConsumerPage() {
   }, [approvedOffers, search]);
 
   const hotOfferIds = useMemo(() => {
+    if (isSupabaseMode) {
+      if (!supabaseModeData) return new Set<string>();
+      return getHotOfferIds(
+        {
+          offers: supabaseModeData.offers,
+          redemptions: supabaseModeData.redemptions,
+        },
+        4,
+      );
+    }
     if (!data) return new Set<string>();
     return getHotOfferIds(data, 4);
-  }, [data]);
+  }, [data, supabaseModeData]);
 
-  const generateCode = (offer: Offer) => {
+  const generateCode = async (offer: Offer) => {
     if (!user) return;
+    if (isSupabaseMode) {
+      try {
+        const response = await fetch("/api/consumer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "generateCode",
+            userId: user.id,
+            offerId: offer.id,
+          }),
+        });
+        const payload = (await response.json()) as { error?: string };
+        if (!response.ok || payload.error) {
+          throw new Error(payload.error || "Falha ao gerar código de resgate.");
+        }
+        showToast("Código de resgate gerado com sucesso.", "success");
+        await fetchConsumerDataFromSupabase();
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : "Falha ao gerar código de resgate.", "error");
+      }
+      return;
+    }
     generateRedemption(user.id, offer.id);
+    showToast("Código de resgate gerado com sucesso.", "success");
     refresh();
   };
 
-  if (!user || !data) {
+  if (!user || (!isSupabaseMode && !data)) {
     return <main className="clubezn-shell">Carregando...</main>;
   }
 
-  const companiesById = new Map(data.companies.map((company) => [company.id, company]));
-  const history = data.redemptions
-    .filter((redemption) => redemption.userId === user.id)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const companiesById = isSupabaseMode
+    ? (supabaseModeData?.companiesById ?? new Map())
+    : new Map(data?.companies.map((company) => [company.id, company]));
+  const offersById = new Map((isSupabaseMode ? supabaseModeData?.offers ?? [] : data?.offers ?? []).map((offer) => [offer.id, offer]));
+  const history = isSupabaseMode
+    ? (supabaseModeData?.redemptions ?? [])
+        .filter((redemption) => redemption.userId === user.id)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    : (data?.redemptions ?? [])
+        .filter((redemption) => redemption.userId === user.id)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <main className="clubezn-shell grid gap-4">
@@ -123,6 +319,9 @@ export default function ConsumerPage() {
           onChange={(event) => setSearch(event.target.value)}
           style={{ border: "1px solid var(--line)", borderRadius: 10, padding: "10px 12px" }}
         />
+        {isSupabaseMode && isLoading ? (
+          <p style={{ margin: 0, color: "var(--muted)", fontSize: 12 }}>Sincronizando dados do Supabase...</p>
+        ) : null}
       </section>
 
       {activeCode && (
@@ -168,7 +367,7 @@ export default function ConsumerPage() {
         <section className="card grid gap-2">
           <h2 style={{ margin: 0, fontSize: 18 }}>Histórico de resgates</h2>
           {history.slice(0, 8).map((item) => {
-            const offer = data.offers.find((offerItem) => offerItem.id === item.offerId);
+            const offer = offersById.get(item.offerId);
             return (
               <div key={item.id} style={{ borderTop: "1px solid var(--line)", paddingTop: 8 }}>
                 <p style={{ margin: 0, fontWeight: 700 }}>{offer?.title ?? "Oferta removida"}</p>
