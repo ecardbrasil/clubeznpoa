@@ -128,7 +128,7 @@ export async function POST(request: Request) {
         city: "Porto Alegre",
         state: "RS",
         owner_user_id: userId,
-        approved: false,
+        approved: true,
         created_at: nowIso,
       });
 
@@ -155,4 +155,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Falha inesperada no serviço de autenticação." }, { status: 500 });
   }
 }
-

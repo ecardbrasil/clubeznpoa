@@ -346,8 +346,8 @@ export default function PartnerPage() {
     setCategory("");
     setImages([]);
     setImageFeedback("");
-    setOfferFeedback("Oferta enviada para aprovação do administrador.");
-    showToast("Oferta enviada para aprovação do administrador.", "success");
+    setOfferFeedback("Oferta publicada com sucesso.");
+    showToast("Oferta publicada com sucesso.", "success");
     refresh();
   };
 
@@ -438,9 +438,7 @@ export default function PartnerPage() {
               <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Empresa Parceira</p>
               <h1 style={{ margin: "2px 0 0", fontSize: 22 }}>{company?.publicName ?? company?.name ?? user.name}</h1>
             </div>
-            <span className={`badge ${company?.approved ? "badge-ok" : "badge-pending"}`}>
-              {company?.approved ? "Aprovada" : "Aguardando aprovação"}
-            </span>
+            <span className="badge badge-ok">Ativa</span>
           </div>
           <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
             Seção atual: <strong>{sectionTitle[section]}</strong>
@@ -723,15 +721,10 @@ export default function PartnerPage() {
                   </div>
                 )}
 
-                <button className="btn btn-primary" disabled={!company?.approved} type="submit">
-                  Enviar oferta para aprovação
+                <button className="btn btn-primary" type="submit">
+                  Publicar oferta
                 </button>
               </form>
-              {!company?.approved && (
-                <p style={{ margin: 0, color: "var(--warn)" }}>
-                  Sua empresa precisa ser aprovada pelo admin para publicar ofertas.
-                </p>
-              )}
               {offerFeedback && <p style={{ margin: 0, fontWeight: 700 }}>{offerFeedback}</p>}
             </section>
 
@@ -751,8 +744,7 @@ export default function PartnerPage() {
                   )}
                   <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                    {offer.discountLabel} • {offer.images.length} foto(s) •{" "}
-                    {offer.approved ? "Aprovada" : offer.rejected ? "Rejeitada" : "Pendente de aprovação"}
+                    {offer.discountLabel} • {offer.images.length} foto(s) • {offer.rejected ? "Rejeitada" : "Publicada"}
                   </p>
                 </div>
               ))}

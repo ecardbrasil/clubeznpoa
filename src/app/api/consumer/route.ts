@@ -46,10 +46,9 @@ export async function POST(request: Request) {
         supabase
           .from("offers")
           .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, created_at")
-          .eq("approved", true)
           .eq("rejected", false)
           .order("created_at", { ascending: false }),
-        supabase.from("companies").select("*").eq("approved", true),
+        supabase.from("companies").select("*"),
         supabase.from("redemptions").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       ]);
 
@@ -88,17 +87,17 @@ export async function POST(request: Request) {
         .eq("id", offerId)
         .maybeSingle();
 
-      if (offerError || !offer || !offer.approved || offer.rejected) {
+      if (offerError || !offer || offer.rejected) {
         return NextResponse.json({ error: "Oferta indisponível para resgate." }, { status: 400 });
       }
 
       const { data: company, error: companyError } = await supabase
         .from("companies")
-        .select("id, approved")
+        .select("id")
         .eq("id", offer.company_id)
         .maybeSingle();
 
-      if (companyError || !company || !company.approved) {
+      if (companyError || !company) {
         return NextResponse.json({ error: "Parceiro indisponível para resgate." }, { status: 400 });
       }
 
@@ -127,4 +126,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Falha inesperada na API do consumidor." }, { status: 500 });
   }
 }
-

@@ -222,12 +222,10 @@ const mapLocalLandingData = () => {
   initStorage();
   const data = getData();
   const hotOfferIds = getHotOfferIds(data, 3);
-  const approvedCompanies = new Map(
-    data.companies.filter((company) => company.approved).map((company) => [company.id, company]),
-  );
+  const companiesById = new Map(data.companies.map((company) => [company.id, company]));
 
   const featuredOffers: OfferCardData[] = data.offers
-    .filter((offer) => offer.approved && approvedCompanies.has(offer.companyId))
+    .filter((offer) => !offer.rejected && companiesById.has(offer.companyId))
     .slice(0, 8)
     .map((offer) => ({
       id: offer.id,
@@ -239,18 +237,18 @@ const mapLocalLandingData = () => {
       neighborhood: offer.neighborhood,
       isHot: hotOfferIds.has(offer.id),
       companyName:
-        approvedCompanies.get(offer.companyId)?.publicName ?? approvedCompanies.get(offer.companyId)?.name ?? "Parceiro ClubeZN",
+        companiesById.get(offer.companyId)?.publicName ?? companiesById.get(offer.companyId)?.name ?? "Parceiro ClubeZN",
       images: offer.images,
-      partnerLogoImage: approvedCompanies.get(offer.companyId)?.logoImage,
-      partnerCoverImage: approvedCompanies.get(offer.companyId)?.coverImage,
-      partnerAddressLine: approvedCompanies.get(offer.companyId)?.addressLine,
-      partnerInstagram: approvedCompanies.get(offer.companyId)?.instagram,
-      partnerFacebook: approvedCompanies.get(offer.companyId)?.facebook,
-      partnerWebsite: approvedCompanies.get(offer.companyId)?.website,
-      partnerWhatsapp: approvedCompanies.get(offer.companyId)?.whatsapp,
+      partnerLogoImage: companiesById.get(offer.companyId)?.logoImage,
+      partnerCoverImage: companiesById.get(offer.companyId)?.coverImage,
+      partnerAddressLine: companiesById.get(offer.companyId)?.addressLine,
+      partnerInstagram: companiesById.get(offer.companyId)?.instagram,
+      partnerFacebook: companiesById.get(offer.companyId)?.facebook,
+      partnerWebsite: companiesById.get(offer.companyId)?.website,
+      partnerWhatsapp: companiesById.get(offer.companyId)?.whatsapp,
     }));
 
-  const partnerProfiles = data.companies.filter((company) => company.approved).slice(0, 6);
+  const partnerProfiles = data.companies.slice(0, 6);
   return { featuredOffers, partnerProfiles };
 };
 
@@ -281,7 +279,7 @@ const mapSupabaseLandingData = async () => {
   const companies = (companiesRes.data ?? []) as SupabaseCompanyRow[];
   const redemptions = (redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>;
 
-  const approvedCompanies = new Map(companies.filter((company) => company.approved).map((company) => [company.id, company]));
+  const companiesById = new Map(companies.map((company) => [company.id, company]));
 
   const usageScoreByOffer = redemptions.reduce<Record<string, number>>((acc, redemption) => {
     const score = redemption.status === "used" ? 2 : redemption.status === "generated" ? 1 : 0;
@@ -299,10 +297,10 @@ const mapSupabaseLandingData = async () => {
   );
 
   const featuredOffers: OfferCardData[] = offers
-    .filter((offer) => offer.approved && !offer.rejected && approvedCompanies.has(offer.company_id))
+    .filter((offer) => !offer.rejected && companiesById.has(offer.company_id))
     .slice(0, 8)
     .map((offer) => {
-      const company = approvedCompanies.get(offer.company_id);
+      const company = companiesById.get(offer.company_id);
       return {
         id: offer.id,
         companyId: offer.company_id,
@@ -325,7 +323,6 @@ const mapSupabaseLandingData = async () => {
     });
 
   const partnerProfiles: Company[] = companies
-    .filter((company) => company.approved)
     .slice(0, 6)
     .map((company) => ({
       id: company.id,

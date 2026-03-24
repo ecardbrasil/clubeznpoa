@@ -396,7 +396,7 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
       city: "Porto Alegre",
       state: "RS",
       ownerUserId: userId,
-      approved: false,
+      approved: true,
       createdAt: nowIso(),
     });
   }
@@ -504,7 +504,7 @@ export const createOffer = (input: {
     category: input.category,
     neighborhood: input.neighborhood,
     images: input.images.slice(0, 5),
-    approved: false,
+    approved: true,
     rejected: false,
     createdAt: nowIso(),
   };

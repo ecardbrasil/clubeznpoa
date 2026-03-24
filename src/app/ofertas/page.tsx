@@ -49,14 +49,12 @@ const mapLocalOffers = (): PublicOffer[] => {
   initStorage();
   const data = getData();
   const hotOfferIds = getHotOfferIds(data, 4);
-  const approvedCompanies = new Map(
-    data.companies.filter((company) => company.approved).map((company) => [company.id, company]),
-  );
+  const companiesById = new Map(data.companies.map((company) => [company.id, company]));
 
   return data.offers
-    .filter((offer) => offer.approved && approvedCompanies.has(offer.companyId))
+    .filter((offer) => !offer.rejected && companiesById.has(offer.companyId))
     .map((offer) => {
-      const company = approvedCompanies.get(offer.companyId);
+      const company = companiesById.get(offer.companyId);
       return {
         id: offer.id,
         companyId: offer.companyId,
@@ -105,7 +103,7 @@ const mapSupabaseOffers = async (): Promise<PublicOffer[]> => {
   const companies = (companiesRes.data ?? []) as SupabaseCompanyRow[];
   const redemptions = (redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>;
 
-  const approvedCompanies = new Map(companies.filter((company) => company.approved).map((company) => [company.id, company]));
+  const companiesById = new Map(companies.map((company) => [company.id, company]));
 
   const usageScoreByOffer = redemptions.reduce<Record<string, number>>((acc, redemption) => {
     const score = redemption.status === "used" ? 2 : redemption.status === "generated" ? 1 : 0;
@@ -123,9 +121,9 @@ const mapSupabaseOffers = async (): Promise<PublicOffer[]> => {
   );
 
   return offers
-    .filter((offer) => offer.approved && !offer.rejected && approvedCompanies.has(offer.company_id))
+    .filter((offer) => !offer.rejected && companiesById.has(offer.company_id))
     .map((offer) => {
-      const company = approvedCompanies.get(offer.company_id);
+      const company = companiesById.get(offer.company_id);
       return {
         id: offer.id,
         companyId: offer.company_id,

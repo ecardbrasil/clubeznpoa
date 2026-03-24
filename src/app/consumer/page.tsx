@@ -202,36 +202,26 @@ export default function ConsumerPage() {
     );
   }, [data, supabaseModeData, user]);
 
-  const approvedOffers = useMemo(() => {
+  const availableOffers = useMemo(() => {
     if (isSupabaseMode) {
       if (!supabaseModeData) return [];
-      const companiesById = supabaseModeData.companiesById;
       return supabaseModeData.offers
-        .filter((offer) => offer.approved)
-        .filter((offer) => {
-          const company = companiesById.get(offer.companyId);
-          return company?.approved;
-        });
+        .filter((offer) => !offer.rejected);
     }
     if (!data) return [];
-    const companiesById = new Map(data.companies.map((c) => [c.id, c]));
     return data.offers
-      .filter((offer) => offer.approved)
-      .filter((offer) => {
-        const company = companiesById.get(offer.companyId);
-        return company?.approved;
-      });
+      .filter((offer) => !offer.rejected);
   }, [data, supabaseModeData]);
 
   const filteredOffers = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return approvedOffers;
-    return approvedOffers.filter((offer) =>
+    if (!q) return availableOffers;
+    return availableOffers.filter((offer) =>
       [offer.title, offer.description, offer.category, offer.neighborhood].some((item) =>
         item.toLowerCase().includes(q),
       ),
     );
-  }, [approvedOffers, search]);
+  }, [availableOffers, search]);
 
   const hotOfferIds = useMemo(() => {
     if (isSupabaseMode) {

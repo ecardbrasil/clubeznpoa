@@ -30,14 +30,14 @@ export default function PartnerPublicProfilePage() {
   const hotOfferIds = useMemo(() => getHotOfferIds(data, 4), [data]);
 
   const company = useMemo(
-    () => data.companies.find((item) => item.id === companyId && item.approved),
+    () => data.companies.find((item) => item.id === companyId),
     [companyId, data.companies],
   );
 
   const offers = useMemo<OfferCardData[]>(() => {
     if (!company) return [];
     return data.offers
-      .filter((offer) => offer.companyId === company.id && offer.approved)
+      .filter((offer) => offer.companyId === company.id && !offer.rejected)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .map((offer) => ({
         id: offer.id,
@@ -210,4 +210,3 @@ export default function PartnerPublicProfilePage() {
     </main>
   );
 }
-
