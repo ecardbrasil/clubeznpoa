@@ -241,12 +241,6 @@ export default function Home() {
             <p className="m-0 text-sm text-[#486048]">3. Entre e acesse seu painel automaticamente.</p>
           </div>
 
-          <div className="grid gap-1.5 rounded-xl border border-[#dbe8de] bg-white p-3">
-            <p className="m-0 text-xs font-bold uppercase tracking-[0.06em] text-[#5d735f]">Credenciais de demonstração</p>
-            <p className="m-0 text-sm text-[#314634]">Admin: admin@clubezn.com / 123456</p>
-            <p className="m-0 text-sm text-[#314634]">Parceiro: parceiro@sarandi.com / 123456</p>
-            <p className="m-0 text-sm text-[#314634]">Consumidor: cliente@clubezn.com / 123456</p>
-          </div>
         </section>
 
         <section className="card grid gap-3">

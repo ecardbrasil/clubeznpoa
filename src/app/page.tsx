@@ -419,20 +419,20 @@ export default function LandingPage() {
   };
 
   return (
-    <main id="conteudo-principal" className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
+    <main id="conteudo-principal" className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-5 px-4 py-5 md:gap-7 md:px-6 md:py-7 xl:px-8">
       <a
         href="#ofertas"
         className="sr-only rounded-lg bg-white px-3 py-2 text-sm font-bold text-[#102113] focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[120]"
       >
         Pular para ofertas
       </a>
-      <section className="grid gap-4">
-        <div className="flex items-center justify-center rounded-2xl border border-[#d9e6db] bg-[#f4faf5] px-3 py-2 text-center text-xs font-semibold text-[#255f33] md:text-sm">
+      <section className="grid gap-5">
+        <div className="flex items-center justify-center rounded-2xl border border-[#d9e6db] bg-[#f4faf5] px-4 py-2.5 text-center text-xs font-semibold text-[#255f33] md:text-sm">
           Ganhe ate 25% OFF em parceiros selecionados da Zona Norte
         </div>
 
-        <header className="rounded-2xl border border-[#d9e6db] bg-white px-3 py-2.5 md:px-4">
-          <div className="flex items-center justify-between gap-3">
+        <header className="rounded-2xl border border-[#d9e6db] bg-white px-3 py-3 md:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <BrandLogo />
 
             <nav className="hidden items-center gap-6 md:flex" aria-label="Menu principal">
@@ -443,21 +443,21 @@ export default function LandingPage() {
               ))}
             </nav>
 
-            <div className="flex items-center gap-2">
-              <Link href="/auth" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <Link href="/auth" className="btn btn-ghost !w-full sm:!w-auto !px-4 !py-2 text-sm text-center">
                 Já tenho conta
               </Link>
-              <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
+              <Link href="/auth" className="btn btn-primary !w-full sm:!w-auto !px-4 !py-2 text-sm text-center">
                 Começar por Cadastro
               </Link>
             </div>
           </div>
         </header>
 
-        <div className="grid gap-4 rounded-[26px] bg-[#f7faf7] p-3 md:grid-cols-[1.05fr_0.95fr] md:items-stretch md:gap-6 md:p-6">
-          <article className="grid content-start gap-4">
+        <div className="grid gap-5 rounded-[26px] bg-[#f7faf7] p-4 md:grid-cols-[1.05fr_0.95fr] md:items-stretch md:gap-7 md:p-7">
+          <article className="grid content-start gap-5">
             <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2b7a3f]">Zona Norte - Porto Alegre</p>
-            <h1 className="m-0 text-4xl font-black leading-[0.95] text-[#102113] md:text-6xl">
+            <h1 className="m-0 text-[2.1rem] font-black leading-[0.95] text-[#102113] md:text-6xl">
               Chegamos na Zona Norte de POA!
               <span className="mt-2 block text-[0.82em] leading-[1.02] md:mt-3">
                 <span className="font-extrabold text-[#1f5f30]">✚</span> descontos
@@ -472,7 +472,7 @@ export default function LandingPage() {
               quem mora na Zona Norte.
             </p>
 
-            <div className="grid gap-2 sm:flex sm:flex-wrap">
+            <div className="grid gap-2.5 sm:flex sm:flex-wrap">
               <Link href="/ofertas" className="btn btn-primary !w-full sm:!w-auto sm:min-w-44">
                 Ver ofertas agora
               </Link>
@@ -481,7 +481,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="mt-1 grid gap-2">
+            <div className="mt-1 grid gap-2.5">
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
                   {heroPeoplePhotos.map((photo, index) => (
@@ -504,7 +504,7 @@ export default function LandingPage() {
             </div>
           </article>
 
-          <aside className="relative grid min-h-[340px] overflow-hidden rounded-[24px] border border-[#d6e7d9] bg-[linear-gradient(150deg,#e8f6eb_0%,#d4edda_60%,#c7e8d0_100%)] p-3 md:min-h-[460px] md:p-5">
+          <aside className="relative grid min-h-[320px] overflow-hidden rounded-[24px] border border-[#d6e7d9] bg-[linear-gradient(150deg,#e8f6eb_0%,#d4edda_60%,#c7e8d0_100%)] p-3 md:min-h-[460px] md:p-5">
             <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(#bdd8c5_1px,transparent_1px),linear-gradient(90deg,#bdd8c5_1px,transparent_1px)] [background-size:24px_24px]" />
             {heroImage ? (
               <Image
@@ -521,11 +521,11 @@ export default function LandingPage() {
               </div>
             )}
 
-            <article className="absolute bottom-3 left-3 z-[2] grid gap-1 rounded-2xl border border-[#dbe8de] bg-white px-3 py-2 shadow-sm md:bottom-5 md:left-5">
+            <article className="absolute bottom-2 left-2 z-[2] grid gap-1 rounded-2xl border border-[#dbe8de] bg-white px-2.5 py-2 shadow-sm md:bottom-5 md:left-5 md:px-3">
               <p className="m-0 text-[11px] font-semibold text-[#5d735f]">Economia no mes</p>
               <p className="m-0 text-xl font-black text-[#102113]">R$ 198,00</p>
             </article>
-            <article className="absolute right-3 top-3 z-[2] grid gap-1 rounded-2xl border border-[#dbe8de] bg-white px-3 py-2 shadow-sm md:right-5 md:top-5">
+            <article className="absolute right-2 top-2 z-[2] grid gap-1 rounded-2xl border border-[#dbe8de] bg-white px-2.5 py-2 shadow-sm md:right-5 md:top-5 md:px-3">
               <p className="m-0 text-[11px] font-semibold text-[#5d735f]">Resgates (30 dias)</p>
               <p className="m-0 text-xl font-black text-[#102113]">+120</p>
             </article>
@@ -533,20 +533,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="categorias" className="grid gap-3 rounded-[24px] border border-[#dbdee3] bg-[#f2f4f7] p-4 md:p-5">
+      <section id="categorias" className="grid gap-4 rounded-[24px] border border-[#dbdee3] bg-[#f2f4f7] p-5 md:p-6">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-extrabold text-[#25303b] md:text-2xl">Explore nossas coleções</h3>
+          <h3 className="m-0 text-lg font-extrabold text-[#25303b] md:text-2xl">Explore nossas coleções</h3>
           <Link href="/ofertas" className="text-sm font-bold text-[#2487ff] hover:underline">
             Ver tudo
           </Link>
         </div>
         <div className="relative">
-          <div ref={categoriesScrollerRef} className="flex gap-3 overflow-x-auto pb-1 pr-12">
+          <div ref={categoriesScrollerRef} className="flex gap-3 overflow-x-auto pb-1 pr-8 md:pr-12">
             {categories.map((category) => (
               <Link
                 key={category.title}
                 href={`/ofertas?categoria=${encodeURIComponent(category.title)}`}
-                className="grid min-w-[152px] gap-1.5 rounded-2xl border border-[#d7dce2] bg-[#f6f7f9] px-3 py-4 text-center transition hover:bg-white"
+                className="grid min-w-[140px] gap-1.5 rounded-2xl border border-[#d7dce2] bg-[#f6f7f9] px-3 py-4 text-center transition hover:bg-white md:min-w-[152px]"
               >
                 <span className="mx-auto grid h-10 w-10 place-items-center rounded-full border border-[#d2d7de] bg-white text-[#747d87]">
                   <category.icon size={19} />
@@ -567,7 +567,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="ofertas" className="grid gap-3">
+      <section id="ofertas" className="grid gap-4">
         <div className="flex items-center justify-between gap-2">
           <h3 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Ofertas em destaque</h3>
           <Link href="/ofertas" className="text-sm font-bold text-[#1f5f30] hover:underline">
@@ -581,7 +581,7 @@ export default function LandingPage() {
           </article>
         ) : null}
 
-        <div className="grid grid-flow-col auto-cols-[85%] gap-3 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-4 md:auto-cols-auto md:overflow-visible">
+        <div className="grid grid-flow-col auto-cols-[88%] gap-3 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-4 md:auto-cols-auto md:overflow-visible">
           {featuredOffers.map((offer) => (
             <OfferCard
               key={offer.id}
@@ -596,7 +596,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 rounded-2xl border border-[#d4e4d8] bg-white p-4 md:p-5">
+      <section className="grid gap-4 rounded-2xl border border-[#d4e4d8] bg-white p-5 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="m-0 text-xl font-extrabold text-[#102113] md:text-2xl">Quem usa, recomenda</h3>
           <div className="flex flex-wrap gap-2">
@@ -618,7 +618,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 rounded-[28px] border border-[#f2c97f] bg-[linear-gradient(135deg,#ffe2ad_0%,#ffd28a_55%,#ffc670_100%)] p-4 md:p-6">
+      <section className="grid gap-5 rounded-[28px] border border-[#f2c97f] bg-[linear-gradient(135deg,#ffe2ad_0%,#ffd28a_55%,#ffc670_100%)] p-5 md:p-7">
         <div className="grid gap-2 md:grid-cols-[1.1fr_0.9fr] md:items-end">
           <div className="grid gap-2">
             <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#704110]">Bairros da Zona Norte</p>
@@ -643,10 +643,10 @@ export default function LandingPage() {
             <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(#e8ba76_0.8px,transparent_0.8px)] [background-size:14px_14px]" />
             <div className="relative z-[1]">
               <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#7f4c0f]">Mapa Zona Norte (contornos reais)</p>
-              <div className="relative mt-2 rounded-xl border border-[#dcb276] bg-white/60 p-2">
+              <div className="relative mt-2 overflow-hidden rounded-xl border border-[#dcb276] bg-white/60 p-2">
                 <svg
                   viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-                  className="h-[220px] w-full md:h-[260px]"
+                  className="h-[200px] w-full md:h-[260px]"
                   role="img"
                   aria-label="Mapa da Zona Norte com contornos de bairros"
                 >
@@ -695,7 +695,7 @@ export default function LandingPage() {
                         }`}
                       />
                       <span
-                        className={`absolute left-1/2 top-[120%] -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        className={`absolute left-1/2 top-[120%] hidden -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold md:block ${
                           highlighted ? "bg-[#2f1a03] text-[#f7d6a8]" : "bg-white text-[#6b3f0d]"
                         }`}
                       >
@@ -734,7 +734,7 @@ export default function LandingPage() {
 
       </section>
 
-      <section id="como-funciona" className="grid gap-3">
+      <section id="como-funciona" className="grid gap-4">
         <h3 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Como funciona</h3>
         <div className="grid gap-3 md:grid-cols-3">
           <article className="card !rounded-2xl">
@@ -761,7 +761,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="parceiros" className="grid gap-3 md:grid-cols-[1.15fr_0.85fr]">
+      <section id="parceiros" className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
         <article className="card !grid !gap-3 !rounded-2xl">
           <div className="flex items-center justify-between">
             <h3 className="m-0 text-xl font-bold text-[#102113]">Empresas parceiras</h3>
@@ -795,10 +795,10 @@ export default function LandingPage() {
                   ) : null}
                   <p className="m-0 text-sm font-bold text-[#1f5f30]">{partner.publicName ?? partner.name}</p>
                 </div>
-                <p className="m-0 text-xs text-[#486048]">
+                <p className="m-0 break-words text-xs text-[#486048]">
                   {partner.addressLine || `${partner.neighborhood} - ${partner.city}/${partner.state}`}
                 </p>
-                <p className="m-0 text-xs text-[#486048]">
+                <p className="m-0 break-all text-xs text-[#486048]">
                   {[partner.instagram, partner.facebook, partner.website, partner.whatsapp].filter(Boolean).join(" • ") ||
                     "Redes não informadas"}
                 </p>
@@ -824,7 +824,7 @@ export default function LandingPage() {
         </article>
       </section>
 
-      <section className="grid gap-3">
+      <section className="grid gap-4">
         <div className="flex items-center justify-between gap-2">
           <h3 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Empresas parceiras em destaque</h3>
           <Link href="/auth" className="text-sm font-bold text-[#1f5f30] hover:underline">
@@ -858,7 +858,7 @@ export default function LandingPage() {
         <p className="m-0 text-sm text-[#1f5f30]"><strong>Quem pode usar?</strong> Moradores da Zona Norte de Porto Alegre.</p>
       </section>
 
-      <footer className="grid gap-5 rounded-[28px] border border-[#25432f] bg-[#102113] p-5 text-[#d7e8db] md:p-8">
+      <footer className="grid gap-6 rounded-[28px] border border-[#25432f] bg-[#102113] p-5 text-[#d7e8db] md:p-8">
         <div className="grid gap-5 border-b border-[#294735] pb-5 md:grid-cols-[1.2fr_0.8fr] md:items-center">
           <div className="grid gap-2">
             <BrandLogo />
