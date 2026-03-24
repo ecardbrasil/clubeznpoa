@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { useToast } from "@/components/ui/toast";
-import { isSupabaseMode } from "@/lib/runtime-config";
-import { initStorage, resetDemoData, routeByRole, signInWithProvider, signUpWithProvider } from "@/lib/storage";
+import { initStorage, routeByRole, signInWithProvider, signUpWithProvider } from "@/lib/storage";
 
 type Mode = "login" | "register";
 type RegisterRole = "consumer" | "partner";
@@ -224,36 +223,6 @@ export default function Home() {
         )}
 
         {error && <p style={{ margin: 0, color: "var(--warn)", fontWeight: 700 }}>{error}</p>}
-      </section>
-
-      <section className="card grid gap-2.5">
-        <h2 style={{ margin: 0, fontSize: 17 }}>Acesso rápido para demo</h2>
-        <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
-          Admin: admin@clubezn.com | senha 123456
-        </p>
-        <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
-          Parceiro: parceiro@sarandi.com | senha 123456
-        </p>
-        <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
-          Consumidor: cliente@clubezn.com | senha 123456
-        </p>
-        {!isSupabaseMode ? (
-          <button
-            className="btn btn-ghost"
-            onClick={() => {
-              resetDemoData();
-              setError("Dados de demonstração reiniciados.");
-              showToast("Dados de demonstração reiniciados.", "info");
-            }}
-            type="button"
-          >
-            Reiniciar dados da demo
-          </button>
-        ) : (
-          <p style={{ margin: 0, color: "var(--muted)", fontSize: 12 }}>
-            Modo Supabase ativo: os dados de demo são gerenciados pelo banco.
-          </p>
-        )}
       </section>
 
       <footer className="card grid gap-1.5 lg:col-span-2" style={{ fontSize: 12, color: "var(--muted)" }}>
