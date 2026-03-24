@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { useToast } from "@/components/ui/toast";
-import { initStorage, resetDemoData, routeByRole, signIn, signUp } from "@/lib/storage";
+import { isSupabaseMode } from "@/lib/runtime-config";
+import { initStorage, resetDemoData, routeByRole, signInWithProvider, signUpWithProvider } from "@/lib/storage";
 
 type Mode = "login" | "register";
 type RegisterRole = "consumer" | "partner";
@@ -49,11 +50,11 @@ export default function Home() {
     initStorage();
   }, []);
 
-  const handleLogin = (e: FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const user = signIn(identifier, password);
+    const user = await signInWithProvider(identifier, password);
     if (!user) {
       setError("Credenciais inválidas.");
       showToast("Credenciais inválidas.", "error");
@@ -64,11 +65,11 @@ export default function Home() {
     router.push(routeByRole(user.role));
   };
 
-  const handleRegister = (e: FormEvent) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
 
-    const response = signUp({
+    const response = await signUpWithProvider({
       name,
       email,
       phone,
@@ -236,17 +237,23 @@ export default function Home() {
         <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
           Consumidor: cliente@clubezn.com | senha 123456
         </p>
-        <button
-          className="btn btn-ghost"
-          onClick={() => {
-            resetDemoData();
-            setError("Dados de demonstração reiniciados.");
-            showToast("Dados de demonstração reiniciados.", "info");
-          }}
-          type="button"
-        >
-          Reiniciar dados da demo
-        </button>
+        {!isSupabaseMode ? (
+          <button
+            className="btn btn-ghost"
+            onClick={() => {
+              resetDemoData();
+              setError("Dados de demonstração reiniciados.");
+              showToast("Dados de demonstração reiniciados.", "info");
+            }}
+            type="button"
+          >
+            Reiniciar dados da demo
+          </button>
+        ) : (
+          <p style={{ margin: 0, color: "var(--muted)", fontSize: 12 }}>
+            Modo Supabase ativo: os dados de demo são gerenciados pelo banco.
+          </p>
+        )}
       </section>
 
       <footer className="card grid gap-1.5 lg:col-span-2" style={{ fontSize: 12, color: "var(--muted)" }}>

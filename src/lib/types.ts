@@ -62,6 +62,7 @@ export interface Redemption {
 
 export interface Session {
   userId: string;
+  user?: User;
 }
 
 export type NotificationType = "company_approved" | "offer_approved" | "offer_rejected";

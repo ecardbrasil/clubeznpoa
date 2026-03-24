@@ -1,4 +1,5 @@
 import { AppData, AppNotification, Company, Offer, Redemption, Session, User, UserRole } from "@/lib/types";
+import { isSupabaseMode } from "@/lib/runtime-config";
 
 const STORAGE_KEY = "clubezn_data_v1";
 const SESSION_KEY = "clubezn_session_v1";
@@ -314,12 +315,15 @@ export const getCurrentUser = (): User | null => {
 
   const session = JSON.parse(sessionRaw) as Session;
   const data = getData();
-  return data.users.find((u) => u.id === session.userId) ?? null;
+  const fromData = data.users.find((u) => u.id === session.userId);
+  if (fromData) return fromData;
+  if (session.user && session.user.id === session.userId) return session.user;
+  return null;
 };
 
-export const setSession = (userId: string) => {
+export const setSession = (userId: string, user?: User) => {
   if (!ensureClient()) return;
-  const session: Session = { userId };
+  const session: Session = { userId, user };
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 };
 
@@ -339,11 +343,11 @@ export const signIn = (identifier: string, password: string): User | null => {
   });
 
   if (!user) return null;
-  setSession(user.id);
+  setSession(user.id, user);
   return user;
 };
 
-interface SignUpInput {
+export interface SignUpInput {
   name: string;
   email?: string;
   phone?: string;
@@ -411,9 +415,61 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
 
   data.users.push(user);
   saveData(data);
-  setSession(user.id);
+  setSession(user.id, user);
 
   return { user };
+};
+
+type SignInApiResponse = { user?: User };
+type SignUpApiResponse = { user?: User; error?: string };
+
+export const signInWithProvider = async (identifier: string, password: string): Promise<User | null> => {
+  if (!isSupabaseMode) {
+    return signIn(identifier, password);
+  }
+
+  const response = await fetch("/api/auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "login",
+      identifier,
+      password,
+    }),
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const payload = (await response.json()) as SignInApiResponse;
+  if (!payload.user) return null;
+  setSession(payload.user.id, payload.user);
+  return payload.user;
+};
+
+export const signUpWithProvider = async (input: SignUpInput): Promise<{ user?: User; error?: string }> => {
+  if (!isSupabaseMode) {
+    return signUp(input);
+  }
+
+  const response = await fetch("/api/auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "register",
+      payload: input,
+    }),
+  });
+
+  const payload = (await response.json()) as SignUpApiResponse;
+
+  if (!response.ok || payload.error || !payload.user) {
+    return { error: payload.error || "Não foi possível criar a conta." };
+  }
+
+  setSession(payload.user.id, payload.user);
+  return { user: payload.user };
 };
 
 export const routeByRole = (role: UserRole): string => {
