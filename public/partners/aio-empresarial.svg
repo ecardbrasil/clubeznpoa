@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#ececec"/>
+  <g transform="translate(112,72)">
+    <polygon points="144,0 288,72 144,144 0,72" fill="#2c2c2c"/>
+    <polygon points="0,72 144,144 144,320 0,248" fill="#151515"/>
+    <polygon points="288,72 144,144 144,320 288,248" fill="#3a3a3a"/>
+    <text x="109" y="75" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" fill="#ff646e">A</text>
+    <text x="39" y="208" font-family="Inter, Arial, sans-serif" font-size="92" font-weight="800" fill="#56a1ff">I</text>
+    <text x="196" y="224" font-family="Inter, Arial, sans-serif" font-size="92" font-weight="800" fill="#ffbf2e">O</text>
+  </g>
+  <text x="52" y="442" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="900" fill="#111">AIO</text>
+  <text x="172" y="442" font-family="Inter, Arial, sans-serif" font-size="50" font-weight="500" fill="#2a2a2a">EMPRESARIAL</text>
+</svg>

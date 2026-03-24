@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## ClubeZN MVP
 
-## Getting Started
+MVP web mobile-first do ClubeZN (clube de vantagens para a Zona Norte de Porto Alegre/RS), com:
 
-First, run the development server:
+- Landing page pública para visitantes sem login
+- Área de autenticação separada (`/auth`)
+- 3 áreas internas
+
+- Consumidor
+- Empresa Parceira
+- Administrador
+
+### Funcionalidades do MVP
+
+- Login com e-mail ou celular + senha
+- Cadastro de consumidor e empresa parceira
+- Aprovação de empresas e ofertas pelo admin
+- Listagem de ofertas aprovadas para consumidor
+- Geração de código numérico de resgate (6 dígitos, validade 10 minutos)
+- Validação do código pela empresa parceira
+- Dashboard básico no admin:
+- Resgates confirmados
+- Empresas ativas
+- Ofertas mais usadas
+
+### Credenciais de demonstração
+
+- Admin: `admin@clubezn.com` / `123456`
+- Parceiro: `parceiro@sarandi.com` / `123456`
+- Consumidor: `cliente@clubezn.com` / `123456`
+
+### Rodando localmente
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra `http://localhost:3000`.
+- Landing pública: `/`
+- Login/cadastro: `/auth`
+- Consumidor: `/consumer`
+- Parceiro: `/partner`
+- Admin: `/admin`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build de produção
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+### Deploy em link temporário (Vercel)
 
-To learn more about Next.js, take a look at the following resources:
+1. Suba este diretório em um repositório GitHub.
+2. Importe o repositório na Vercel.
+3. Configure as variáveis de ambiente (ver `.env.example`):
+- `NEXT_PUBLIC_DATA_PROVIDER`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (somente server-side)
+4. Deploy padrão de Next.js.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Observação importante
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Este MVP usa `localStorage` para persistência local (demo). Em produção real, o próximo passo é migrar para backend com banco (ex.: Supabase/Postgres), autenticação robusta e regras de auditoria/LGPD.
 
-## Deploy on Vercel
+### Preparacao Supabase
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Schema inicial pronto em `supabase/schema.sql`
+- Cliente Supabase browser/server pronto em `src/lib/supabase`
+- Config de provider em `src/lib/runtime-config.ts`
+- Guia de setup completo em `docs/SUPABASE_VERCEL_SETUP.md`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Checklist de evolucao
+
+Consulte o checklist em `docs/CHECKLIST_MELHORIAS.md`.
