@@ -35,6 +35,11 @@ type PartnerSocial = {
   url: string;
 };
 
+type Coordinates = {
+  latitude: number;
+  longitude: number;
+};
+
 const ensureHttp = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return "";
@@ -46,6 +51,42 @@ const sanitizeHandle = (value: string) => value.trim().replace(/^@/, "");
 
 const normalizePhone = (value: string) => value.replace(/\D/g, "");
 
+const toRad = (value: number) => (value * Math.PI) / 180;
+
+const distanceKmBetween = (from: Coordinates, to: Coordinates) => {
+  const earthRadiusKm = 6371;
+  const dLat = toRad(to.latitude - from.latitude);
+  const dLon = toRad(to.longitude - from.longitude);
+  const lat1 = toRad(from.latitude);
+  const lat2 = toRad(to.latitude);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+};
+
+const geocodeAddress = async (address: string): Promise<Coordinates | null> => {
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=${encodeURIComponent(address)}`,
+    {
+      headers: { "Accept-Language": "pt-BR" },
+    },
+  );
+
+  if (!response.ok) return null;
+
+  const payload = (await response.json()) as Array<{ lat: string; lon: string }>;
+  const first = payload[0];
+  if (!first) return null;
+
+  const latitude = Number(first.lat);
+  const longitude = Number(first.lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return { latitude, longitude };
+};
+
 export function OfferCard({
   offer,
   actionLabel,
@@ -56,6 +97,10 @@ export function OfferCard({
 }: OfferCardProps) {
   const [open, setOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [companyCoordinates, setCompanyCoordinates] = useState<Coordinates | null>(null);
+  const [mapLoading, setMapLoading] = useState(false);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [distanceLoading, setDistanceLoading] = useState(false);
 
   const imageCount = offer.images.length;
   const currentImage = imageCount > 0 ? offer.images[activeImageIndex % imageCount] : "";
@@ -100,6 +145,15 @@ export function OfferCard({
     [offer.companyName, offer.category, offer.neighborhood],
   );
   const partnerProfileHref = `/parceiros/${offer.companyId}`;
+  const mapEmbedUrl = useMemo(() => {
+    if (!companyCoordinates) return "";
+
+    const lat = companyCoordinates.latitude;
+    const lon = companyCoordinates.longitude;
+    const delta = 0.008;
+    const bbox = `${lon - delta}%2C${lat - delta}%2C${lon + delta}%2C${lat + delta}`;
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lon}`;
+  }, [companyCoordinates]);
   const socialLinks = useMemo<PartnerSocial[]>(() => {
     const social: PartnerSocial[] = [];
 
@@ -158,6 +212,93 @@ export function OfferCard({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!open || !offer.partnerAddressLine?.trim()) {
+      setCompanyCoordinates(null);
+      setMapLoading(false);
+      setDistanceKm(null);
+      setDistanceLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setMapLoading(true);
+    void (async () => {
+      try {
+        const coordinates = await geocodeAddress(offer.partnerAddressLine ?? "");
+        if (!cancelled) {
+          setCompanyCoordinates(coordinates);
+        }
+      } catch {
+        if (!cancelled) {
+          setCompanyCoordinates(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setMapLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [offer.partnerAddressLine, open]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!open || !companyCoordinates || !offer.partnerAddressLine?.trim()) {
+      setDistanceKm(null);
+      setDistanceLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    if (!("geolocation" in navigator)) {
+      setDistanceKm(null);
+      setDistanceLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setDistanceLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userCoordinates: Coordinates = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        const value = distanceKmBetween(userCoordinates, companyCoordinates);
+        if (!cancelled) {
+          setDistanceKm(value);
+          setDistanceLoading(false);
+        }
+      },
+      () => {
+        if (!cancelled) {
+          setDistanceKm(null);
+          setDistanceLoading(false);
+        }
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 8000,
+        maximumAge: 30 * 60 * 1000,
+      },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [companyCoordinates, offer.partnerAddressLine, open]);
+
   return (
     <>
       <article
@@ -202,67 +343,21 @@ export function OfferCard({
               </span>
             ) : null}
             {hasGallery && (
-              <>
-                <button
-                  className="btn"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    goPrev();
-                  }}
-                  style={{
-                    position: "absolute",
-                    left: 6,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: 30,
-                    height: 30,
-                    borderRadius: "50%",
-                    background: "rgba(0,0,0,0.55)",
-                    color: "white",
-                    padding: 0,
-                  }}
-                  type="button"
-                >
-                  {"<"}
-                </button>
-                <button
-                  className="btn"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    goNext();
-                  }}
-                  style={{
-                    position: "absolute",
-                    right: 6,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    width: 30,
-                    height: 30,
-                    borderRadius: "50%",
-                    background: "rgba(0,0,0,0.55)",
-                    color: "white",
-                    padding: 0,
-                  }}
-                  type="button"
-                >
-                  {">"}
-                </button>
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: 6,
-                    right: 8,
-                    background: "rgba(0,0,0,0.55)",
-                    color: "white",
-                    borderRadius: 999,
-                    padding: "2px 8px",
-                    fontSize: 11,
-                    fontWeight: 700,
-                  }}
-                >
-                  {activeImageIndex + 1}/{imageCount}
-                </div>
-              </>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 6,
+                  right: 8,
+                  background: "rgba(0,0,0,0.55)",
+                  color: "white",
+                  borderRadius: 999,
+                  padding: "2px 8px",
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                {imageCount} fotos
+              </div>
             )}
           </div>
         ) : (
@@ -455,7 +550,33 @@ export function OfferCard({
                   <span>Categoria: {offer.category}</span>
                   <span>Empresa: {offer.companyName}</span>
                   <span>Fotos: {imageCount}</span>
+                  {offer.partnerAddressLine ? (
+                    <span>
+                      Distância:{" "}
+                      {distanceLoading
+                        ? "calculando..."
+                        : distanceKm !== null
+                          ? `~${distanceKm.toFixed(1)} km`
+                          : "não disponível"}
+                    </span>
+                  ) : null}
                 </div>
+                {offer.partnerAddressLine && companyCoordinates && mapEmbedUrl ? (
+                  <div className="card !grid !gap-2 !rounded-xl !p-2">
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 700 }}>
+                      Localização da empresa parceira
+                    </p>
+                    <iframe
+                      title={`Mapa de localização de ${offer.companyName}`}
+                      src={mapEmbedUrl}
+                      style={{ width: "100%", height: 180, border: "1px solid var(--line)", borderRadius: 10 }}
+                      loading="lazy"
+                    />
+                  </div>
+                ) : null}
+                {offer.partnerAddressLine && mapLoading ? (
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Carregando mapa...</p>
+                ) : null}
                 <div className="card !grid !gap-1.5 !rounded-xl !p-3">
                   <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 700 }}>Perfil do parceiro</p>
                   <div className="flex items-center gap-2">

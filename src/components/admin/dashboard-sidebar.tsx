@@ -56,7 +56,7 @@ export function AdminDashboardSidebar({
           </div>
 
           <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
-            {pendingCompanies} empresa(s) e {pendingOffers} oferta(s) pendentes.
+            Moderação automática: {pendingCompanies + pendingOffers === 0 ? "sem pendências" : "verificar inconsistências"}.
           </p>
         </div>
 

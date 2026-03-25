@@ -8,32 +8,33 @@ A proposta e conectar consumidores locais a empresas parceiras da regiao, com re
 Entregar rapidamente uma versao funcional web (mobile-first) que valide:
 - interesse do consumidor por ofertas locais,
 - adesao de parceiros comerciais,
-- capacidade de operacao com aprovacao e controle via admin.
+- capacidade de operacao com fluxo simples e monitoramento via admin (sem moderacao manual).
 
 ## 3) Perfis de usuario
 A plataforma tem 3 perfis principais:
 
 1. **Consumidor**
-- Busca ofertas aprovadas
+- Busca ofertas ativas
 - Gera codigo de resgate
 - Visualiza historico de uso
+- No detalhe da oferta, pode ver distancia aproximada e mapa da empresa (quando houver endereco fisico)
 
 2. **Empresa Parceira**
-- Cadastra empresa e ofertas
-- Aguarda aprovacao administrativa
+- Cadastra empresa e ofertas com publicacao imediata
+- Define perfil publico (nome, bio, redes, logo, capa)
+- Pode informar que nao possui endereco fisico
 - Valida codigo de beneficio
 - Acompanha resgates e ofertas proprias
 
 3. **Administrador**
-- Aprova empresas parceiras
-- Aprova ofertas
 - Monitora indicadores basicos (resgates, empresas ativas, ofertas mais usadas)
+- Consulta cadastros de empresas e ofertas (sem fluxo de aprovacao/rejeicao)
 
 ## 4) Funcionalidades atuais do MVP
 
 ### 4.1 Landing publica (/)
 - Apresentacao do ClubeZN
-- Seções de valor da plataforma
+- Secoes de valor da plataforma
 - Vitrine de ofertas em destaque
 - CTA para entrar/cadastrar
 
@@ -43,15 +44,16 @@ A plataforma tem 3 perfis principais:
 - Cadastro de parceiro (com dados da empresa)
 
 ### 4.3 Area do consumidor (/consumer)
-- Lista de ofertas aprovadas
-- Filtro por texto (titulo, bairro, categoria)
-- Geração de codigo de resgate (6 digitos)
+- Redirecionamento para vitrine de ofertas (`/ofertas`)
+- Filtros por texto, bairro, categoria e parceiro
+- Geracao de codigo de resgate (6 digitos)
 - Visualizacao de codigo ativo com validade
 - Historico de resgates
 
 ### 4.4 Area da empresa parceira (/partner)
-- Status de aprovacao da empresa
-- Cadastro de nova oferta (pendente de aprovacao)
+- Edicao de perfil publico
+- Opcao de empresa sem endereco fisico
+- Cadastro de nova oferta (publicacao imediata)
 - Validacao de codigo de resgate
 - Historico de resgates da empresa
 - Lista de ofertas da propria empresa
@@ -61,15 +63,16 @@ A plataforma tem 3 perfis principais:
   - resgates confirmados
   - empresas ativas
   - ofertas mais usadas
-- Aprovacao de empresas pendentes
-- Aprovacao de ofertas pendentes
+- Listagem de empresas
+- Listagem de ofertas
 
 ## 5) Regras de negocio atuais
 - Login por email/celular + senha (sem OTP neste MVP)
-- Ofertas e empresas so ficam visiveis apos aprovacao do admin
+- Empresas e ofertas sao publicadas sem aprovacao manual
 - Resgate via codigo numerico de 6 digitos
 - Codigo expira em 10 minutos
 - Codigo so pode ser validado pela empresa dona da oferta
+- Mapa no detalhe da oferta so aparece quando a empresa possui endereco fisico informado
 
 ## 6) Direcionadores de produto (nortes)
 
@@ -79,9 +82,9 @@ A plataforma tem 3 perfis principais:
 - Linguagem simples e direta
 
 ### 6.2 Norte de operacao
-- Curadoria e controle central via admin
-- Evitar friccao para parceiro cadastrar oferta
-- Rapida aprovacao para aumentar volume de beneficios validos
+- Menor friccao para parceiro cadastrar oferta
+- Monitoramento central via admin
+- Evolucao gradual para controles operacionais mais avancados
 
 ### 6.3 Norte comercial
 - Foco em densidade local (Zona Norte)
@@ -91,35 +94,43 @@ A plataforma tem 3 perfis principais:
 ## 7) Identidade visual (diretriz atual)
 - Estilo **2D flat**
 - Cor oficial da identidade visual ClubeZN: **#C9F549**
-- Aplicar o verde **#C9F549** em banners e seções de destaque
+- Aplicar o verde **#C9F549** em banners e secoes de destaque
 - Evitar gradientes e excesso de efeitos
 - Aplicacao consistente da logomarca em cabecalho e rodape
 
 ## 8) Arquitetura tecnica atual (MVP)
 - Frontend: Next.js (App Router)
 - Estilizacao: Tailwind + CSS global
-- Persistencia: localStorage (modo demo)
+- Persistencia: localStorage (modo demo) e Supabase (modo remoto)
+- API interna com sessao por token assinado
 - Build/deploy: pronto para Vercel
 
-## 9) Limitacoes conhecidas do MVP
-- Sem backend real (dados locais do navegador)
+## 9) Seguranca atual do MVP
+- Token de sessao da API assinado (Bearer)
+- Validacao de papel por rota (`admin`, `partner`, `consumer`)
+- Hash de senha no fluxo Supabase (`scrypt`)
+- Migracao automatica de senha legada em texto puro no login (quando detectada)
+- Campo de senha nao e retornado no `User` enviado ao frontend
+
+## 10) Limitacoes conhecidas do MVP
+- `localStorage` ainda existe como modo demo
 - Sem LGPD completa (consentimento/auditoria/retencao formal)
 - Sem integracao de notificacao (SMS, WhatsApp, email transacional)
 - Sem painel analitico avancado
 
-## 10) Proximos passos recomendados (pos-MVP)
-1. Migrar persistencia para backend (Supabase/Postgres)
+## 11) Proximos passos recomendados (pos-MVP)
+1. Consolidar operacao 100% em Supabase e reduzir dependencia do modo local
 2. Implementar autenticacao robusta (OTP celular + recuperacao de senha)
 3. Criar modulo de termos/LGPD
 4. Incluir relatorios operacionais e comerciais avancados
 5. Implantar dominio e ambiente de producao
 
-## 11) Criterios de sucesso iniciais
+## 12) Criterios de sucesso iniciais
 - Quantidade de usuarios cadastrados
-- Empresas parceiras aprovadas
+- Empresas parceiras ativas
 - Ofertas ativas
 - Taxa de resgate por oferta
-- Tempo medio entre cadastro do parceiro e primeira oferta aprovada
+- Tempo medio entre cadastro do parceiro e primeira oferta publicada
 
 ---
 

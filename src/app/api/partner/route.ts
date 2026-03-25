@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
+import { readApiSessionFromRequest } from "@/lib/server-auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { AppData, AppNotification, Company, Offer, Redemption, User } from "@/lib/types";
 
 type PartnerActionPayload =
-  | { action: "getCompany"; companyId: string; ownerUserId: string }
-  | { action: "getDashboardData"; companyId: string; ownerUserId: string }
+  | { action: "getCompany"; companyId: string }
+  | { action: "getDashboardData"; companyId: string }
   | {
       action: "updateProfile";
       companyId: string;
-      ownerUserId: string;
       payload: {
         publicName: string;
         addressLine: string;
@@ -24,7 +24,6 @@ type PartnerActionPayload =
   | {
       action: "createOffer";
       companyId: string;
-      ownerUserId: string;
       payload: {
         title: string;
         description: string;
@@ -34,9 +33,9 @@ type PartnerActionPayload =
         images: string[];
       };
     }
-  | { action: "validateCode"; companyId: string; ownerUserId: string; code: string }
-  | { action: "markNotificationAsRead"; companyId: string; ownerUserId: string; notificationId: string }
-  | { action: "markAllNotificationsAsRead"; companyId: string; ownerUserId: string };
+  | { action: "validateCode"; companyId: string; code: string }
+  | { action: "markNotificationAsRead"; companyId: string; notificationId: string }
+  | { action: "markAllNotificationsAsRead"; companyId: string };
 
 type UserRow = {
   id: string;
@@ -44,7 +43,6 @@ type UserRow = {
   email: string | null;
   phone: string | null;
   neighborhood: string | null;
-  password: string;
   role: "consumer" | "partner" | "admin";
   company_id: string | null;
   created_at: string;
@@ -107,7 +105,6 @@ const mapUserRow = (row: UserRow): User => ({
   email: row.email ?? undefined,
   phone: row.phone ?? undefined,
   neighborhood: row.neighborhood ?? undefined,
-  password: row.password,
   role: row.role,
   companyId: row.company_id ?? undefined,
   createdAt: row.created_at,
@@ -233,14 +230,14 @@ const getDashboardData = async (companyId: string, ownerUserId: string): Promise
   const [ownerUserRes, consumersRes] = await Promise.all([
     supabase
       .from("users")
-      .select("id, name, email, phone, neighborhood, password, role, company_id, created_at")
+      .select("id, name, email, phone, neighborhood, role, company_id, created_at")
       .eq("id", ownerUserId)
       .maybeSingle<UserRow>(),
     redemptionUserIds.length === 0
       ? Promise.resolve({ data: [], error: null })
       : supabase
           .from("users")
-          .select("id, name, email, phone, neighborhood, password, role, company_id, created_at")
+          .select("id, name, email, phone, neighborhood, role, company_id, created_at")
           .in("id", redemptionUserIds),
   ]);
 
@@ -360,13 +357,21 @@ const trimOrNull = (value: string | undefined) => {
 
 export async function POST(request: Request) {
   try {
+    const session = readApiSessionFromRequest(request);
+    if (!session || session.role !== "partner") {
+      return NextResponse.json({ error: "Sessão inválida para parceiro." }, { status: 401 });
+    }
+
     const body = (await request.json()) as PartnerActionPayload;
     const supabase = getSupabaseServerClient();
 
     const companyId = body.companyId?.trim();
-    const ownerUserId = body.ownerUserId?.trim();
-    if (!companyId || !ownerUserId) {
-      return NextResponse.json({ error: "companyId e ownerUserId são obrigatórios." }, { status: 400 });
+    const ownerUserId = session.uid;
+    if (!companyId) {
+      return NextResponse.json({ error: "companyId é obrigatório." }, { status: 400 });
+    }
+    if (session.cid && companyId !== session.cid) {
+      return NextResponse.json({ error: "companyId incompatível com a sessão atual." }, { status: 403 });
     }
 
     if (body.action === "getCompany") {

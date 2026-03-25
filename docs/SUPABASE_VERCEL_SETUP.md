@@ -31,9 +31,12 @@ NEXT_PUBLIC_DATA_PROVIDER=local
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
+API_SESSION_SECRET=...
 ```
 
 Notas:
+- `API_SESSION_SECRET` e usado para assinar tokens de sessao da API.
+- Se `API_SESSION_SECRET` nao for definido, o app usa `SUPABASE_SERVICE_ROLE_KEY` como fallback (recomendado definir segredo dedicado).
 - Mantenha `NEXT_PUBLIC_DATA_PROVIDER=local` ate finalizar a migracao de funcoes.
 - Troque para `supabase` quando os fluxos CRUD estiverem migrados.
 
@@ -46,6 +49,7 @@ Notas:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (apenas para rotas server, nunca no client)
+- `API_SESSION_SECRET`
 4. Faça deploy.
 
 ## 5) Estrutura adicionada no projeto
@@ -53,15 +57,15 @@ Notas:
 - `src/lib/runtime-config.ts`: chave unica para modo `local` ou `supabase`.
 - `src/lib/supabase/client.ts`: cliente browser.
 - `src/lib/supabase/server.ts`: cliente server com service role.
+- `src/lib/server-auth.ts`: assinatura e validacao de token de sessao da API.
 - `supabase/schema.sql`: schema inicial com indices e RLS base.
 
 ## 6) Proximo passo recomendado (migracao incremental)
 
-1. Migrar leitura publica de ofertas/parceiros para Supabase.
+1. Consolidar leitura/escrita em Supabase para todos os fluxos principais.
 2. Migrar cadastro/login para Supabase Auth.
-3. Migrar fluxo de parceiro (perfil/ofertas/notificacoes).
-4. Migrar fluxo admin (aprovacoes).
-5. Remover `localStorage` como fonte principal.
+3. Manter painel admin como monitoramento operacional (sem aprovacoes manuais).
+4. Remover `localStorage` como fonte principal para producao.
 
 ## 7) Seed de dados demo (opcional)
 

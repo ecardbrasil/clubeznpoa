@@ -6,7 +6,6 @@ export interface User {
   email?: string;
   phone?: string;
   neighborhood?: string;
-  password: string;
   role: UserRole;
   companyId?: string;
   createdAt: string;
@@ -63,6 +62,7 @@ export interface Redemption {
 export interface Session {
   userId: string;
   user?: User;
+  token?: string;
 }
 
 export type NotificationType = "company_approved" | "offer_approved" | "offer_rejected";

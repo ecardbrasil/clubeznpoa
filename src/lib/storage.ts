@@ -54,10 +54,12 @@ const createNotification = (
   ...input,
 });
 
+type LocalUser = User & { password: string };
+
 const seedData = (): AppData => {
   const createdAt = nowIso();
 
-  const admin: User = {
+  const admin: LocalUser = {
     id: "u_admin",
     name: "Administrador ClubeZN",
     email: "admin@clubezn.com",
@@ -66,7 +68,7 @@ const seedData = (): AppData => {
     createdAt,
   };
 
-  const partnerUser: User = {
+  const partnerUser: LocalUser = {
     id: "u_partner_1",
     name: "Mercado Sarandi",
     email: "parceiro@sarandi.com",
@@ -77,7 +79,7 @@ const seedData = (): AppData => {
     createdAt,
   };
 
-  const consumerUser: User = {
+  const consumerUser: LocalUser = {
     id: "u_consumer_1",
     name: "Morador ZN",
     email: "cliente@clubezn.com",
@@ -323,9 +325,23 @@ export const getCurrentUser = (): User | null => {
   return null;
 };
 
-export const setSession = (userId: string, user?: User) => {
+export const getSessionToken = (): string | null => {
+  if (!ensureClient()) return null;
+  const sessionRaw = window.localStorage.getItem(SESSION_KEY);
+  if (!sessionRaw) return null;
+
+  const session = JSON.parse(sessionRaw) as Session;
+  return session.token ?? null;
+};
+
+export const getAuthHeaders = (): HeadersInit => {
+  const token = getSessionToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+export const setSession = (userId: string, user?: User, token?: string) => {
   if (!ensureClient()) return;
-  const session: Session = { userId, user };
+  const session: Session = { userId, user, token };
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
 };
 
@@ -338,15 +354,26 @@ export const signIn = (identifier: string, password: string): User | null => {
   const data = getData();
   const normalized = identifier.trim().toLowerCase();
 
-  const user = data.users.find((u) => {
+  const user = data.users.find((rawUser) => {
+    const u = rawUser as LocalUser;
     const emailMatch = u.email?.toLowerCase() === normalized;
     const phoneMatch = u.phone === identifier.trim();
     return (emailMatch || phoneMatch) && u.password === password;
   });
 
   if (!user) return null;
-  setSession(user.id, user);
-  return user;
+  const safeUser: User = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    neighborhood: user.neighborhood,
+    role: user.role,
+    companyId: user.companyId,
+    createdAt: user.createdAt,
+  };
+  setSession(safeUser.id, safeUser);
+  return safeUser;
 };
 
 export interface SignUpInput {
@@ -403,7 +430,7 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
     });
   }
 
-  const user: User = {
+  const localUser: LocalUser = {
     id: userId,
     name: input.name,
     email: normalizedEmail,
@@ -415,15 +442,25 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
     createdAt: nowIso(),
   };
 
-  data.users.push(user);
+  data.users.push(localUser);
   saveData(data);
+  const user: User = {
+    id: localUser.id,
+    name: localUser.name,
+    email: localUser.email,
+    phone: localUser.phone,
+    neighborhood: localUser.neighborhood,
+    role: localUser.role,
+    companyId: localUser.companyId,
+    createdAt: localUser.createdAt,
+  };
   setSession(user.id, user);
 
   return { user };
 };
 
-type SignInApiResponse = { user?: User };
-type SignUpApiResponse = { user?: User; error?: string };
+type SignInApiResponse = { user?: User; token?: string };
+type SignUpApiResponse = { user?: User; token?: string; error?: string };
 
 export const signInWithProvider = async (identifier: string, password: string): Promise<User | null> => {
   if (!isSupabaseMode) {
@@ -446,7 +483,7 @@ export const signInWithProvider = async (identifier: string, password: string): 
 
   const payload = (await response.json()) as SignInApiResponse;
   if (!payload.user) return null;
-  setSession(payload.user.id, payload.user);
+  setSession(payload.user.id, payload.user, payload.token);
   return payload.user;
 };
 
@@ -470,7 +507,7 @@ export const signUpWithProvider = async (input: SignUpInput): Promise<{ user?: U
     return { error: payload.error || "Não foi possível criar a conta." };
   }
 
-  setSession(payload.user.id, payload.user);
+  setSession(payload.user.id, payload.user, payload.token);
   return { user: payload.user };
 };
 

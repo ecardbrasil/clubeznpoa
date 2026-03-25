@@ -22,7 +22,7 @@ import { isSupabaseMode } from "@/lib/runtime-config";
 import { getData, initStorage } from "@/lib/storage";
 import { getSupabaseBrowserClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { Company } from "@/lib/types";
-import { getHotOfferIds } from "@/lib/utils";
+import { getHotOfferIds, getHotOfferIdsFromSupabase } from "@/lib/utils";
 
 const categories: { title: string; subtitle: string; icon: LucideIcon }[] = [
   { title: "Supermercado", subtitle: "e compras", icon: ShoppingBasket },
@@ -258,7 +258,7 @@ const mapLocalLandingData = () => {
   const companiesById = new Map(data.companies.map((company) => [company.id, company]));
 
   const featuredOffers: OfferCardData[] = data.offers
-    .filter((offer) => !offer.rejected && companiesById.has(offer.companyId))
+    .filter((offer) => offer.approved && !offer.rejected && companiesById.has(offer.companyId))
     .slice(0, 8)
     .map((offer) => ({
       id: offer.id,
@@ -314,23 +314,10 @@ const mapSupabaseLandingData = async () => {
 
   const companiesById = new Map(companies.map((company) => [company.id, company]));
 
-  const usageScoreByOffer = redemptions.reduce<Record<string, number>>((acc, redemption) => {
-    const score = redemption.status === "used" ? 2 : redemption.status === "generated" ? 1 : 0;
-    if (score <= 0) return acc;
-    acc[redemption.offer_id] = (acc[redemption.offer_id] ?? 0) + score;
-    return acc;
-  }, {});
-
-  const hotOfferIds = new Set(
-    Object.entries(usageScoreByOffer)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .filter(([, score]) => score > 0)
-      .map(([offerId]) => offerId),
-  );
+  const hotOfferIds = getHotOfferIdsFromSupabase(redemptions, 3);
 
   const featuredOffers: OfferCardData[] = offers
-    .filter((offer) => !offer.rejected && companiesById.has(offer.company_id))
+    .filter((offer) => offer.approved && !offer.rejected && companiesById.has(offer.company_id))
     .slice(0, 8)
     .map((offer) => {
       const company = companiesById.get(offer.company_id);

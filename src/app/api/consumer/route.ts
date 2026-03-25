@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { readApiSessionFromRequest } from "@/lib/server-auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 type ConsumerActionPayload =
@@ -21,13 +22,18 @@ const ensureUniqueCode = async () => {
 
 export async function POST(request: Request) {
   try {
+    const session = readApiSessionFromRequest(request);
+    if (!session || session.role !== "consumer") {
+      return NextResponse.json({ error: "Sessão inválida para consumidor." }, { status: 401 });
+    }
+
     const body = (await request.json()) as ConsumerActionPayload;
     const supabase = getSupabaseServerClient();
 
     if (body.action === "getData") {
       const userId = body.userId?.trim();
-      if (!userId) {
-        return NextResponse.json({ error: "userId é obrigatório." }, { status: 400 });
+      if (!userId || userId !== session.uid) {
+        return NextResponse.json({ error: "userId inválido para esta sessão." }, { status: 400 });
       }
 
       await supabase
@@ -40,15 +46,16 @@ export async function POST(request: Request) {
       const [usersRes, offersRes, companiesRes, redemptionsRes] = await Promise.all([
         supabase
           .from("users")
-          .select("id, name, email, phone, neighborhood, password, role, company_id, created_at")
+          .select("id, name, email, phone, neighborhood, role, company_id, created_at")
           .eq("id", userId)
           .maybeSingle(),
         supabase
           .from("offers")
           .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, created_at")
+          .eq("approved", true)
           .eq("rejected", false)
           .order("created_at", { ascending: false }),
-        supabase.from("companies").select("*"),
+        supabase.from("companies").select("*").eq("approved", true),
         supabase.from("redemptions").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
       ]);
 
@@ -70,8 +77,8 @@ export async function POST(request: Request) {
     if (body.action === "generateCode") {
       const userId = body.userId?.trim();
       const offerId = body.offerId?.trim();
-      if (!userId || !offerId) {
-        return NextResponse.json({ error: "userId e offerId são obrigatórios." }, { status: 400 });
+      if (!userId || userId !== session.uid || !offerId) {
+        return NextResponse.json({ error: "Parâmetros inválidos para esta sessão." }, { status: 400 });
       }
 
       await supabase
@@ -87,7 +94,7 @@ export async function POST(request: Request) {
         .eq("id", offerId)
         .maybeSingle();
 
-      if (offerError || !offer || offer.rejected) {
+      if (offerError || !offer || offer.rejected || !offer.approved) {
         return NextResponse.json({ error: "Oferta indisponível para resgate." }, { status: 400 });
       }
 

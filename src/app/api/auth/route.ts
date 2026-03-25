@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { createApiSessionToken } from "@/lib/server-auth";
 import type { SignUpInput } from "@/lib/storage";
 import type { User } from "@/lib/types";
 
@@ -9,7 +11,7 @@ type SupabaseUserRow = {
   email: string | null;
   phone: string | null;
   neighborhood: string | null;
-  password: string;
+  password?: string;
   role: "consumer" | "partner" | "admin";
   company_id: string | null;
   created_at: string;
@@ -21,7 +23,6 @@ const mapUserRow = (row: SupabaseUserRow): User => ({
   email: row.email ?? undefined,
   phone: row.phone ?? undefined,
   neighborhood: row.neighborhood ?? undefined,
-  password: row.password,
   role: row.role,
   companyId: row.company_id ?? undefined,
   createdAt: row.created_at,
@@ -29,6 +30,31 @@ const mapUserRow = (row: SupabaseUserRow): User => ({
 
 const createUserId = () => `u_${crypto.randomUUID()}`;
 const createCompanyId = () => `c_${crypto.randomUUID()}`;
+const HASH_PREFIX = "scrypt";
+
+const hashPassword = (password: string) => {
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync(password, salt, 64).toString("hex");
+  return `${HASH_PREFIX}$${salt}$${hash}`;
+};
+
+const verifyPassword = (password: string, stored: string) => {
+  if (!stored.startsWith(`${HASH_PREFIX}$`)) {
+    return { valid: stored === password, shouldRehash: true };
+  }
+
+  const [, salt, hash] = stored.split("$");
+  if (!salt || !hash) return { valid: false, shouldRehash: false };
+
+  const providedHash = scryptSync(password, salt, 64).toString("hex");
+  const expectedBuffer = Buffer.from(hash, "hex");
+  const providedBuffer = Buffer.from(providedHash, "hex");
+  if (expectedBuffer.length !== providedBuffer.length) return { valid: false, shouldRehash: false };
+  return {
+    valid: timingSafeEqual(expectedBuffer, providedBuffer),
+    shouldRehash: false,
+  };
+};
 
 export async function POST(request: Request) {
   try {
@@ -40,13 +66,12 @@ export async function POST(request: Request) {
 
     if (body.action === "login") {
       const identifier = body.identifier.trim();
-      const password = body.password;
+      const passwordInput = body.password;
       const normalizedEmail = identifier.toLowerCase();
 
       const baseQuery = supabase
         .from("users")
         .select("id, name, email, phone, neighborhood, password, role, company_id, created_at")
-        .eq("password", password)
         .limit(1);
 
       const loginQuery = identifier.includes("@")
@@ -59,7 +84,21 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
       }
 
-      return NextResponse.json({ user: mapUserRow(data) });
+      const passwordCheck = verifyPassword(passwordInput, data.password ?? "");
+      if (!passwordCheck.valid) {
+        return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
+      }
+      if (passwordCheck.shouldRehash) {
+        await supabase.from("users").update({ password: hashPassword(passwordInput) }).eq("id", data.id);
+      }
+
+      const user = mapUserRow(data);
+      const token = createApiSessionToken({
+        userId: user.id,
+        role: user.role,
+        companyId: user.companyId,
+      });
+      return NextResponse.json({ user, token });
     }
 
     const input = body.payload;
@@ -102,10 +141,10 @@ export async function POST(request: Request) {
       email: normalizedEmail ?? null,
       phone: normalizedPhone ?? null,
       neighborhood: input.neighborhood?.trim() ?? null,
-      password: input.password,
       role: input.role,
       company_id: null,
       created_at: nowIso,
+      password: hashPassword(input.password),
     });
 
     if (userInsertError) {
@@ -142,7 +181,7 @@ export async function POST(request: Request) {
 
     const { data: createdRow, error: readBackError } = await supabase
       .from("users")
-      .select("id, name, email, phone, neighborhood, password, role, company_id, created_at")
+      .select("id, name, email, phone, neighborhood, role, company_id, created_at")
       .eq("id", userId)
       .single<SupabaseUserRow>();
 
@@ -150,7 +189,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Conta criada, mas falhou ao recuperar sessão." }, { status: 500 });
     }
 
-    return NextResponse.json({ user: mapUserRow(createdRow) });
+    const user = mapUserRow(createdRow);
+    const token = createApiSessionToken({
+      userId: user.id,
+      role: user.role,
+      companyId: user.companyId,
+    });
+    return NextResponse.json({ user, token });
   } catch {
     return NextResponse.json({ error: "Falha inesperada no serviço de autenticação." }, { status: 500 });
   }

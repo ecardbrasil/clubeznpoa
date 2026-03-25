@@ -7,12 +7,10 @@ import { useToast } from "@/components/ui/toast";
 import { isSupabaseMode } from "@/lib/runtime-config";
 import { AppData, Company, Offer, Redemption } from "@/lib/types";
 import {
-  approveCompany,
-  approveOffer,
   clearSession,
+  getAuthHeaders,
   getCurrentUser,
   getData,
-  rejectOffer,
   routeByRole,
   syncRedemptionExpirations,
 } from "@/lib/storage";
@@ -60,31 +58,6 @@ export default function AdminPage() {
   const user = getCurrentUser();
   const [data, setData] = useState<AppData | null>(null);
 
-  const refresh = async () => {
-    if (!user) return;
-
-    if (!isSupabaseMode) {
-      syncRedemptionExpirations();
-      setData(getData());
-      return;
-    }
-
-    const response = await fetch("/api/admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "getDashboardData",
-        userId: user.id,
-      }),
-    });
-
-    if (!response.ok) return;
-    const payload = (await response.json()) as { data?: AppData };
-    if (payload.data) {
-      setData(payload.data);
-    }
-  };
-
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (!currentUser) {
@@ -129,10 +102,12 @@ export default function AdminPage() {
       try {
         const response = await fetch("/api/admin", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
           body: JSON.stringify({
             action: "getDashboardData",
-            userId,
           }),
         });
 
@@ -285,9 +260,9 @@ export default function AdminPage() {
         {section === "dashboard" && (
           <>
             <section className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-              <MetricCard label="Empresas ativas" value={dashboard.approvedCompanies} helper="Aprovadas pelo admin" />
-              <MetricCard label="Empresas pendentes" value={dashboard.pendingCompanies.length} helper="Aguardando aprovação" />
-              <MetricCard label="Ofertas pendentes" value={dashboard.pendingOffers.length} helper="Fila de moderação" />
+              <MetricCard label="Empresas ativas" value={dashboard.approvedCompanies} helper="Empresas publicadas" />
+              <MetricCard label="Empresas pendentes" value={dashboard.pendingCompanies.length} helper="Sem moderação automática" />
+              <MetricCard label="Ofertas pendentes" value={dashboard.pendingOffers.length} helper="Sem moderação automática" />
               <MetricCard label="Resgates usados (7 dias)" value={dashboard.usedIn7Days} helper="Janela móvel semanal" />
             </section>
 
@@ -295,9 +270,9 @@ export default function AdminPage() {
               <article className="card grid gap-2">
                 <h2 style={{ margin: 0, fontSize: 18 }}>Funil operacional</h2>
                 <FunnelRow label="Empresas cadastradas" value={dashboard.funnel.companiesTotal} />
-                <FunnelRow label="Empresas aprovadas" value={dashboard.funnel.companiesApproved} />
+                <FunnelRow label="Empresas ativas" value={dashboard.funnel.companiesApproved} />
                 <FunnelRow label="Ofertas cadastradas" value={dashboard.funnel.offersTotal} />
-                <FunnelRow label="Ofertas aprovadas" value={dashboard.funnel.offersApproved} />
+                <FunnelRow label="Ofertas ativas" value={dashboard.funnel.offersApproved} />
                 <FunnelRow label="Códigos gerados" value={dashboard.funnel.redemptionsGenerated} />
                 <FunnelRow label="Códigos usados" value={dashboard.funnel.redemptionsUsed} />
                 <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
@@ -332,7 +307,7 @@ export default function AdminPage() {
 
               <article className="card grid gap-2">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 style={{ margin: 0, fontSize: 18 }}>Fila prioritária</h2>
+                  <h2 style={{ margin: 0, fontSize: 18 }}>Resumo operacional</h2>
                   <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => setSection("companies")}>
                     Abrir empresas
                   </button>
@@ -341,7 +316,7 @@ export default function AdminPage() {
                   <div key={company.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
                     <p style={{ margin: 0, fontWeight: 700 }}>{company.name}</p>
                     <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                      Pendente há {getAgeLabel(company.createdAt)} • {company.category}
+                      Criada há {getAgeLabel(company.createdAt)} • {company.category}
                     </p>
                   </div>
                 ))}
@@ -349,7 +324,7 @@ export default function AdminPage() {
                   <div key={offer.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
                     <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
                     <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                      Oferta pendente há {getAgeLabel(offer.createdAt)}
+                      Criada há {getAgeLabel(offer.createdAt)}
                     </p>
                   </div>
                 ))}
@@ -374,79 +349,11 @@ export default function AdminPage() {
         )}
 
         {section === "companies" && (
-          <ApprovalCompanies
-            pendingCompanies={dashboard.pendingCompanies}
-            onApprove={async (companyId) => {
-              if (isSupabaseMode) {
-                const response = await fetch("/api/admin", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    action: "approveCompany",
-                    userId: user.id,
-                    companyId,
-                  }),
-                });
-                if (!response.ok) {
-                  showToast("Não foi possível aprovar empresa.", "error");
-                  return;
-                }
-              } else {
-                approveCompany(companyId);
-              }
-              await refresh();
-              showToast("Empresa aprovada com sucesso.", "success");
-            }}
-          />
+          <CompaniesList companies={sortByCreatedAtDesc(data.companies)} />
         )}
 
         {section === "offers" && (
-          <ApprovalOffers
-            pendingOffers={dashboard.pendingOffers}
-            companies={data.companies}
-            onApprove={async (offerId) => {
-              if (isSupabaseMode) {
-                const response = await fetch("/api/admin", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    action: "approveOffer",
-                    userId: user.id,
-                    offerId,
-                  }),
-                });
-                if (!response.ok) {
-                  showToast("Não foi possível aprovar oferta.", "error");
-                  return;
-                }
-              } else {
-                approveOffer(offerId);
-              }
-              await refresh();
-              showToast("Oferta aprovada com sucesso.", "success");
-            }}
-            onReject={async (offerId) => {
-              if (isSupabaseMode) {
-                const response = await fetch("/api/admin", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    action: "rejectOffer",
-                    userId: user.id,
-                    offerId,
-                  }),
-                });
-                if (!response.ok) {
-                  showToast("Não foi possível rejeitar oferta.", "error");
-                  return;
-                }
-              } else {
-                rejectOffer(offerId);
-              }
-              await refresh();
-              showToast("Oferta rejeitada com sucesso.", "info");
-            }}
-          />
+          <OffersList offers={sortByCreatedAtDesc(data.offers)} companies={data.companies} />
         )}
 
         <footer className="card" style={{ fontSize: 12, color: "var(--muted)" }}>
@@ -485,49 +392,32 @@ function StatusLine({ label, value }: { label: string; value: number }) {
   );
 }
 
-function ApprovalCompanies({
-  pendingCompanies,
-  onApprove,
-}: {
-  pendingCompanies: Company[];
-  onApprove: (companyId: string) => void;
-}) {
+function CompaniesList({ companies }: { companies: Company[] }) {
   return (
     <section className="card grid gap-2">
-      <h2 style={{ margin: 0, fontSize: 18 }}>Empresas pendentes</h2>
-      {pendingCompanies.map((company) => (
+      <h2 style={{ margin: 0, fontSize: 18 }}>Empresas cadastradas</h2>
+      {companies.map((company) => (
         <article key={company.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
           <p style={{ margin: 0, fontWeight: 700 }}>{company.name}</p>
           <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
             {company.category} • {company.neighborhood} • {company.city}/{company.state}
           </p>
-          <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Criada em {formatDate(company.createdAt)}</p>
-          <button className="btn btn-primary md:!w-auto" onClick={() => onApprove(company.id)}>
-            Aprovar empresa
-          </button>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+            Criada em {formatDate(company.createdAt)} • {company.approved ? "Ativa" : "Inativa"}
+          </p>
         </article>
       ))}
-      {pendingCompanies.length === 0 && <p style={{ margin: 0 }}>Nenhuma empresa aguardando aprovação.</p>}
+      {companies.length === 0 && <p style={{ margin: 0 }}>Nenhuma empresa cadastrada.</p>}
     </section>
   );
 }
 
-function ApprovalOffers({
-  pendingOffers,
-  companies,
-  onApprove,
-  onReject,
-}: {
-  pendingOffers: Offer[];
-  companies: Company[];
-  onApprove: (offerId: string) => void;
-  onReject: (offerId: string) => void;
-}) {
+function OffersList({ offers, companies }: { offers: Offer[]; companies: Company[] }) {
   const companyById = new Map(companies.map((company) => [company.id, company]));
   return (
     <section className="card grid gap-2">
-      <h2 style={{ margin: 0, fontSize: 18 }}>Ofertas pendentes</h2>
-      {pendingOffers.map((offer) => {
+      <h2 style={{ margin: 0, fontSize: 18 }}>Ofertas cadastradas</h2>
+      {offers.map((offer) => {
         const company = companyById.get(offer.companyId);
         return (
           <article key={offer.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
@@ -536,19 +426,13 @@ function ApprovalOffers({
               {offer.discountLabel} • {company?.name} • {offer.neighborhood}
             </p>
             <p style={{ margin: 0, fontSize: 13 }}>{offer.description}</p>
-            <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Criada em {formatDate(offer.createdAt)}</p>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <button className="btn btn-primary md:!w-auto" onClick={() => onApprove(offer.id)}>
-                Aprovar oferta
-              </button>
-              <button className="btn btn-ghost md:!w-auto" onClick={() => onReject(offer.id)}>
-                Rejeitar oferta
-              </button>
-            </div>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+              Criada em {formatDate(offer.createdAt)} • {offer.rejected ? "Rejeitada" : "Ativa"}
+            </p>
           </article>
         );
       })}
-      {pendingOffers.length === 0 && <p style={{ margin: 0 }}>Nenhuma oferta aguardando aprovação.</p>}
+      {offers.length === 0 && <p style={{ margin: 0 }}>Nenhuma oferta cadastrada.</p>}
     </section>
   );
 }

@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { readApiSessionFromRequest } from "@/lib/server-auth";
 import type { AppData, AppNotification, Company, Offer, Redemption, User } from "@/lib/types";
 
-type AdminActionPayload =
-  | { action: "getDashboardData"; userId: string }
-  | { action: "approveCompany"; userId: string; companyId: string }
-  | { action: "approveOffer"; userId: string; offerId: string }
-  | { action: "rejectOffer"; userId: string; offerId: string };
+type AdminActionPayload = { action: "getDashboardData" };
 
 type UserRow = {
   id: string;
@@ -14,7 +11,6 @@ type UserRow = {
   email: string | null;
   phone: string | null;
   neighborhood: string | null;
-  password: string;
   role: "consumer" | "partner" | "admin";
   company_id: string | null;
   created_at: string;
@@ -80,27 +76,12 @@ type NotificationRow = {
 
 const nowIso = () => new Date().toISOString();
 
-const createNotification = (
-  input: Omit<AppNotification, "id" | "createdAt" | "read">,
-): NotificationRow => ({
-  id: `n_${crypto.randomUUID()}`,
-  created_at: nowIso(),
-  read: false,
-  user_id: input.userId,
-  company_id: input.companyId ?? null,
-  offer_id: input.offerId ?? null,
-  type: input.type,
-  title: input.title,
-  message: input.message,
-});
-
 const mapUserRow = (row: UserRow): User => ({
   id: row.id,
   name: row.name,
   email: row.email ?? undefined,
   phone: row.phone ?? undefined,
   neighborhood: row.neighborhood ?? undefined,
-  password: row.password,
   role: row.role,
   companyId: row.company_id ?? undefined,
   createdAt: row.created_at,
@@ -176,7 +157,7 @@ const getDashboardData = async (): Promise<{ data?: AppData; error?: string }> =
   await supabase.from("redemptions").update({ status: "expired" }).eq("status", "generated").lt("expires_at", nowIso());
 
   const [usersRes, companiesRes, offersRes, redemptionsRes, notificationsRes] = await Promise.all([
-    supabase.from("users").select("id, name, email, phone, neighborhood, password, role, company_id, created_at"),
+    supabase.from("users").select("id, name, email, phone, neighborhood, role, company_id, created_at"),
     supabase
       .from("companies")
       .select(
@@ -206,18 +187,16 @@ const getDashboardData = async (): Promise<{ data?: AppData; error?: string }> =
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as AdminActionPayload;
-    const userId = body.userId?.trim();
-    if (!userId) {
-      return NextResponse.json({ error: "userId é obrigatório." }, { status: 400 });
+    const session = readApiSessionFromRequest(request);
+    if (!session || session.role !== "admin") {
+      return NextResponse.json({ error: "Sessão inválida para acesso administrativo." }, { status: 401 });
     }
 
-    const isAdmin = await ensureAdminUser(userId);
+    const body = (await request.json()) as AdminActionPayload;
+    const isAdmin = await ensureAdminUser(session.uid);
     if (!isAdmin) {
       return NextResponse.json({ error: "Usuário sem permissão de administrador." }, { status: 403 });
     }
-
-    const supabase = getSupabaseServerClient();
 
     if (body.action === "getDashboardData") {
       const output = await getDashboardData();
@@ -225,94 +204,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: output.error || "Falha ao carregar painel admin." }, { status: 500 });
       }
       return NextResponse.json({ data: output.data });
-    }
-
-    if (body.action === "approveCompany") {
-      const companyId = body.companyId?.trim();
-      if (!companyId) {
-        return NextResponse.json({ error: "companyId é obrigatório." }, { status: 400 });
-      }
-
-      const { data: company, error: companyError } = await supabase
-        .from("companies")
-        .select("id, name, public_name, owner_user_id")
-        .eq("id", companyId)
-        .maybeSingle<{ id: string; name: string; public_name: string | null; owner_user_id: string }>();
-      if (companyError || !company) {
-        return NextResponse.json({ error: "Empresa não encontrada." }, { status: 404 });
-      }
-
-      const { error } = await supabase.from("companies").update({ approved: true }).eq("id", companyId);
-      if (error) {
-        return NextResponse.json({ error: "Falha ao aprovar empresa." }, { status: 500 });
-      }
-
-      const notification = createNotification({
-        userId: company.owner_user_id,
-        companyId: company.id,
-        type: "company_approved",
-        title: "Empresa aprovada",
-        message: `Sua empresa ${company.public_name ?? company.name} foi aprovada e já pode publicar ofertas.`,
-      });
-      await supabase.from("notifications").insert(notification);
-      return NextResponse.json({ ok: true });
-    }
-
-    if (body.action === "approveOffer" || body.action === "rejectOffer") {
-      const offerId = body.offerId?.trim();
-      if (!offerId) {
-        return NextResponse.json({ error: "offerId é obrigatório." }, { status: 400 });
-      }
-
-      const { data: offer, error: offerError } = await supabase
-        .from("offers")
-        .select("id, title, company_id")
-        .eq("id", offerId)
-        .maybeSingle<{ id: string; title: string; company_id: string }>();
-      if (offerError || !offer) {
-        return NextResponse.json({ error: "Oferta não encontrada." }, { status: 404 });
-      }
-
-      const { data: company, error: companyError } = await supabase
-        .from("companies")
-        .select("id, owner_user_id")
-        .eq("id", offer.company_id)
-        .maybeSingle<{ id: string; owner_user_id: string }>();
-      if (companyError || !company) {
-        return NextResponse.json({ error: "Empresa da oferta não encontrada." }, { status: 404 });
-      }
-
-      if (body.action === "approveOffer") {
-        const { error } = await supabase.from("offers").update({ approved: true, rejected: false }).eq("id", offerId);
-        if (error) {
-          return NextResponse.json({ error: "Falha ao aprovar oferta." }, { status: 500 });
-        }
-        const notification = createNotification({
-          userId: company.owner_user_id,
-          companyId: company.id,
-          offerId: offer.id,
-          type: "offer_approved",
-          title: "Oferta aprovada",
-          message: `A oferta "${offer.title}" foi aprovada pelo administrador.`,
-        });
-        await supabase.from("notifications").insert(notification);
-        return NextResponse.json({ ok: true });
-      }
-
-      const { error } = await supabase.from("offers").update({ approved: false, rejected: true }).eq("id", offerId);
-      if (error) {
-        return NextResponse.json({ error: "Falha ao rejeitar oferta." }, { status: 500 });
-      }
-      const notification = createNotification({
-        userId: company.owner_user_id,
-        companyId: company.id,
-        offerId: offer.id,
-        type: "offer_rejected",
-        title: "Oferta rejeitada",
-        message: `A oferta "${offer.title}" foi rejeitada. Revise os dados e envie novamente.`,
-      });
-      await supabase.from("notifications").insert(notification);
-      return NextResponse.json({ ok: true });
     }
 
     return NextResponse.json({ error: "Ação inválida." }, { status: 400 });

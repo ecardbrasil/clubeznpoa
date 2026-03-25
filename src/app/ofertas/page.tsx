@@ -8,10 +8,10 @@ import { OfferCard, type OfferCardData } from "@/components/offer-card";
 import { PublicPageHeader } from "@/components/public-page-header";
 import { useToast } from "@/components/ui/toast";
 import { isSupabaseMode } from "@/lib/runtime-config";
-import { clearSession, generateRedemption, getCurrentUser, getData, initStorage, routeByRole } from "@/lib/storage";
+import { clearSession, generateRedemption, getAuthHeaders, getCurrentUser, getData, initStorage, routeByRole } from "@/lib/storage";
 import { getSupabaseBrowserClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { User } from "@/lib/types";
-import { getHotOfferIds } from "@/lib/utils";
+import { getHotOfferIds, getHotOfferIdsFromSupabase, parseDiscountSortWeight } from "@/lib/utils";
 
 type SortOption = "recentes" | "desconto" | "bairro";
 
@@ -55,7 +55,7 @@ const mapLocalOffers = (): PublicOffer[] => {
   const companiesById = new Map(data.companies.map((company) => [company.id, company]));
 
   return data.offers
-    .filter((offer) => !offer.rejected && companiesById.has(offer.companyId))
+    .filter((offer) => offer.approved && !offer.rejected && companiesById.has(offer.companyId))
     .map((offer) => {
       const company = companiesById.get(offer.companyId);
       return {
@@ -108,23 +108,10 @@ const mapSupabaseOffers = async (): Promise<PublicOffer[]> => {
 
   const companiesById = new Map(companies.map((company) => [company.id, company]));
 
-  const usageScoreByOffer = redemptions.reduce<Record<string, number>>((acc, redemption) => {
-    const score = redemption.status === "used" ? 2 : redemption.status === "generated" ? 1 : 0;
-    if (score <= 0) return acc;
-    acc[redemption.offer_id] = (acc[redemption.offer_id] ?? 0) + score;
-    return acc;
-  }, {});
-
-  const hotOfferIds = new Set(
-    Object.entries(usageScoreByOffer)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
-      .filter(([, score]) => score > 0)
-      .map(([offerId]) => offerId),
-  );
+  const hotOfferIds = getHotOfferIdsFromSupabase(redemptions, 4);
 
   return offers
-    .filter((offer) => !offer.rejected && companiesById.has(offer.company_id))
+    .filter((offer) => offer.approved && !offer.rejected && companiesById.has(offer.company_id))
     .map((offer) => {
       const company = companiesById.get(offer.company_id);
       return {
@@ -253,7 +240,11 @@ function OffersPageContent() {
     });
 
     output = [...output].sort((a, b) => {
-      if (sortBy === "desconto") return b.discountLabel.localeCompare(a.discountLabel, "pt-BR");
+      if (sortBy === "desconto") {
+        const scoreDiff = parseDiscountSortWeight(b.discountLabel) - parseDiscountSortWeight(a.discountLabel);
+        if (scoreDiff !== 0) return scoreDiff;
+        return b.discountLabel.localeCompare(a.discountLabel, "pt-BR");
+      }
       if (sortBy === "bairro") return a.neighborhood.localeCompare(b.neighborhood, "pt-BR");
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
@@ -285,7 +276,10 @@ function OffersPageContent() {
       if (isSupabaseMode) {
         const response = await fetch("/api/consumer", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
           body: JSON.stringify({
             action: "generateCode",
             userId: viewer.id,

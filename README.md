@@ -14,14 +14,23 @@ MVP web mobile-first do ClubeZN (clube de vantagens para a Zona Norte de Porto A
 
 - Login com e-mail ou celular + senha
 - Cadastro de consumidor e empresa parceira
-- Aprovação de empresas e ofertas pelo admin
-- Listagem de ofertas aprovadas para consumidor
+- Publicação imediata de empresas e ofertas (sem aprovação manual)
+- Listagem de ofertas ativas para consumidor
 - Geração de código numérico de resgate (6 dígitos, validade 10 minutos)
 - Validação do código pela empresa parceira
-- Dashboard básico no admin:
-- Resgates confirmados
-- Empresas ativas
-- Ofertas mais usadas
+- Detalhamento da oferta com:
+- galeria de imagens no modal
+- distância aproximada em km (quando disponível)
+- mapa com pin da empresa parceira (quando há endereço físico)
+- Perfil da empresa parceira com opção de informar que não possui endereço físico
+- Dashboard no admin com monitoramento operacional (sem moderação manual)
+
+### Segurança e sessão
+
+- Sessão de API baseada em token assinado (`Authorization: Bearer ...`)
+- Validação de papel por rota (`admin`, `partner`, `consumer`)
+- Senha com hash no fluxo Supabase (`scrypt`) com migração automática de registros legados no login
+- `User` público sem campo de senha retornado ao frontend
 
 ### Identidade visual
 
@@ -63,6 +72,7 @@ npm run start
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (somente server-side)
+- `API_SESSION_SECRET` (segredo para assinatura dos tokens de sessão da API)
 4. Deploy padrão de Next.js.
 
 ### Observação importante

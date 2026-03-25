@@ -10,6 +10,7 @@ import { isSupabaseMode } from "@/lib/runtime-config";
 import {
   clearSession,
   createOffer,
+  getAuthHeaders,
   getCurrentUser,
   getData,
   markAllNotificationsAsRead,
@@ -65,6 +66,7 @@ export default function PartnerPage() {
   const [imageFeedback, setImageFeedback] = useState("");
 
   const [publicName, setPublicName] = useState<string | null>(null);
+  const [hasPhysicalAddress, setHasPhysicalAddress] = useState<boolean | null>(null);
   const [addressLine, setAddressLine] = useState<string | null>(null);
   const [bio, setBio] = useState<string | null>(null);
   const [instagram, setInstagram] = useState<string | null>(null);
@@ -86,11 +88,13 @@ export default function PartnerPage() {
 
     const response = await fetch("/api/partner", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
       body: JSON.stringify({
         action: "getDashboardData",
         companyId: user.companyId,
-        ownerUserId: user.id,
       }),
     });
 
@@ -155,11 +159,13 @@ export default function PartnerPage() {
       try {
         const response = await fetch("/api/partner", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
           body: JSON.stringify({
             action: "getDashboardData",
             companyId,
-            ownerUserId: userId,
           }),
         });
 
@@ -213,6 +219,7 @@ export default function PartnerPage() {
 
   const effectivePublicName = publicName ?? (company?.publicName ?? company?.name ?? "");
   const effectiveAddressLine = addressLine ?? (company?.addressLine ?? "");
+  const effectiveHasPhysicalAddress = hasPhysicalAddress ?? Boolean((company?.addressLine ?? "").trim());
   const effectiveBio = bio ?? (company?.bio ?? "");
   const effectiveInstagram = instagram ?? (company?.instagram ?? "");
   const effectiveFacebook = facebook ?? (company?.facebook ?? "");
@@ -364,11 +371,13 @@ export default function PartnerPage() {
       if (!user) return;
       const response = await fetch("/api/partner", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           action: "validateCode",
           companyId: company.id,
-          ownerUserId: user.id,
           code,
         }),
       });
@@ -399,17 +408,21 @@ export default function PartnerPage() {
       return;
     }
 
+    const normalizedAddressLine = effectiveHasPhysicalAddress ? effectiveAddressLine : "";
+
     if (isSupabaseMode) {
       const response = await fetch("/api/partner", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           action: "updateProfile",
           companyId,
-          ownerUserId: user.id,
           payload: {
             publicName: effectivePublicName,
-            addressLine: effectiveAddressLine,
+            addressLine: normalizedAddressLine,
             bio: effectiveBio,
             instagram: effectiveInstagram,
             facebook: effectiveFacebook,
@@ -438,7 +451,7 @@ export default function PartnerPage() {
 
     updateCompanyProfile(companyId, {
       publicName: effectivePublicName,
-      addressLine: effectiveAddressLine,
+      addressLine: normalizedAddressLine,
       bio: effectiveBio,
       instagram: effectiveInstagram,
       facebook: effectiveFacebook,
@@ -492,11 +505,13 @@ export default function PartnerPage() {
       if (!user) return;
       const response = await fetch("/api/partner", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           action: "createOffer",
           companyId: company.id,
-          ownerUserId: user.id,
           payload: {
             title,
             description,
@@ -708,7 +723,24 @@ export default function PartnerPage() {
                   value={effectiveAddressLine}
                   onChange={(event) => setAddressLine(event.target.value)}
                   placeholder="Rua, número, bairro, cidade"
+                  disabled={!effectiveHasPhysicalAddress}
                 />
+              </label>
+              <label className="field">
+                <span>Endereço físico</span>
+                <select
+                  value={effectiveHasPhysicalAddress ? "yes" : "no"}
+                  onChange={(event) => {
+                    const hasAddress = event.target.value === "yes";
+                    setHasPhysicalAddress(hasAddress);
+                    if (!hasAddress) {
+                      setAddressLine("");
+                    }
+                  }}
+                >
+                  <option value="yes">Tenho endereço físico</option>
+                  <option value="no">Não tenho endereço físico</option>
+                </select>
               </label>
 
               <label className="field">
@@ -970,11 +1002,13 @@ export default function PartnerPage() {
                     if (isSupabaseMode) {
                       await fetch("/api/partner", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: {
+                          "Content-Type": "application/json",
+                          ...getAuthHeaders(),
+                        },
                         body: JSON.stringify({
                           action: "markAllNotificationsAsRead",
                           companyId: company?.id ?? user.companyId,
-                          ownerUserId: user.id,
                         }),
                       });
                     } else {
@@ -1008,11 +1042,13 @@ export default function PartnerPage() {
                       if (isSupabaseMode) {
                         await fetch("/api/partner", {
                           method: "POST",
-                          headers: { "Content-Type": "application/json" },
+                          headers: {
+                            "Content-Type": "application/json",
+                            ...getAuthHeaders(),
+                          },
                           body: JSON.stringify({
                             action: "markNotificationAsRead",
                             companyId: company?.id ?? user.companyId,
-                            ownerUserId: user.id,
                             notificationId: notification.id,
                           }),
                         });
