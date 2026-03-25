@@ -42,29 +42,72 @@ const headerLinks = [
   { label: "FAQ", href: "#faq" },
 ];
 
-const featuredPartnerLogos = [
-  {
-    name: "Trip Junior",
-    segment: "Turismo e experiências",
-    image: "/partners/trip-junior.svg",
-  },
-  {
-    name: "AIO Empresarial",
-    segment: "Soluções corporativas",
-    image: "/partners/aio-empresarial.svg",
-  },
-  {
-    name: "Colégio Kennedy",
-    segment: "Educação",
-    image: "/partners/colegio-kennedy.svg",
-  },
-];
-
 const heroPeoplePhotos = [
   "https://i.pravatar.cc/64?img=12",
   "https://i.pravatar.cc/64?img=32",
   "https://i.pravatar.cc/64?img=47",
   "https://i.pravatar.cc/64?img=56",
+];
+
+const howItWorksSteps = [
+  {
+    step: "01",
+    title: "Cadastre-se em menos de 2 minutos",
+    description: "Crie sua conta com e-mail ou telefone e já acesse a vitrine de ofertas da Zona Norte.",
+  },
+  {
+    step: "02",
+    title: "Escolha uma oferta por bairro e categoria",
+    description: "Filtre por tipo de comércio e encontre benefícios perto de você.",
+  },
+  {
+    step: "03",
+    title: "Gere o código do benefício",
+    description: "Com um clique, seu código é criado na hora para apresentar no parceiro.",
+  },
+  {
+    step: "04",
+    title: "Valide no estabelecimento",
+    description: "Mostre o código no caixa ou atendimento e confirme o resgate.",
+  },
+  {
+    step: "05",
+    title: "Acompanhe novas vantagens",
+    description: "Volte sempre para descobrir novas ofertas e parceiros cadastrados.",
+  },
+];
+
+const faqItems = [
+  {
+    question: "O ClubeZN tem custo para o morador?",
+    answer:
+      "Não. O acesso e o uso da plataforma são gratuitos para moradores. Você cria sua conta e já pode visualizar e resgatar ofertas disponíveis.",
+  },
+  {
+    question: "Como faço para resgatar um desconto?",
+    answer:
+      "Escolha a oferta, clique em gerar código e apresente esse código no parceiro participante. A validação é feita no momento do atendimento.",
+  },
+  {
+    question: "As ofertas são válidas em toda Porto Alegre?",
+    answer:
+      "Neste momento, o foco está na Zona Norte de Porto Alegre. As ofertas exibidas são organizadas por bairro para facilitar o uso local.",
+  },
+  {
+    question: "Sou empresa. Como entro na plataforma?",
+    answer:
+      "Faça o cadastro como parceiro, complete o perfil da empresa e publique suas ofertas. Após aprovação, sua empresa aparece para os moradores.",
+  },
+  {
+    question: "Posso usar mais de uma oferta por dia?",
+    answer:
+      "Depende das regras definidas por cada parceiro. Verifique os detalhes de cada oferta antes de gerar o código de resgate.",
+  },
+  {
+    question: "O que acontece se meu código expirar?",
+    answer:
+      "Basta gerar um novo código na plataforma, desde que a oferta continue ativa e disponível no momento da solicitação.",
+  },
 ];
 
 const trustTestimonials = [
@@ -255,7 +298,13 @@ const mapLocalLandingData = () => {
   initStorage();
   const data = getData();
   const hotOfferIds = getHotOfferIds(data, 3);
-  const companiesById = new Map(data.companies.map((company) => [company.id, company]));
+  const approvedOffers = data.offers.filter((offer) => offer.approved && !offer.rejected);
+  const approvedCompanies = data.companies.filter((company) => company.approved);
+  const companiesById = new Map(approvedCompanies.map((company) => [company.id, company]));
+  const offerCountByCompanyId = approvedOffers.reduce<Record<string, number>>((acc, offer) => {
+    acc[offer.companyId] = (acc[offer.companyId] ?? 0) + 1;
+    return acc;
+  }, {});
 
   const featuredOffers: OfferCardData[] = data.offers
     .filter((offer) => offer.approved && !offer.rejected && companiesById.has(offer.companyId))
@@ -281,7 +330,13 @@ const mapLocalLandingData = () => {
       partnerWhatsapp: companiesById.get(offer.companyId)?.whatsapp,
     }));
 
-  const partnerProfiles = data.companies.slice(0, 6);
+  const partnerProfiles = approvedCompanies
+    .sort((a, b) => {
+      const offersDiff = (offerCountByCompanyId[b.id] ?? 0) - (offerCountByCompanyId[a.id] ?? 0);
+      if (offersDiff !== 0) return offersDiff;
+      return (a.publicName ?? a.name).localeCompare(b.publicName ?? b.name, "pt-BR");
+    })
+    .slice(0, 18);
   return { featuredOffers, partnerProfiles };
 };
 
@@ -342,8 +397,21 @@ const mapSupabaseLandingData = async () => {
       };
     });
 
+  const offerCountByCompanyId = offers
+    .filter((offer) => offer.approved && !offer.rejected)
+    .reduce<Record<string, number>>((acc, offer) => {
+      acc[offer.company_id] = (acc[offer.company_id] ?? 0) + 1;
+      return acc;
+    }, {});
+
   const partnerProfiles: Company[] = companies
-    .slice(0, 6)
+    .filter((company) => company.approved)
+    .sort((a, b) => {
+      const offersDiff = (offerCountByCompanyId[b.id] ?? 0) - (offerCountByCompanyId[a.id] ?? 0);
+      if (offersDiff !== 0) return offersDiff;
+      return (a.public_name ?? a.name).localeCompare(b.public_name ?? b.name, "pt-BR");
+    })
+    .slice(0, 18)
     .map((company) => ({
       id: company.id,
       name: company.name,
@@ -778,30 +846,33 @@ export default function LandingPage() {
 
       </section>
 
-      <section id="como-funciona" className="grid gap-4">
-        <h3 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Como funciona</h3>
-        <div className="grid gap-3 md:grid-cols-3">
-          <article className="card !rounded-2xl">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#d9f0dd] text-sm font-extrabold text-[#1f5f30]">
-              1
-            </span>
-            <h4 className="mb-1 mt-2 text-base font-extrabold text-[#102113]">Crie sua conta</h4>
-            <p className="m-0 text-sm text-[#486048]">Cadastro rápido com email ou celular para entrar no ClubeZN.</p>
-          </article>
-          <article className="card !rounded-2xl">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#d9f0dd] text-sm font-extrabold text-[#1f5f30]">
-              2
-            </span>
-            <h4 className="mb-1 mt-2 text-base font-extrabold text-[#102113]">Escolha a oferta</h4>
-            <p className="m-0 text-sm text-[#486048]">Veja os descontos disponíveis por bairro e categoria da Zona Norte.</p>
-          </article>
-          <article className="card !rounded-2xl">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#d9f0dd] text-sm font-extrabold text-[#1f5f30]">
-              3
-            </span>
-            <h4 className="mb-1 mt-2 text-base font-extrabold text-[#102113]">Resgate no parceiro</h4>
-            <p className="m-0 text-sm text-[#486048]">Gere seu código de benefício e valide no estabelecimento parceiro.</p>
-          </article>
+      <section
+        id="como-funciona"
+        className="grid gap-5 rounded-[26px] border border-[#d3e6d7] bg-[linear-gradient(135deg,#f3fbf5_0%,#ecf8ef_55%,#e6f4ea_100%)] p-5 md:gap-6 md:p-7"
+      >
+        <div className="grid gap-2 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="grid gap-2">
+            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2b7a3f]">Passo a passo</p>
+            <h3 className="m-0 text-2xl font-black text-[#102113] md:text-4xl">Como funciona o ClubeZN na prática</h3>
+            <p className="m-0 max-w-3xl text-sm text-[#486048] md:text-base">
+              Processo simples, rápido e focado em economia local. Em poucos passos você já usa vantagens no seu bairro.
+            </p>
+          </div>
+          <Link href="/auth" className="btn btn-primary !w-full md:!w-auto md:min-w-48">
+            Começar agora
+          </Link>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {howItWorksSteps.map((item) => (
+            <article key={item.step} className="grid gap-2 rounded-2xl border border-[#cde3d2] bg-white p-4">
+              <span className="inline-flex w-fit items-center justify-center rounded-full border border-[#b6d8bd] bg-[#eaf7ee] px-2.5 py-1 text-xs font-black text-[#1f5f30]">
+                Etapa {item.step}
+              </span>
+              <h4 className="m-0 text-base font-extrabold text-[#102113]">{item.title}</h4>
+              <p className="m-0 text-sm text-[#486048]">{item.description}</p>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -809,9 +880,14 @@ export default function LandingPage() {
         <article className="card !grid !gap-3 !rounded-2xl">
           <div className="flex items-center justify-between">
             <h3 className="m-0 text-xl font-bold text-[#102113]">Empresas parceiras</h3>
-            <Link href="/auth" className="text-sm font-bold text-[#1f5f30] hover:underline">
-              Quero ser parceiro
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/parceiros" className="text-sm font-bold text-[#1f5f30] hover:underline">
+                Ver todas
+              </Link>
+              <Link href="/auth" className="text-sm font-bold text-[#1f5f30] hover:underline">
+                Quero ser parceiro
+              </Link>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {partnerProfiles.map((partner) => (
@@ -870,42 +946,68 @@ export default function LandingPage() {
 
       <section className="grid gap-4 rounded-2xl border border-[#d9dddf] bg-[#f1f2f3] p-4 md:p-6">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-bold text-[#1e1f22] md:text-2xl">Os principais parceiros</h3>
-          <Link href="/auth" className="text-sm font-bold text-[#38424f] hover:underline">
-            Quero minha marca aqui
-          </Link>
+          <h3 className="m-0 text-xl font-bold text-[#1e1f22] md:text-2xl">Empresas parceiras cadastradas</h3>
+          <div className="flex items-center gap-3">
+            <Link href="/parceiros" className="text-sm font-bold text-[#38424f] hover:underline">
+              Ver todas
+            </Link>
+            <Link href="/auth" className="text-sm font-bold text-[#38424f] hover:underline">
+              Quero minha marca aqui
+            </Link>
+          </div>
         </div>
         <div className="grid grid-flow-col auto-cols-[minmax(240px,1fr)] gap-3 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-3 md:overflow-visible lg:grid-cols-5">
-          {featuredPartnerLogos.map((partner) => (
+          {partnerProfiles.slice(0, 10).map((partner) => (
             <article
-              key={partner.name}
+              key={partner.id}
               className="relative flex items-center gap-3 rounded-xl border border-[#cfd3d7] bg-[#f6f7f8] px-4 py-3.5 shadow-[0_1px_0_rgba(0,0,0,0.03)]"
             >
               <span className="absolute right-2.5 top-2 text-xs font-black text-[#ef5656]">✹</span>
               <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-[#d4d7db] bg-white p-2">
-                <Image
-                  src={partner.image}
-                  alt={`Logomarca ${partner.name}`}
-                  width={52}
-                  height={52}
-                  unoptimized
-                  style={{ width: 52, height: 52, objectFit: "contain" }}
-                />
+                {partner.logoImage ? (
+                  <Image
+                    src={partner.logoImage}
+                    alt={`Logomarca ${partner.publicName ?? partner.name}`}
+                    width={52}
+                    height={52}
+                    unoptimized
+                    style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 999 }}
+                  />
+                ) : (
+                  <span className="text-base font-black text-[#1e1f22]">
+                    {(partner.publicName ?? partner.name).trim()[0]?.toUpperCase() ?? "P"}
+                  </span>
+                )}
               </div>
               <div className="grid min-w-0">
-                <p className="m-0 truncate text-[1.04rem] font-semibold leading-tight text-[#202328]">{partner.name}</p>
-                <p className="m-0 truncate text-sm text-[#7c838d]">{partner.segment}</p>
+                <p className="m-0 truncate text-[1.04rem] font-semibold leading-tight text-[#202328]">
+                  {partner.publicName ?? partner.name}
+                </p>
+                <p className="m-0 truncate text-sm text-[#7c838d]">{partner.category}</p>
               </div>
             </article>
           ))}
+          {partnerProfiles.length === 0 && (
+            <article className="rounded-xl border border-[#cfd3d7] bg-white px-4 py-3 text-sm font-semibold text-[#38424f]">
+              As empresas cadastradas aparecerão aqui.
+            </article>
+          )}
         </div>
       </section>
 
-      <section id="faq" className="card !grid !gap-2 !rounded-2xl">
-        <h3 className="m-0 text-lg font-extrabold text-[#102113]">Perguntas frequentes</h3>
-        <p className="m-0 text-sm text-[#1f5f30]"><strong>Precisa pagar?</strong> Não. O uso é gratuito neste MVP.</p>
-        <p className="m-0 text-sm text-[#1f5f30]"><strong>Como resgatar?</strong> Gere código de 6 dígitos e valide no parceiro.</p>
-        <p className="m-0 text-sm text-[#1f5f30]"><strong>Quem pode usar?</strong> Moradores da Zona Norte de Porto Alegre.</p>
+      <section id="faq" className="grid gap-4 rounded-[24px] border border-[#d6e7d9] bg-[#f7fbf8] p-5 md:p-6">
+        <div className="grid gap-1">
+          <h3 className="m-0 text-xl font-black text-[#102113] md:text-2xl">Perguntas frequentes</h3>
+          <p className="m-0 text-sm text-[#486048]">Dúvidas mais comuns de moradores e empresas parceiras.</p>
+        </div>
+        <div className="grid gap-2">
+          {faqItems.map((item) => (
+            <details key={item.question} className="rounded-xl border border-[#d5e4d8] bg-white px-4 py-3">
+              <summary className="cursor-pointer text-sm font-extrabold text-[#19321f]">{item.question}</summary>
+              <p className="m-0 mt-2 text-sm leading-relaxed text-[#486048]">{item.answer}</p>
+            </details>
+          ))}
+        </div>
       </section>
 
       <footer className="grid gap-6 rounded-[28px] border border-[#25432f] bg-[#102113] p-5 text-[#d7e8db] md:p-8">
