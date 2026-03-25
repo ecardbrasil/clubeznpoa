@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Building2, Loader2, UserRound } from "lucide-react";
 import { PublicPageHeader } from "@/components/public-page-header";
 import { useToast } from "@/components/ui/toast";
@@ -217,11 +216,6 @@ export default function Home() {
       <PublicPageHeader
         subtitle="Acesso e cadastro da plataforma"
         smallLogo
-        actions={
-          <Link href="/" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
-            Página inicial
-          </Link>
-        }
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">

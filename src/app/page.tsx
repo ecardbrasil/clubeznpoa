@@ -468,7 +468,7 @@ export default function LandingPage() {
                 Já tenho conta
               </Link>
               <Link href="/auth" className="btn btn-primary !w-full sm:!w-auto !px-4 !py-2 text-sm text-center">
-                Começar pelo cadastro
+                cadastro
               </Link>
             </div>
           </div>
@@ -868,28 +868,34 @@ export default function LandingPage() {
         </article>
       </section>
 
-      <section className="grid gap-4">
+      <section className="grid gap-4 rounded-2xl border border-[#d9dddf] bg-[#f1f2f3] p-4 md:p-6">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Empresas parceiras em destaque</h3>
-          <Link href="/auth" className="text-sm font-bold text-[#1f5f30] hover:underline">
+          <h3 className="m-0 text-xl font-bold text-[#1e1f22] md:text-2xl">Os principais parceiros</h3>
+          <Link href="/auth" className="text-sm font-bold text-[#38424f] hover:underline">
             Quero minha marca aqui
           </Link>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid grid-flow-col auto-cols-[minmax(240px,1fr)] gap-3 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-3 md:overflow-visible lg:grid-cols-5">
           {featuredPartnerLogos.map((partner) => (
-            <article key={partner.name} className="card !grid !gap-2 !rounded-2xl">
-              <div className="grid place-items-center rounded-xl border border-[#d1dfd1] bg-[#f8fbf8] p-2">
+            <article
+              key={partner.name}
+              className="relative flex items-center gap-3 rounded-xl border border-[#cfd3d7] bg-[#f6f7f8] px-4 py-3.5 shadow-[0_1px_0_rgba(0,0,0,0.03)]"
+            >
+              <span className="absolute right-2.5 top-2 text-xs font-black text-[#ef5656]">✹</span>
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-[#d4d7db] bg-white p-2">
                 <Image
                   src={partner.image}
                   alt={`Logomarca ${partner.name}`}
-                  width={300}
-                  height={160}
+                  width={52}
+                  height={52}
                   unoptimized
-                  style={{ width: "100%", height: 160, objectFit: "contain" }}
+                  style={{ width: 52, height: 52, objectFit: "contain" }}
                 />
               </div>
-              <p className="m-0 text-base font-extrabold text-[#102113]">{partner.name}</p>
-              <p className="m-0 text-sm text-[#486048]">{partner.segment}</p>
+              <div className="grid min-w-0">
+                <p className="m-0 truncate text-[1.04rem] font-semibold leading-tight text-[#202328]">{partner.name}</p>
+                <p className="m-0 truncate text-sm text-[#7c838d]">{partner.segment}</p>
+              </div>
             </article>
           ))}
         </div>

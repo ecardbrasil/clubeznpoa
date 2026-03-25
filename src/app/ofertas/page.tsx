@@ -306,9 +306,6 @@ function OffersPageContent() {
         subtitle={viewer?.role === "consumer" ? "Vitrine de ofertas - cliente logado" : "Vitrine pública de ofertas"}
         actions={
           <>
-            <Link href="/" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
-              Voltar para a home
-            </Link>
             {viewer?.role === "consumer" ? (
               <>
                 <span className="badge badge-ok">Olá, {viewer.name}</span>
@@ -347,7 +344,7 @@ function OffersPageContent() {
               </>
             ) : (
               <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
-                Começar pelo cadastro
+                cadastro
               </Link>
             )}
           </>

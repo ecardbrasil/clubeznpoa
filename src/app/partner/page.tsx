@@ -358,6 +358,65 @@ export default function PartnerPage() {
   }, [data, user]);
 
   const unreadNotifications = partnerNotifications.filter((item) => !item.read).length;
+  const onboardingSteps = useMemo(
+    () => [
+      {
+        id: "first-offer",
+        title: "Cadastre sua primeira oferta",
+        description: "Publique uma oferta para começar a aparecer para os moradores.",
+        done: companyOffers.length > 0,
+        section: "offer" as PartnerSection,
+        actionLabel: "Ir para cadastro de oferta",
+      },
+      {
+        id: "public-profile",
+        title: "Complete seu perfil público",
+        description: "Preencha nome público, endereço físico e uma descrição da empresa.",
+        done: Boolean(effectivePublicName.trim()) && (Boolean(effectiveAddressLine.trim()) || Boolean(effectiveBio.trim())),
+        section: "profile" as PartnerSection,
+        actionLabel: "Completar perfil",
+      },
+      {
+        id: "branding",
+        title: "Adicione logomarca e foto de capa",
+        description: "Isso melhora a confiança e o destaque da sua empresa nas páginas públicas.",
+        done: Boolean(effectiveLogoImage) && Boolean(effectiveCoverImage),
+        section: "profile" as PartnerSection,
+        actionLabel: "Adicionar imagens",
+      },
+      {
+        id: "contact",
+        title: "Ative ao menos um canal de contato",
+        description: "Informe WhatsApp, Instagram, Facebook ou site para facilitar o contato.",
+        done: [effectiveWhatsapp, effectiveInstagram, effectiveFacebook, effectiveWebsite].some((value) => Boolean(value.trim())),
+        section: "profile" as PartnerSection,
+        actionLabel: "Configurar contatos",
+      },
+      {
+        id: "notifications",
+        title: "Revise seu centro de notificações",
+        description: "Acompanhe aprovações e deixe as notificações em dia.",
+        done: partnerNotifications.length > 0 && unreadNotifications === 0,
+        section: "notifications" as PartnerSection,
+        actionLabel: "Abrir notificações",
+      },
+    ],
+    [
+      companyOffers.length,
+      effectiveAddressLine,
+      effectiveBio,
+      effectiveCoverImage,
+      effectiveFacebook,
+      effectiveInstagram,
+      effectiveLogoImage,
+      effectivePublicName,
+      effectiveWebsite,
+      effectiveWhatsapp,
+      partnerNotifications.length,
+      unreadNotifications,
+    ],
+  );
+  const onboardingCompleted = onboardingSteps.filter((step) => step.done).length;
 
   const validate = async () => {
     setFeedback("");
@@ -655,6 +714,37 @@ export default function PartnerPage() {
 
         {section === "overview" && (
           <>
+            <section className="card grid gap-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 style={{ margin: 0, fontSize: 18 }}>Checklist inicial do parceiro</h2>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+                    Conclua estes passos para deixar o perfil pronto e começar a gerar resultados.
+                  </p>
+                </div>
+                <span className={`badge ${onboardingCompleted === onboardingSteps.length ? "badge-ok" : "badge-pending"}`}>
+                  {onboardingCompleted}/{onboardingSteps.length} concluídos
+                </span>
+              </div>
+
+              {onboardingSteps.map((step, index) => (
+                <article key={step.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p style={{ margin: 0, fontWeight: 700 }}>
+                      {step.done ? "☑" : "☐"} {index + 1}. {step.title}
+                    </p>
+                    <span className={`badge ${step.done ? "badge-ok" : "badge-pending"}`}>
+                      {step.done ? "Concluído" : "Pendente"}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{step.description}</p>
+                  <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => selectSection(step.section)} type="button">
+                    {step.done ? "Revisar etapa" : step.actionLabel}
+                  </button>
+                </article>
+              ))}
+            </section>
+
             <section className="card grid gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
