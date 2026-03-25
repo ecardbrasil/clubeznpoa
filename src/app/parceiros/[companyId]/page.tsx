@@ -249,7 +249,7 @@ export default function PartnerPublicProfilePage() {
               Ver todas as ofertas
             </Link>
             <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
-              Começar por Cadastro
+              Começar pelo cadastro
             </Link>
           </>
         }

@@ -26,13 +26,13 @@ import { getHotOfferIds } from "@/lib/utils";
 
 const categories: { title: string; subtitle: string; icon: LucideIcon }[] = [
   { title: "Supermercado", subtitle: "e compras", icon: ShoppingBasket },
-  { title: "Farmacia", subtitle: "e cuidados", icon: Pill },
-  { title: "Restaurantes", subtitle: "e cafes", icon: UtensilsCrossed },
+  { title: "Farmácia", subtitle: "e cuidados", icon: Pill },
+  { title: "Restaurantes", subtitle: "e cafés", icon: UtensilsCrossed },
   { title: "Beleza", subtitle: "e estilo", icon: Sparkles },
-  { title: "Saude", subtitle: "e bem-estar", icon: HeartPulse },
-  { title: "Servicos", subtitle: "locais", icon: BriefcaseBusiness },
+  { title: "Saúde", subtitle: "e bem-estar", icon: HeartPulse },
+  { title: "Serviços", subtitle: "locais", icon: BriefcaseBusiness },
   { title: "Pet", subtitle: "care", icon: PawPrint },
-  { title: "Educacao", subtitle: "e cursos", icon: GraduationCap },
+  { title: "Educação", subtitle: "e cursos", icon: GraduationCap },
 ];
 
 const headerLinks = [
@@ -45,17 +45,17 @@ const headerLinks = [
 const featuredPartnerLogos = [
   {
     name: "Trip Junior",
-    segment: "Turismo e experiencias",
+    segment: "Turismo e experiências",
     image: "/partners/trip-junior.svg",
   },
   {
     name: "AIO Empresarial",
-    segment: "Solucoes corporativas",
+    segment: "Soluções corporativas",
     image: "/partners/aio-empresarial.svg",
   },
   {
-    name: "Colegio Kennedy",
-    segment: "Educacao",
+    name: "Colégio Kennedy",
+    segment: "Educação",
     image: "/partners/colegio-kennedy.svg",
   },
 ];
@@ -69,28 +69,53 @@ const heroPeoplePhotos = [
 
 const trustTestimonials = [
   {
-    author: "Ana P., moradora do Passo d'Areia.",
+    name: "Ana P.",
+    neighborhood: "Passo d'Areia",
     quote:
-      "Adorei! Ja usei o desconto no petshop aqui do bairro e economizei uma grana na racao. Toda ajuda no orcamento de casa e bem vinda ne. Recomendo dmais.",
+      "Adorei! Já usei o desconto no petshop aqui do bairro e economizei uma grana na ração. Toda ajuda no orçamento de casa é bem-vinda. Recomendo demais.",
   },
   {
-    author: "Roberto C., morador do bairro Sao Joao.",
+    name: "Roberto C.",
+    neighborhood: "São João",
     quote:
-      "Confesso que no inicio fiquei meio assim ne, por ser de graca. Mas resolvi testar e me surpreendi. Ja economizei na farmacia e ate na padaria. Virou rotina usar.",
+      "No início fiquei desconfiado por ser grátis, mas me surpreendi. Já economizei na farmácia e até na padaria. Hoje uso toda semana.",
   },
   {
-    author: "Lucas T., morador do Jardim Lindoia.",
+    name: "Lucas T.",
+    neighborhood: "Jardim Lindóia",
     quote:
-      "Cara, que ideia genial. Mto top. Usei pra um happy hour com a galera e o desconto ja pagou a primeira ceva kkkk. Facil de usar, so mostrei o celular.",
+      "Usei para um happy hour com os amigos e o desconto já valeu a noite. É simples, rápido e funciona de verdade no parceiro.",
   },
   {
-    author: "",
+    name: "Mariana S.",
+    neighborhood: "Sarandi",
     quote:
-      "Gente, serio. Fui fazer um servico no carro e lembrei de olhar o clube e por incrivel q pareça tinha uma oficina pertinho da minha casa.",
+      "Fui procurar serviço para o carro e encontrei oficina parceira perto de casa. Fechei na hora e ainda paguei menos.",
+  },
+  {
+    name: "João V.",
+    neighborhood: "Vila Ipiranga",
+    quote:
+      "O que mais gostei foi a variedade. Em um mês consegui usar em mercado, restaurante e farmácia, tudo aqui na Zona Norte.",
+  },
+  {
+    name: "Carla M.",
+    neighborhood: "Cristo Redentor",
+    quote:
+      "A plataforma é clara e objetiva. Entrei, escolhi a oferta e resgatei sem dificuldade. Excelente para organizar o orçamento.",
   },
 ];
 
 const trustBadges = ["Parceiros verificados", "Ofertas com curadoria", "Suporte local Zona Norte"];
+
+const getInitials = (fullName: string) =>
+  fullName
+    .split(" ")
+    .map((part) => part.trim()[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 
 const MAP_WIDTH = 520;
 const MAP_HEIGHT = 320;
@@ -436,7 +461,7 @@ export default function LandingPage() {
       </a>
       <section className="grid gap-5">
         <div className="flex items-center justify-center rounded-2xl border border-[#a4c83a] bg-[var(--brand-accent)] px-4 py-2.5 text-center text-xs font-semibold text-[#102113] md:text-sm">
-          Ganhe ate 25% OFF em parceiros selecionados da Zona Norte
+          Ganhe até 25% OFF em parceiros selecionados da Zona Norte
         </div>
 
         <header className="rounded-2xl border border-[#d9e6db] bg-white px-3 py-3 md:px-5">
@@ -456,7 +481,7 @@ export default function LandingPage() {
                 Já tenho conta
               </Link>
               <Link href="/auth" className="btn btn-primary !w-full sm:!w-auto !px-4 !py-2 text-sm text-center">
-                Começar por Cadastro
+                Começar pelo cadastro
               </Link>
             </div>
           </div>
@@ -476,7 +501,7 @@ export default function LandingPage() {
               </span>
             </h1>
             <p className="m-0 max-w-xl text-sm leading-relaxed text-[#486048] md:text-base">
-              Veja ofertas por bairro, gere seu codigo em segundos e valide direto no parceiro. Tudo num fluxo simples para
+              Veja ofertas por bairro, gere seu código em segundos e valide direto no parceiro. Tudo num fluxo simples para
               quem mora na Zona Norte.
             </p>
 
@@ -507,7 +532,7 @@ export default function LandingPage() {
                 <p className="m-0 text-sm font-semibold text-[#1b2d1f]">200+ moradores usando o ClubeZN</p>
               </div>
               <p className="m-0 max-w-md text-xs text-[#486048] md:text-sm">
-                Todo bairro tem um atalho para economizar. O ClubeZN conecta voce a ele.
+                Todo bairro tem um atalho para economizar. O ClubeZN conecta você a ele.
               </p>
             </div>
           </article>
@@ -531,7 +556,7 @@ export default function LandingPage() {
             )}
 
             <article className="absolute bottom-2 left-2 z-[2] grid gap-1 rounded-2xl border border-[#dbe8de] bg-white px-2.5 py-2 shadow-sm md:bottom-5 md:left-5 md:px-3">
-              <p className="m-0 text-[11px] font-semibold text-[#5d735f]">Economia no mes</p>
+              <p className="m-0 text-[11px] font-semibold text-[#5d735f]">Economia no mês</p>
               <p className="m-0 text-xl font-black text-[#102113]">R$ 198,00</p>
             </article>
             <article className="absolute right-2 top-2 z-[2] grid gap-1 rounded-2xl border border-[#dbe8de] bg-white px-2.5 py-2 shadow-sm md:right-5 md:top-5 md:px-3">
@@ -600,34 +625,53 @@ export default function LandingPage() {
             />
           ))}
           {featuredOffers.length === 0 && (
-            <p className="card">As ofertas aprovadas aparecerao aqui assim que forem publicadas.</p>
+            <p className="card">As ofertas aprovadas aparecerão aqui assim que forem publicadas.</p>
           )}
         </div>
       </section>
 
-      <section className="grid gap-4 rounded-2xl border border-[#a4c83a] bg-[var(--brand-accent)] p-5 md:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-extrabold text-[#102113] md:text-2xl">A confiança de quem faz a Zona Norte acontecer.</h3>
-          <div className="flex flex-wrap gap-2">
-            {trustBadges.map((badge) => (
-              <span key={badge} className="rounded-full border border-[#8eac2d] bg-[#efffbd] px-3 py-1 text-xs font-bold text-[#17301b]">
-                {badge}
+      <section className="rounded-[30px] bg-[linear-gradient(140deg,#173b20_0%,#1f5f30_55%,#2b7a3f_100%)] p-3 md:p-5">
+        <div className="grid gap-5 rounded-[24px] border border-[#a4c83a] bg-white p-4 md:gap-6 md:p-7">
+          <div className="grid justify-items-center gap-3 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#91b730] bg-[#102113] px-3 py-1 text-xs font-semibold text-[#eefbc7]">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-accent)] text-[10px] font-black text-[#102113]">
+                ★
               </span>
+              Avaliado por moradores da Zona Norte
+            </span>
+            <h3 className="m-0 max-w-3xl text-2xl font-black leading-tight text-[#102113] md:text-4xl">
+              A confiança de quem faz a Zona Norte acontecer.
+            </h3>
+            <p className="m-0 max-w-3xl text-sm text-[#38503e] md:text-base">
+              Nossa rede de parceiros não para de crescer, unindo desde o café da sua rua preferida até marcas que você já
+              conhece e confia.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {trustBadges.map((badge) => (
+                <span key={badge} className="rounded-full border border-[#8eac2d] bg-[#efffbd] px-3 py-1 text-xs font-bold text-[#17301b]">
+                  {badge}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {trustTestimonials.map((item) => (
+              <article key={`${item.name}-${item.neighborhood}`} className="grid gap-3 rounded-2xl border border-[#d8e7dc] bg-[#f8fcf8] p-4">
+                <p className="m-0 text-3xl font-black leading-none text-[#2b7a3f]">“</p>
+                <p className="m-0 -mt-2 text-sm leading-relaxed text-[#2f4535]">{item.quote}</p>
+                <div className="mt-1 flex items-center gap-2.5">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#a4c83a] bg-[var(--brand-accent)] text-xs font-black text-[#102113]">
+                    {getInitials(item.name)}
+                  </span>
+                  <div className="grid gap-0.5">
+                    <p className="m-0 text-sm font-extrabold text-[#102113]">{item.name}</p>
+                    <p className="m-0 text-xs font-semibold text-[#5a735f]">Morador(a) do {item.neighborhood}</p>
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
-        </div>
-        <p className="m-0 text-sm text-[#1d3320] md:text-base">
-          Nossa rede de parceiros não para de crescer, unindo desde o café da sua rua preferida até grandes marcas que você
-          já conhece e confia.
-        </p>
-
-        <div className="grid gap-3 md:grid-cols-2">
-          {trustTestimonials.map((item, index) => (
-            <article key={`${item.author || "anon"}-${index}`} className="rounded-xl border border-[#dce8de] bg-[#f8fcf8] p-3">
-              <p className="m-0 text-sm leading-relaxed text-[#314634]">“{item.quote}”</p>
-              {item.author ? <p className="mt-2 mb-0 text-xs font-bold uppercase tracking-[0.06em] text-[#5b755f]">{item.author}</p> : null}
-            </article>
-          ))}
         </div>
       </section>
 
@@ -636,7 +680,7 @@ export default function LandingPage() {
           <div className="grid gap-2">
             <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#704110]">Bairros da Zona Norte</p>
             <h3 className="m-0 text-2xl font-black leading-tight text-[#2f1a03] md:text-4xl">
-              {highlightNeighborhood} ja esta no mapa do ClubeZN. Se voce mora aqui, ja pode participar.
+              {highlightNeighborhood} já está no mapa do ClubeZN. Se você mora aqui, já pode participar.
             </h3>
             <p className="m-0 max-w-3xl text-sm text-[#5f370a] md:text-base">
               Estamos expandindo por toda a Zona Norte para conectar moradores a descontos locais. Procure seu bairro na lista e
@@ -755,21 +799,21 @@ export default function LandingPage() {
               1
             </span>
             <h4 className="mb-1 mt-2 text-base font-extrabold text-[#102113]">Crie sua conta</h4>
-            <p className="m-0 text-sm text-[#486048]">Cadastro rapido com email ou celular para entrar no ClubeZN.</p>
+            <p className="m-0 text-sm text-[#486048]">Cadastro rápido com email ou celular para entrar no ClubeZN.</p>
           </article>
           <article className="card !rounded-2xl">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#d9f0dd] text-sm font-extrabold text-[#1f5f30]">
               2
             </span>
             <h4 className="mb-1 mt-2 text-base font-extrabold text-[#102113]">Escolha a oferta</h4>
-            <p className="m-0 text-sm text-[#486048]">Veja os descontos disponiveis por bairro e categoria da Zona Norte.</p>
+            <p className="m-0 text-sm text-[#486048]">Veja os descontos disponíveis por bairro e categoria da Zona Norte.</p>
           </article>
           <article className="card !rounded-2xl">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#d9f0dd] text-sm font-extrabold text-[#1f5f30]">
               3
             </span>
             <h4 className="mb-1 mt-2 text-base font-extrabold text-[#102113]">Resgate no parceiro</h4>
-            <p className="m-0 text-sm text-[#486048]">Gere seu codigo de beneficio e valide no estabelecimento parceiro.</p>
+            <p className="m-0 text-sm text-[#486048]">Gere seu código de benefício e valide no estabelecimento parceiro.</p>
           </article>
         </div>
       </section>
@@ -866,8 +910,8 @@ export default function LandingPage() {
 
       <section id="faq" className="card !grid !gap-2 !rounded-2xl">
         <h3 className="m-0 text-lg font-extrabold text-[#102113]">Perguntas frequentes</h3>
-        <p className="m-0 text-sm text-[#1f5f30]"><strong>Precisa pagar?</strong> Nao. O uso e gratuito neste MVP.</p>
-        <p className="m-0 text-sm text-[#1f5f30]"><strong>Como resgatar?</strong> Gere codigo de 6 digitos e valide no parceiro.</p>
+        <p className="m-0 text-sm text-[#1f5f30]"><strong>Precisa pagar?</strong> Não. O uso é gratuito neste MVP.</p>
+        <p className="m-0 text-sm text-[#1f5f30]"><strong>Como resgatar?</strong> Gere código de 6 dígitos e valide no parceiro.</p>
         <p className="m-0 text-sm text-[#1f5f30]"><strong>Quem pode usar?</strong> Moradores da Zona Norte de Porto Alegre.</p>
       </section>
 
@@ -876,7 +920,7 @@ export default function LandingPage() {
           <div className="grid gap-2">
             <BrandLogo />
             <p className="m-0 max-w-xl text-sm leading-relaxed text-[#b7cdbd]">
-              ClubeZN e a plataforma de vantagens da Zona Norte de Porto Alegre, conectando moradores a parceiros locais com
+              ClubeZN é a plataforma de vantagens da Zona Norte de Porto Alegre, conectando moradores a parceiros locais com
               resgate simples e seguro.
             </p>
           </div>
@@ -903,7 +947,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid content-start gap-2">
-            <p className="m-0 text-sm font-extrabold text-white">Links uteis</p>
+            <p className="m-0 text-sm font-extrabold text-white">Links úteis</p>
             <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Seja parceiro</a>
             <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Fale com suporte</a>
             <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Status da plataforma</a>

@@ -450,7 +450,7 @@ export default function AdminPage() {
         )}
 
         <footer className="card" style={{ fontSize: 12, color: "var(--muted)" }}>
-          <p style={{ margin: 0 }}>ClubeZN - Administracao</p>
+          <p style={{ margin: 0 }}>ClubeZN - Administração</p>
         </footer>
       </div>
     </main>

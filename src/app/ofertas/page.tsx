@@ -313,7 +313,7 @@ function OffersPageContent() {
         actions={
           <>
             <Link href="/" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
-              Voltar para home
+              Voltar para a home
             </Link>
             {viewer?.role === "consumer" ? (
               <>
@@ -353,7 +353,7 @@ function OffersPageContent() {
               </>
             ) : (
               <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
-                Começar por Cadastro
+                Começar pelo cadastro
               </Link>
             )}
           </>
@@ -364,7 +364,7 @@ function OffersPageContent() {
         <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2b7a3f]">Ofertas abertas</p>
         <h1 className="m-0 text-3xl font-black leading-tight text-[#102113] md:text-4xl">Escolha por bairro, categoria e parceiro.</h1>
         <p className="m-0 max-w-3xl text-sm text-[#486048] md:text-base">
-          Explore os beneficios da Zona Norte com filtros completos para encontrar a melhor oferta para o seu dia.
+          Explore os benefícios da Zona Norte com filtros completos para encontrar a melhor oferta para o seu dia.
         </p>
       </section>
 
