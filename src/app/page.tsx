@@ -69,16 +69,24 @@ const heroPeoplePhotos = [
 
 const trustTestimonials = [
   {
-    author: "Ana, moradora do Sarandi",
-    quote: "Em duas semanas já usei três ofertas perto de casa. O processo é simples e rápido.",
+    author: "Ana P., moradora do Passo d'Areia.",
+    quote:
+      "Adorei! Ja usei o desconto no petshop aqui do bairro e economizei uma grana na racao. Toda ajuda no orcamento de casa e bem vinda ne. Recomendo dmais.",
   },
   {
-    author: "Carlos, Rubem Berta",
-    quote: "Consegui economizar no mercado e na farmácia no mesmo mês, sem burocracia.",
+    author: "Roberto C., morador do bairro Sao Joao.",
+    quote:
+      "Confesso que no inicio fiquei meio assim ne, por ser de graca. Mas resolvi testar e me surpreendi. Ja economizei na farmacia e ate na padaria. Virou rotina usar.",
   },
   {
-    author: "Patrícia, Jardim Lindóia",
-    quote: "Gostei porque as ofertas são locais e fáceis de validar direto no parceiro.",
+    author: "Lucas T., morador do Jardim Lindoia.",
+    quote:
+      "Cara, que ideia genial. Mto top. Usei pra um happy hour com a galera e o desconto ja pagou a primeira ceva kkkk. Facil de usar, so mostrei o celular.",
+  },
+  {
+    author: "",
+    quote:
+      "Gente, serio. Fui fazer um servico no carro e lembrei de olhar o clube e por incrivel q pareça tinha uma oficina pertinho da minha casa.",
   },
 ];
 
@@ -355,7 +363,7 @@ export default function LandingPage() {
   const [offersLoadingError, setOffersLoadingError] = useState("");
 
   const [highlightNeighborhood, setHighlightNeighborhood] = useState(defaultNeighborhood);
-  const heroImage = featuredOffers[0]?.images[0];
+  const heroImage = "/hero/hero-clubezn.avif";
 
   useEffect(() => {
     let cancelled = false;
@@ -511,8 +519,9 @@ export default function LandingPage() {
                 alt="Destaque de oferta local"
                 height={520}
                 src={heroImage}
-                unoptimized
                 width={520}
+                priority
+                sizes="(min-width: 768px) 45vw, 92vw"
                 className="relative z-[1] mt-auto h-[76%] w-full rounded-2xl object-cover md:h-[80%]"
               />
             ) : (
@@ -598,7 +607,7 @@ export default function LandingPage() {
 
       <section className="grid gap-4 rounded-2xl border border-[#a4c83a] bg-[var(--brand-accent)] p-5 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-extrabold text-[#102113] md:text-2xl">Quem usa, recomenda</h3>
+          <h3 className="m-0 text-xl font-extrabold text-[#102113] md:text-2xl">A confiança de quem faz a Zona Norte acontecer.</h3>
           <div className="flex flex-wrap gap-2">
             {trustBadges.map((badge) => (
               <span key={badge} className="rounded-full border border-[#8eac2d] bg-[#efffbd] px-3 py-1 text-xs font-bold text-[#17301b]">
@@ -607,12 +616,16 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
+        <p className="m-0 text-sm text-[#1d3320] md:text-base">
+          Nossa rede de parceiros não para de crescer, unindo desde o café da sua rua preferida até grandes marcas que você
+          já conhece e confia.
+        </p>
 
-        <div className="grid gap-3 md:grid-cols-3">
-          {trustTestimonials.map((item) => (
-            <article key={item.author} className="rounded-xl border border-[#dce8de] bg-[#f8fcf8] p-3">
+        <div className="grid gap-3 md:grid-cols-2">
+          {trustTestimonials.map((item, index) => (
+            <article key={`${item.author || "anon"}-${index}`} className="rounded-xl border border-[#dce8de] bg-[#f8fcf8] p-3">
               <p className="m-0 text-sm leading-relaxed text-[#314634]">“{item.quote}”</p>
-              <p className="mt-2 mb-0 text-xs font-bold uppercase tracking-[0.06em] text-[#5b755f]">{item.author}</p>
+              {item.author ? <p className="mt-2 mb-0 text-xs font-bold uppercase tracking-[0.06em] text-[#5b755f]">{item.author}</p> : null}
             </article>
           ))}
         </div>
