@@ -546,8 +546,9 @@ export const resetPasswordWithProvider = async (identifier: string, newPassword:
       return { error: "Conta não encontrada para o identificador informado." };
     }
 
-    const current = data.users[userIndex] as LocalUser;
-    data.users[userIndex] = {
+    const localUsers = data.users as LocalUser[];
+    const current = localUsers[userIndex];
+    localUsers[userIndex] = {
       ...current,
       password: newPassword,
     };

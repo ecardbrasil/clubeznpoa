@@ -872,13 +872,14 @@ export default function PartnerPage() {
                     A validação de código está disponível aqui para uso frequente.
                   </p>
                 </div>
-                <button
-                  className="btn btn-primary !w-auto"
-                  onClick={() => selectSection("validate")}
-                  type="button"
-                >
-                  Validar código agora
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button className="btn btn-ghost !w-auto" onClick={() => selectSection("offer")} type="button">
+                    Cadastrar oferta
+                  </button>
+                  <button className="btn btn-primary !w-auto" onClick={() => selectSection("validate")} type="button">
+                    Validar código agora
+                  </button>
+                </div>
               </div>
             </section>
 
