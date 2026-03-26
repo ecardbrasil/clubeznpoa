@@ -1029,9 +1029,9 @@ export default function LandingPage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
           <div className="grid content-start gap-2">
             <p className="m-0 text-sm font-extrabold text-white">Empresa</p>
-            <a href="#como-funciona" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Como funciona</a>
-            <a href="#parceiros" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Parceiros</a>
-            <a href="#faq" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Perguntas frequentes</a>
+            <Link href="/como-funciona" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Como funciona</Link>
+            <Link href="/parceiros" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Parceiros</Link>
+            <Link href="/faq" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Perguntas frequentes</Link>
           </div>
 
           <div className="grid content-start gap-2">
@@ -1043,23 +1043,23 @@ export default function LandingPage() {
 
           <div className="grid content-start gap-2">
             <p className="m-0 text-sm font-extrabold text-white">Links úteis</p>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Seja parceiro</a>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Fale com suporte</a>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Status da plataforma</a>
+            <Link href="/seja-parceiro" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Seja parceiro</Link>
+            <Link href="/suporte" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Fale com suporte</Link>
+            <Link href="/status" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Status da plataforma</Link>
           </div>
 
           <div className="grid content-start gap-2">
             <p className="m-0 text-sm font-extrabold text-white">Legal</p>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Termos de uso</a>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Privacidade</a>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">LGPD</a>
+            <Link href="/termos-de-uso" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Termos de uso</Link>
+            <Link href="/privacidade" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Privacidade</Link>
+            <Link href="/lgpd" className="text-sm text-[#b7cdbd] no-underline hover:text-white">LGPD</Link>
           </div>
 
           <div className="grid content-start gap-2">
             <p className="m-0 text-sm font-extrabold text-white">Redes sociais</p>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Instagram</a>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Facebook</a>
-            <a href="#" className="text-sm text-[#b7cdbd] no-underline hover:text-white">LinkedIn</a>
+            <Link href="/instagram" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Instagram</Link>
+            <Link href="/facebook" className="text-sm text-[#b7cdbd] no-underline hover:text-white">Facebook</Link>
+            <Link href="/linkedin" className="text-sm text-[#b7cdbd] no-underline hover:text-white">LinkedIn</Link>
           </div>
         </div>
 

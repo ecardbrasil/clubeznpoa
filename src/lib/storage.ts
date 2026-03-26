@@ -351,17 +351,29 @@ export const clearSession = () => {
 };
 
 export const signIn = (identifier: string, password: string): User | null => {
-  const data = getData();
-  const normalized = identifier.trim().toLowerCase();
+  const result = signInDetailed(identifier, password);
+  return result.user ?? null;
+};
 
-  const user = data.users.find((rawUser) => {
+export const signInDetailed = (identifier: string, password: string): { user?: User; error?: string } => {
+  const data = getData();
+  const rawIdentifier = identifier.trim();
+  const normalized = rawIdentifier.toLowerCase();
+
+  const user = data.users.find((rawUser: User) => {
     const u = rawUser as LocalUser;
     const emailMatch = u.email?.toLowerCase() === normalized;
-    const phoneMatch = u.phone === identifier.trim();
-    return (emailMatch || phoneMatch) && u.password === password;
+    const phoneMatch = u.phone === rawIdentifier;
+    return emailMatch || phoneMatch;
   });
 
-  if (!user) return null;
+  if (!user) return { error: "Conta não encontrada. Verifique o e-mail/celular." };
+
+  const localUser = user as LocalUser;
+  if (localUser.password !== password) {
+    return { error: "Senha incorreta. Tente novamente ou redefina sua senha." };
+  }
+
   const safeUser: User = {
     id: user.id,
     name: user.name,
@@ -373,7 +385,7 @@ export const signIn = (identifier: string, password: string): User | null => {
     createdAt: user.createdAt,
   };
   setSession(safeUser.id, safeUser);
-  return safeUser;
+  return { user: safeUser };
 };
 
 export interface SignUpInput {
@@ -459,12 +471,16 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
   return { user };
 };
 
-type SignInApiResponse = { user?: User; token?: string };
+type SignInApiResponse = { user?: User; token?: string; error?: string };
 type SignUpApiResponse = { user?: User; token?: string; error?: string };
+type ResetPasswordApiResponse = { ok?: boolean; error?: string };
 
-export const signInWithProvider = async (identifier: string, password: string): Promise<User | null> => {
+export const signInWithProvider = async (
+  identifier: string,
+  password: string,
+): Promise<{ user?: User; error?: string }> => {
   if (!isSupabaseMode) {
-    return signIn(identifier, password);
+    return signInDetailed(identifier, password);
   }
 
   const response = await fetch("/api/auth", {
@@ -478,13 +494,14 @@ export const signInWithProvider = async (identifier: string, password: string): 
   });
 
   if (!response.ok) {
-    return null;
+    const errorPayload = (await response.json().catch(() => null)) as SignInApiResponse | null;
+    return { error: errorPayload?.error || "Falha no login. Tente novamente." };
   }
 
   const payload = (await response.json()) as SignInApiResponse;
-  if (!payload.user) return null;
+  if (!payload.user) return { error: payload.error || "Falha no login. Tente novamente." };
   setSession(payload.user.id, payload.user, payload.token);
-  return payload.user;
+  return { user: payload.user };
 };
 
 export const signUpWithProvider = async (input: SignUpInput): Promise<{ user?: User; error?: string }> => {
@@ -509,6 +526,51 @@ export const signUpWithProvider = async (input: SignUpInput): Promise<{ user?: U
 
   setSession(payload.user.id, payload.user, payload.token);
   return { user: payload.user };
+};
+
+export const resetPasswordWithProvider = async (identifier: string, newPassword: string): Promise<{ error?: string }> => {
+  const normalizedIdentifier = identifier.trim();
+  if (!normalizedIdentifier) return { error: "Informe e-mail ou celular." };
+
+  if (!isSupabaseMode) {
+    const data = getData();
+    const normalizedEmail = normalizedIdentifier.toLowerCase();
+    const userIndex = data.users.findIndex((item) => {
+      const user = item as LocalUser;
+      const emailMatch = user.email?.toLowerCase() === normalizedEmail;
+      const phoneMatch = user.phone === normalizedIdentifier;
+      return emailMatch || phoneMatch;
+    });
+
+    if (userIndex < 0) {
+      return { error: "Conta não encontrada para o identificador informado." };
+    }
+
+    const current = data.users[userIndex] as LocalUser;
+    data.users[userIndex] = {
+      ...current,
+      password: newPassword,
+    };
+    saveData(data);
+    return {};
+  }
+
+  const response = await fetch("/api/auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "resetPassword",
+      identifier: normalizedIdentifier,
+      newPassword,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => null)) as ResetPasswordApiResponse | null;
+  if (!response.ok) {
+    return { error: payload?.error || "Não foi possível redefinir a senha." };
+  }
+  if (payload?.error) return { error: payload.error };
+  return {};
 };
 
 export const routeByRole = (role: UserRole): string => {

@@ -60,7 +60,8 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as
       | { action: "login"; identifier: string; password: string }
-      | { action: "register"; payload: SignUpInput };
+      | { action: "register"; payload: SignUpInput }
+      | { action: "resetPassword"; identifier: string; newPassword: string };
 
     const supabase = getSupabaseServerClient();
 
@@ -99,6 +100,34 @@ export async function POST(request: Request) {
         companyId: user.companyId,
       });
       return NextResponse.json({ user, token });
+    }
+
+    if (body.action === "resetPassword") {
+      const identifier = body.identifier.trim();
+      const newPassword = body.newPassword;
+      if (!identifier) {
+        return NextResponse.json({ error: "Informe e-mail ou celular." }, { status: 400 });
+      }
+      if (!newPassword || newPassword.length < 6) {
+        return NextResponse.json({ error: "Senha inválida para redefinição." }, { status: 400 });
+      }
+
+      const baseQuery = supabase.from("users").select("id, password").limit(1);
+      const lookupQuery = identifier.includes("@")
+        ? baseQuery.eq("email", identifier.toLowerCase())
+        : baseQuery.eq("phone", identifier);
+
+      const { data, error } = await lookupQuery.maybeSingle<{ id: string; password?: string }>();
+      if (error || !data) {
+        return NextResponse.json({ error: "Conta não encontrada para o identificador informado." }, { status: 404 });
+      }
+
+      const { error: updateError } = await supabase.from("users").update({ password: hashPassword(newPassword) }).eq("id", data.id);
+      if (updateError) {
+        return NextResponse.json({ error: "Não foi possível redefinir a senha." }, { status: 400 });
+      }
+
+      return NextResponse.json({ ok: true });
     }
 
     const input = body.payload;
