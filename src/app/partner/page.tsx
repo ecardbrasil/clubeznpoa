@@ -36,6 +36,36 @@ const readFileAsDataUrl = (file: File) =>
 
 type RedemptionFilter = "all" | "generated" | "used" | "expired";
 
+const defaultOfferCategories = [
+  "Supermercado",
+  "Farmácia",
+  "Restaurante",
+  "Padaria",
+  "Cafeteria",
+  "Pet",
+  "Beleza",
+  "Saúde",
+  "Educação",
+  "Serviços",
+  "Moda",
+  "Casa e decoração",
+];
+
+const northZoneNeighborhoods = [
+  "Sarandi",
+  "Santa Rosa de Lima",
+  "Passo das Pedras",
+  "Rubem Berta",
+  "Jardim Leopoldina",
+  "Parque Santa Fe",
+  "Jardim Itu",
+  "Costa e Silva",
+  "Jardim Lindóia",
+  "Cristo Redentor",
+  "Vila Ipiranga",
+  "Passo da Areia",
+];
+
 export default function PartnerPage() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -60,10 +90,14 @@ export default function PartnerPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [discountLabel, setDiscountLabel] = useState("");
-  const [category, setCategory] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [categorySearch, setCategorySearch] = useState("");
   const [neighborhood, setNeighborhood] = useState("Sarandi");
   const [images, setImages] = useState<string[]>([]);
   const [imageFeedback, setImageFeedback] = useState("");
+  const [isPublishingOffer, setIsPublishingOffer] = useState(false);
+  const [neighborhoodAutofilled, setNeighborhoodAutofilled] = useState(false);
+  const [onboardingExpanded, setOnboardingExpanded] = useState(false);
 
   const [publicName, setPublicName] = useState<string | null>(null);
   const [hasPhysicalAddress, setHasPhysicalAddress] = useState<boolean | null>(null);
@@ -209,6 +243,32 @@ export default function PartnerPage() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [data, company]);
 
+  const availableOfferCategories = useMemo(() => {
+    const fromCompanyOffers = companyOffers.map((offer) => offer.category).filter(Boolean);
+    const all = Array.from(new Set([...defaultOfferCategories, ...fromCompanyOffers])).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    return all;
+  }, [companyOffers]);
+
+  const filteredCategorySuggestions = useMemo(() => {
+    const normalizedSearch = categorySearch.trim().toLowerCase();
+    return availableOfferCategories.filter((item) => {
+      if (selectedCategories.includes(item)) return false;
+      if (!normalizedSearch) return true;
+      return item.toLowerCase().includes(normalizedSearch);
+    });
+  }, [availableOfferCategories, categorySearch, selectedCategories]);
+
+  const availableNeighborhoods = useMemo(() => {
+    const merged = Array.from(
+      new Set([
+        ...northZoneNeighborhoods,
+        company?.neighborhood ?? "",
+        ...companyOffers.map((offer) => offer.neighborhood),
+      ].filter(Boolean)),
+    );
+    return merged.sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [company?.neighborhood, companyOffers]);
+
   const redemptions = useMemo(() => {
     if (!data || companyOffers.length === 0) return [];
     const companyOfferIds = new Set(companyOffers.map((offer) => offer.id));
@@ -216,6 +276,12 @@ export default function PartnerPage() {
       .filter((item) => companyOfferIds.has(item.offerId))
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [data, companyOffers]);
+
+  useEffect(() => {
+    if (!company?.neighborhood || neighborhoodAutofilled) return;
+    setNeighborhood(company.neighborhood);
+    setNeighborhoodAutofilled(true);
+  }, [company?.neighborhood, neighborhoodAutofilled]);
 
   const effectivePublicName = publicName ?? (company?.publicName ?? company?.name ?? "");
   const effectiveAddressLine = addressLine ?? (company?.addressLine ?? "");
@@ -544,9 +610,25 @@ export default function PartnerPage() {
     }
   };
 
+  const addCategoryFromSearch = () => {
+    const normalized = categorySearch.trim();
+    if (!normalized) return;
+    if (selectedCategories.includes(normalized)) {
+      setCategorySearch("");
+      return;
+    }
+    setSelectedCategories((current) => [...current, normalized]);
+    setCategorySearch("");
+  };
+
+  const toggleCategorySelection = (item: string) => {
+    setSelectedCategories((current) => (current.includes(item) ? current.filter((categoryItem) => categoryItem !== item) : [...current, item]));
+  };
+
   const createPartnerOffer = async (event: FormEvent) => {
     event.preventDefault();
     setOfferFeedback("");
+    setImageFeedback("");
 
     if (!company) {
       setOfferFeedback("Empresa não encontrada.");
@@ -554,61 +636,79 @@ export default function PartnerPage() {
       return;
     }
 
-    if (images.length === 0) {
-      setOfferFeedback("Adicione ao menos 1 foto da oferta.");
-      showToast("Adicione ao menos 1 foto da oferta.", "error");
+    const missingRequiredItems: string[] = [];
+    if (!title.trim()) missingRequiredItems.push("Título");
+    if (!description.trim()) missingRequiredItems.push("Descrição");
+    if (!discountLabel.trim()) missingRequiredItems.push("Chamada do desconto");
+    if (selectedCategories.length === 0) missingRequiredItems.push("Categoria");
+    if (!neighborhood.trim()) missingRequiredItems.push("Bairro");
+    if (images.length === 0) missingRequiredItems.push("Fotos da oferta");
+
+    if (missingRequiredItems.length > 0) {
+      const message = `Não foi possível cadastrar a oferta. Complete: ${missingRequiredItems.join(", ")}.`;
+      setOfferFeedback(message);
+      showToast(message, "error");
       return;
     }
 
-    if (isSupabaseMode) {
-      if (!user) return;
-      const response = await fetch("/api/partner", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify({
-          action: "createOffer",
-          companyId: company.id,
-          payload: {
-            title,
-            description,
-            discountLabel,
-            category,
-            neighborhood,
-            images,
+    const mainCategory = selectedCategories[0];
+    setIsPublishingOffer(true);
+
+    try {
+      if (isSupabaseMode) {
+        if (!user) return;
+        const response = await fetch("/api/partner", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
           },
-        }),
-      });
+          body: JSON.stringify({
+            action: "createOffer",
+            companyId: company.id,
+            payload: {
+              title: title.trim(),
+              description: description.trim(),
+              discountLabel: discountLabel.trim(),
+              category: mainCategory,
+              neighborhood: neighborhood.trim(),
+              images,
+            },
+          }),
+        });
 
-      const payload = (await response.json()) as { error?: string };
-      if (!response.ok || payload.error) {
-        setOfferFeedback(payload.error || "Falha ao publicar oferta.");
-        showToast(payload.error || "Falha ao publicar oferta.", "error");
-        return;
+        const payload = (await response.json()) as { error?: string };
+        if (!response.ok || payload.error) {
+          setOfferFeedback(payload.error || "Falha ao publicar oferta.");
+          showToast(payload.error || "Falha ao publicar oferta.", "error");
+          return;
+        }
+      } else {
+        createOffer({
+          companyId: company.id,
+          title: title.trim(),
+          description: description.trim(),
+          discountLabel: discountLabel.trim(),
+          category: mainCategory,
+          neighborhood: neighborhood.trim(),
+          images,
+        });
       }
-    } else {
-      createOffer({
-        companyId: company.id,
-        title,
-        description,
-        discountLabel,
-        category,
-        neighborhood,
-        images,
-      });
-    }
 
-    setTitle("");
-    setDescription("");
-    setDiscountLabel("");
-    setCategory("");
-    setImages([]);
-    setImageFeedback("");
-    setOfferFeedback("Oferta publicada com sucesso.");
-    showToast("Oferta publicada com sucesso.", "success");
-    await refresh();
+      setTitle("");
+      setDescription("");
+      setDiscountLabel("");
+      setSelectedCategories([]);
+      setCategorySearch("");
+      setImages([]);
+      setImageFeedback("");
+      setOfferFeedback("Oferta publicada com sucesso.");
+      showToast("Oferta publicada com sucesso.", "success");
+      await refresh();
+      setSection("overview");
+    } finally {
+      setIsPublishingOffer(false);
+    }
   };
 
   const onSelectImages = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -719,7 +819,9 @@ export default function PartnerPage() {
                 <div>
                   <h2 style={{ margin: 0, fontSize: 18 }}>Checklist inicial do parceiro</h2>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                    Conclua estes passos para deixar o perfil pronto e começar a gerar resultados.
+                    {onboardingExpanded
+                      ? "Conclua estes passos para deixar o perfil pronto e começar a gerar resultados."
+                      : "Checklist minimizado para economizar espaço. Abra para ver as etapas."}
                   </p>
                 </div>
                 <span className={`badge ${onboardingCompleted === onboardingSteps.length ? "badge-ok" : "badge-pending"}`}>
@@ -727,22 +829,39 @@ export default function PartnerPage() {
                 </span>
               </div>
 
-              {onboardingSteps.map((step, index) => (
-                <article key={step.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p style={{ margin: 0, fontWeight: 700 }}>
-                      {step.done ? "☑" : "☐"} {index + 1}. {step.title}
-                    </p>
-                    <span className={`badge ${step.done ? "badge-ok" : "badge-pending"}`}>
-                      {step.done ? "Concluído" : "Pendente"}
-                    </span>
-                  </div>
-                  <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{step.description}</p>
-                  <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => selectSection(step.section)} type="button">
-                    {step.done ? "Revisar etapa" : step.actionLabel}
-                  </button>
-                </article>
-              ))}
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#dce8de] bg-[#f8fcf8] px-3 py-2">
+                <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+                  {onboardingCompleted === onboardingSteps.length
+                    ? "Todas as etapas concluídas."
+                    : `${onboardingSteps.length - onboardingCompleted} etapa(s) pendente(s).`}
+                </p>
+                <button
+                  className="btn btn-ghost !w-auto !px-3 !py-1.5"
+                  onClick={() => setOnboardingExpanded((current) => !current)}
+                  type="button"
+                >
+                  {onboardingExpanded ? "Minimizar checklist" : "Abrir checklist"}
+                </button>
+              </div>
+
+              {onboardingExpanded
+                ? onboardingSteps.map((step, index) => (
+                    <article key={step.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p style={{ margin: 0, fontWeight: 700 }}>
+                          {step.done ? "☑" : "☐"} {index + 1}. {step.title}
+                        </p>
+                        <span className={`badge ${step.done ? "badge-ok" : "badge-pending"}`}>
+                          {step.done ? "Concluído" : "Pendente"}
+                        </span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{step.description}</p>
+                      <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => selectSection(step.section)} type="button">
+                        {step.done ? "Revisar etapa" : step.actionLabel}
+                      </button>
+                    </article>
+                  ))
+                : null}
             </section>
 
             <section className="card grid gap-2">
@@ -980,14 +1099,73 @@ export default function PartnerPage() {
                   />
                 </label>
 
-                <label className="field">
-                  <span>Categoria</span>
-                  <input value={category} onChange={(event) => setCategory(event.target.value)} required />
-                </label>
+                <div className="grid gap-2">
+                  <label className="field">
+                    <span>Categoria (multi seleção com busca)</span>
+                    <input
+                      value={categorySearch}
+                      onChange={(event) => setCategorySearch(event.target.value)}
+                      placeholder="Busque e selecione categorias"
+                    />
+                  </label>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedCategories.map((item) => (
+                      <button
+                        key={`selected-${item}`}
+                        type="button"
+                        className="badge badge-ok"
+                        onClick={() => toggleCategorySelection(item)}
+                        title="Clique para remover"
+                      >
+                        {item} ×
+                      </button>
+                    ))}
+                    {selectedCategories.length === 0 ? (
+                      <span className="text-xs text-[var(--muted)]">Nenhuma categoria selecionada.</span>
+                    ) : null}
+                  </div>
+
+                  <div className="grid gap-1 rounded-xl border border-[#dce8de] bg-white p-2">
+                    {filteredCategorySuggestions.slice(0, 10).map((item) => (
+                      <label key={`option-${item}`} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(item)}
+                          onChange={() => toggleCategorySelection(item)}
+                        />
+                        <span>{item}</span>
+                      </label>
+                    ))}
+                    {filteredCategorySuggestions.length === 0 ? (
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Nenhuma categoria encontrada para esta busca.</p>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-ghost !w-auto !px-3 !py-1.5"
+                      onClick={addCategoryFromSearch}
+                      disabled={!categorySearch.trim()}
+                    >
+                      Adicionar categoria nova
+                    </button>
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+                      A primeira categoria selecionada será usada como categoria principal da oferta.
+                    </p>
+                  </div>
+                </div>
 
                 <label className="field">
                   <span>Bairro</span>
-                  <input value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} required />
+                  <select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} required>
+                    {availableNeighborhoods.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
                 </label>
 
                 <label className="field">
@@ -1045,8 +1223,8 @@ export default function PartnerPage() {
                   </div>
                 )}
 
-                <button className="btn btn-primary" type="submit">
-                  Publicar oferta
+                <button className="btn btn-primary" type="submit" disabled={isPublishingOffer}>
+                  {isPublishingOffer ? "Publicando oferta..." : "Publicar oferta"}
                 </button>
               </form>
               {offerFeedback && <p style={{ margin: 0, fontWeight: 700 }}>{offerFeedback}</p>}
