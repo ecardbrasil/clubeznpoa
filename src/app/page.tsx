@@ -2,17 +2,24 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ArrowRight,
+  BadgeCheck,
   BriefcaseBusiness,
-  ChevronRight,
+  Building2,
   GraduationCap,
   HeartPulse,
+  MapPinned,
   PawPrint,
   Pill,
+  ScanSearch,
   ShoppingBasket,
+  ShieldCheck,
   Sparkles,
+  Users,
   UtensilsCrossed,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
@@ -47,6 +54,36 @@ const heroPeoplePhotos = [
   "https://i.pravatar.cc/64?img=32",
   "https://i.pravatar.cc/64?img=47",
   "https://i.pravatar.cc/64?img=56",
+];
+
+const heroStats = [
+  { value: "100%", label: "gratuito para moradores" },
+  { value: "2 min", label: "para criar a conta" },
+  { value: "Local", label: "benefícios por bairro" },
+];
+
+const credibilityPillars = [
+  {
+    title: "Parceiros verificados",
+    description: "Empresas aprovadas com perfil público, endereço e canais visíveis para o morador.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Resgate simples",
+    description: "Você escolhe a oferta, gera o código e valida direto no atendimento, sem burocracia.",
+    icon: ScanSearch,
+  },
+  {
+    title: "Economia próxima de casa",
+    description: "A vitrine prioriza a Zona Norte para transformar desconto em conveniência real.",
+    icon: Wallet,
+  },
+];
+
+const partnerHighlights = [
+  "Perfis públicos com dados da empresa",
+  "Ofertas organizadas por categoria e bairro",
+  "Experiência pensada para morador e comércio local",
 ];
 
 const howItWorksSteps = [
@@ -437,7 +474,6 @@ const mapSupabaseLandingData = async () => {
 };
 
 export default function LandingPage() {
-  const categoriesScrollerRef = useRef<HTMLDivElement | null>(null);
   const [featuredOffers, setFeaturedOffers] = useState<OfferCardData[]>([]);
   const [partnerProfiles, setPartnerProfiles] = useState<Company[]>([]);
   const [offersLoadingError, setOffersLoadingError] = useState("");
@@ -500,14 +536,8 @@ export default function LandingPage() {
     };
   }, []);
 
-  const scrollCollections = () => {
-    const container = categoriesScrollerRef.current;
-    if (!container) return;
-    container.scrollBy({ left: 260, behavior: "smooth" });
-  };
-
   return (
-    <main id="conteudo-principal" className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-5 px-4 py-5 md:gap-7 md:px-6 md:py-7 xl:px-8">
+    <main id="conteudo-principal" className="mx-auto grid min-h-screen w-full max-w-[1380px] gap-6 px-4 py-5 md:gap-8 md:px-6 md:py-7 xl:px-8">
       <a
         href="#ofertas"
         className="sr-only rounded-lg bg-white px-3 py-2 text-sm font-bold text-[#102113] focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[120]"
@@ -515,213 +545,238 @@ export default function LandingPage() {
         Pular para ofertas
       </a>
       <section className="grid gap-5">
-        <div className="flex items-center justify-center rounded-2xl border border-[#a4c83a] bg-[var(--brand-accent)] px-4 py-2.5 text-center text-xs font-semibold text-[#102113] md:text-sm">
-          Ganhe até 25% OFF em parceiros selecionados da Zona Norte
+        <div className="flex items-center justify-center rounded-full border border-[#cad792] bg-[var(--brand-accent)]/55 px-4 py-2 text-center text-xs font-semibold uppercase tracking-[0.08em] text-[#1a291f] md:text-sm">
+          Plataforma local de vantagens para moradores e empresas da Zona Norte de Porto Alegre
         </div>
 
-        <header className="rounded-2xl border border-[#d9e6db] bg-white px-3 py-3 md:px-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <header className="rounded-[28px] border border-[var(--line)] bg-white/92 px-4 py-4 shadow-[var(--shadow-soft)] backdrop-blur md:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <BrandLogo />
 
-            <nav className="hidden items-center gap-6 md:flex" aria-label="Menu principal">
+            <nav className="hidden items-center gap-7 md:flex" aria-label="Menu principal">
               {headerLinks.map((item) => (
-                <a key={item.label} href={item.href} className="text-sm font-semibold text-[#2a3d2f] transition hover:text-[#1f5f30]">
+                <a key={item.label} href={item.href} className="text-sm font-semibold text-[#334139] transition hover:text-[var(--brand)]">
                   {item.label}
                 </a>
               ))}
             </nav>
 
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-              <Link href="/auth" className="btn btn-ghost !w-full sm:!w-auto !px-4 !py-2 text-sm text-center">
+              <Link href="/auth" className="btn btn-ghost !w-full sm:!w-auto !px-5 !py-2.5 text-sm text-center">
                 Já tenho conta
               </Link>
-              <Link href="/auth" className="btn btn-primary !w-full sm:!w-auto !px-4 !py-2 text-sm text-center">
-                cadastro
+              <Link href="/auth" className="btn btn-primary !w-full sm:!w-auto !px-5 !py-2.5 text-sm text-center">
+                Criar cadastro
               </Link>
             </div>
           </div>
         </header>
 
-        <div className="grid gap-5 rounded-[26px] bg-[#f7faf7] p-4 md:grid-cols-[1.05fr_0.95fr] md:items-stretch md:gap-7 md:p-7">
-          <article className="grid content-start gap-5">
-            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2b7a3f]">Zona Norte - Porto Alegre</p>
-            <h1 className="m-0 text-[2.1rem] font-black leading-[0.95] text-[#102113] md:text-6xl">
-              Chegamos na Zona Norte de POA!
-              <span className="mt-2 block text-[0.82em] leading-[1.02] md:mt-3">
-                <span className="font-extrabold text-[#1f5f30]">✚</span> descontos
-                <br />
-                <span className="font-extrabold text-[#1f5f30]">✚</span> vantagens
-                <br />
-                pra ti!
+        <div className="grid gap-5 rounded-[34px] border border-[var(--line)] bg-[linear-gradient(135deg,#fffdfa_0%,#f5efe2_52%,#ece5d8_100%)] p-5 shadow-[var(--shadow-strong)] md:grid-cols-[1.05fr_0.95fr] md:items-stretch md:gap-8 md:p-8">
+          <article className="grid content-start gap-6">
+            <div className="grid gap-3">
+              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#d9d2c2] bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#405046]">
+                <BadgeCheck size={14} className="text-[var(--brand)]" />
+                Curadoria local e operação simples
               </span>
-            </h1>
-            <p className="m-0 max-w-xl text-sm leading-relaxed text-[#486048] md:text-base">
-              Veja ofertas por bairro, gere seu código em segundos e valide direto no parceiro. Tudo num fluxo simples para
-              quem mora na Zona Norte.
-            </p>
+              <div className="grid gap-4">
+                <h1 className="font-display m-0 max-w-3xl text-[2.8rem] leading-[0.9] text-[#18231c] md:text-[4.8rem]">
+                  Economia de bairro com cara de marca séria, clara e confiável.
+                </h1>
+                <p className="m-0 max-w-2xl text-base leading-relaxed text-[var(--muted)] md:text-lg">
+                  O ClubeZN organiza ofertas reais da Zona Norte em uma experiência direta: você encontra por categoria ou
+                  bairro, entende a regra rápido e resgata sem fricção.
+                </p>
+              </div>
+            </div>
 
-            <div className="grid gap-2.5 sm:flex sm:flex-wrap">
-              <Link href="/ofertas" className="btn btn-primary !w-full sm:!w-auto sm:min-w-44">
+            <div className="grid gap-3 sm:flex sm:flex-wrap">
+              <Link href="/ofertas" className="btn btn-primary !w-full sm:!w-auto sm:min-w-52">
                 Ver ofertas agora
               </Link>
               <Link href="/auth" className="btn btn-ghost !w-full sm:!w-auto sm:min-w-44">
-                Quero participar
+                Criar conta grátis
               </Link>
             </div>
 
-            <div className="mt-1 grid gap-2.5">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  {heroPeoplePhotos.map((photo, index) => (
-                    <Image
-                      key={photo}
-                      src={photo}
-                      alt={`Morador ${index + 1}`}
-                      width={32}
-                      height={32}
-                      unoptimized
-                      className="h-8 w-8 rounded-full border-2 border-white object-cover"
-                    />
-                  ))}
-                </div>
-                <p className="m-0 text-sm font-semibold text-[#1b2d1f]">200+ moradores usando o ClubeZN</p>
+            <div className="grid gap-4 rounded-[26px] border border-[#ddd5c8] bg-white/85 p-4 md:grid-cols-[auto_1fr] md:items-center">
+              <div className="flex -space-x-2">
+                {heroPeoplePhotos.map((photo, index) => (
+                  <Image
+                    key={photo}
+                    src={photo}
+                    alt={`Morador ${index + 1}`}
+                    width={40}
+                    height={40}
+                    unoptimized
+                    className="h-10 w-10 rounded-full border-2 border-white object-cover"
+                  />
+                ))}
               </div>
-              <p className="m-0 max-w-md text-xs text-[#486048] md:text-sm">
-                Todo bairro tem um atalho para economizar. O ClubeZN conecta você a ele.
-              </p>
+              <div className="grid gap-1">
+                <p className="m-0 text-sm font-bold text-[#223128]">Moradores usam a plataforma para economizar perto de casa.</p>
+                <p className="m-0 text-sm text-[var(--muted)]">
+                  Mais clareza para o consumidor, mais visibilidade para o comércio local.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {heroStats.map((item) => (
+                <article key={item.label} className="rounded-[24px] border border-[#d8d1c5] bg-[#f8f5ee] px-4 py-4">
+                  <p className="m-0 text-3xl font-black text-[#18231c]">{item.value}</p>
+                  <p className="m-0 mt-1 text-sm text-[var(--muted)]">{item.label}</p>
+                </article>
+              ))}
             </div>
           </article>
 
-          <aside className="relative grid min-h-[320px] overflow-hidden rounded-[24px] border border-[#d6e7d9] bg-[linear-gradient(150deg,#e8f6eb_0%,#d4edda_60%,#c7e8d0_100%)] p-3 md:min-h-[460px] md:p-5">
-            <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(#bdd8c5_1px,transparent_1px),linear-gradient(90deg,#bdd8c5_1px,transparent_1px)] [background-size:24px_24px]" />
-            {heroImage ? (
-              <Image
-                alt="Destaque de oferta local"
-                height={520}
-                src={heroImage}
-                width={520}
-                priority
-                sizes="(min-width: 768px) 45vw, 92vw"
-                className="relative z-[1] mt-auto h-[76%] w-full rounded-2xl object-cover md:h-[80%]"
-              />
-            ) : (
-              <div className="relative z-[1] mt-auto grid h-[76%] place-items-center rounded-2xl border border-[#bcd9c3] bg-white/50 text-sm font-bold text-[#1f5f30] md:h-[80%]">
-                Sua oferta em destaque aqui
+          <aside className="relative grid min-h-[420px] overflow-hidden rounded-[30px] border border-[#d3cabd] bg-[#22362a] p-4 text-white md:p-5">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(210,233,113,0.28),transparent_30%),linear-gradient(160deg,rgba(255,255,255,0.06),transparent_48%)]" />
+            <div className="relative z-[1] flex items-start justify-between gap-3">
+              <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-2 backdrop-blur">
+                <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/70">Economia estimada</p>
+                <p className="m-0 mt-1 text-2xl font-black">R$ 198/mês</p>
               </div>
-            )}
+              <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-right backdrop-blur">
+                <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/70">Resgates recentes</p>
+                <p className="m-0 mt-1 text-2xl font-black">+120</p>
+              </div>
+            </div>
 
-            <article className="absolute bottom-2 left-2 z-[2] grid gap-1 rounded-2xl border border-[#dbe8de] bg-white px-2.5 py-2 shadow-sm md:bottom-5 md:left-5 md:px-3">
-              <p className="m-0 text-[11px] font-semibold text-[#5d735f]">Economia no mês</p>
-              <p className="m-0 text-xl font-black text-[#102113]">R$ 198,00</p>
-            </article>
-            <article className="absolute right-2 top-2 z-[2] grid gap-1 rounded-2xl border border-[#dbe8de] bg-white px-2.5 py-2 shadow-sm md:right-5 md:top-5 md:px-3">
-              <p className="m-0 text-[11px] font-semibold text-[#5d735f]">Resgates (30 dias)</p>
-              <p className="m-0 text-xl font-black text-[#102113]">+120</p>
-            </article>
+            <div className="relative z-[1] mt-4 overflow-hidden rounded-[28px] border border-white/10 bg-white/8 p-3 backdrop-blur">
+              {heroImage ? (
+                <Image
+                  alt="Destaque de oferta local"
+                  height={620}
+                  src={heroImage}
+                  width={620}
+                  priority
+                  sizes="(min-width: 768px) 45vw, 92vw"
+                  className="h-[260px] w-full rounded-[22px] object-cover md:h-[310px]"
+                />
+              ) : (
+                <div className="grid h-[260px] place-items-center rounded-[22px] border border-white/15 bg-white/10 text-sm font-bold text-white/80 md:h-[310px]">
+                  Sua oferta em destaque aqui
+                </div>
+              )}
+            </div>
+
+            <div className="relative z-[1] mt-auto grid gap-3 md:grid-cols-3">
+              {credibilityPillars.map((item) => (
+                <article key={item.title} className="rounded-[22px] border border-white/12 bg-white/10 p-4 backdrop-blur">
+                  <item.icon size={18} className="text-[var(--brand-accent)]" />
+                  <p className="m-0 mt-3 text-sm font-bold">{item.title}</p>
+                  <p className="m-0 mt-1 text-sm leading-relaxed text-white/72">{item.description}</p>
+                </article>
+              ))}
+            </div>
           </aside>
         </div>
       </section>
 
-      <section id="categorias" className="grid gap-4 rounded-[24px] border border-[#dbdee3] bg-[#f2f4f7] p-5 md:p-6">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="m-0 text-lg font-extrabold text-[#25303b] md:text-2xl">Explore nossas coleções</h3>
-          <Link href="/ofertas" className="text-sm font-bold text-[#2487ff] hover:underline">
-            Ver tudo
+      <section id="categorias" className="grid gap-5 rounded-[30px] border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-soft)] md:p-7">
+        <div className="grid gap-2 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="grid gap-2">
+            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">Navegação rápida</p>
+            <h2 className="font-display m-0 text-3xl leading-tight text-[#18231c] md:text-4xl">Escolha por categoria sem se perder.</h2>
+            <p className="m-0 max-w-2xl text-sm leading-relaxed text-[var(--muted)] md:text-base">
+              A estrutura da home foi organizada para reduzir ruído visual e facilitar a descoberta de benefícios desde o primeiro clique.
+            </p>
+          </div>
+          <Link href="/ofertas" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--brand)] hover:underline">
+            Ver vitrine completa
+            <ArrowRight size={16} />
           </Link>
         </div>
-        <div className="relative">
-          <div ref={categoriesScrollerRef} className="flex gap-3 overflow-x-auto pb-1 pr-8 md:pr-12">
-            {categories.map((category) => (
-              <Link
-                key={category.title}
-                href={`/ofertas?categoria=${encodeURIComponent(category.title)}`}
-                className="grid min-w-[140px] gap-1.5 rounded-2xl border border-[#d7dce2] bg-[#f6f7f9] px-3 py-4 text-center transition hover:bg-white md:min-w-[152px]"
-              >
-                <span className="mx-auto grid h-10 w-10 place-items-center rounded-full border border-[#d2d7de] bg-white text-[#747d87]">
-                  <category.icon size={19} />
-                </span>
-                <p className="m-0 text-sm font-extrabold leading-tight text-[#3f4955] md:text-base">{category.title}</p>
-                <p className="m-0 text-sm font-extrabold leading-tight text-[#3f4955] md:text-base">{category.subtitle}</p>
-              </Link>
-            ))}
-          </div>
-          <button
-            type="button"
-            aria-label="Ver mais coleções"
-            onClick={scrollCollections}
-            className="absolute right-0 top-1/2 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-[#d7dce2] bg-white text-[#2487ff] shadow-[0_6px_18px_rgba(20,35,50,0.15)] md:grid"
-          >
-            <ChevronRight size={22} />
-          </button>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {categories.map((category) => (
+            <Link
+              key={category.title}
+              href={`/ofertas?categoria=${encodeURIComponent(category.title)}`}
+              className="group grid gap-3 rounded-[24px] border border-[#ddd5c8] bg-[#fbf8f2] p-4 transition hover:-translate-y-0.5 hover:border-[#c3b8a8] hover:bg-white"
+            >
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#eef2e3] text-[var(--brand)]">
+                <category.icon size={20} />
+              </span>
+              <div className="grid gap-1">
+                <p className="m-0 text-lg font-bold text-[#18231c]">{category.title}</p>
+                <p className="m-0 text-sm text-[var(--muted)]">{category.subtitle}</p>
+              </div>
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#385246] group-hover:text-[var(--brand)]">
+                Abrir categoria
+                <ArrowRight size={15} />
+              </span>
+            </Link>
+          ))}
         </div>
       </section>
 
       <section id="ofertas" className="grid gap-4">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Ofertas em destaque</h3>
-          <Link href="/ofertas" className="text-sm font-bold text-[#1f5f30] hover:underline">
-            Ver todas
+        <div className="grid gap-3 rounded-[30px] border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-soft)] md:grid-cols-[1fr_auto] md:items-end md:p-7">
+          <div className="grid gap-2">
+            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">Ofertas em destaque</p>
+            <h2 className="font-display m-0 text-3xl leading-tight text-[#18231c] md:text-4xl">Benefícios selecionados para converter confiança em ação.</h2>
+            <p className="m-0 max-w-2xl text-sm leading-relaxed text-[var(--muted)] md:text-base">
+              Cada card destaca o essencial da oferta e mantém o detalhe completo no modal, evitando excesso de informação na vitrine.
+            </p>
+          </div>
+          <Link href="/ofertas" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--brand)] hover:underline">
+            Ver todas as ofertas
+            <ArrowRight size={16} />
           </Link>
         </div>
 
         {offersLoadingError ? (
-          <article className="rounded-2xl border border-[#f0c8c8] bg-[#fff2f2] px-3 py-2 text-sm text-[#7c2323]">
+          <article className="rounded-2xl border border-[#f0c8c8] bg-[#fff2f2] px-4 py-3 text-sm text-[#7c2323]">
             Não foi possível carregar as ofertas da home. Detalhe: {offersLoadingError}
           </article>
         ) : null}
 
-        <div className="grid grid-flow-col auto-cols-[88%] gap-3 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-4 md:auto-cols-auto md:overflow-visible">
+        <div className="grid grid-flow-col auto-cols-[88%] gap-4 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-4 md:auto-cols-auto md:overflow-visible">
           {featuredOffers.map((offer) => (
-            <OfferCard
-              key={offer.id}
-              actionHref="/auth"
-              actionLabel="Quero essa oferta"
-              offer={offer}
-            />
+            <OfferCard key={offer.id} actionHref="/auth" actionLabel="Quero essa oferta" offer={offer} />
           ))}
-          {featuredOffers.length === 0 && (
-            <p className="card">As ofertas aprovadas aparecerão aqui assim que forem publicadas.</p>
-          )}
+          {featuredOffers.length === 0 && <p className="card">As ofertas aprovadas aparecerão aqui assim que forem publicadas.</p>}
         </div>
       </section>
 
-      <section className="rounded-[30px] bg-[linear-gradient(140deg,#173b20_0%,#1f5f30_55%,#2b7a3f_100%)] p-3 md:p-5">
-        <div className="grid gap-5 rounded-[24px] border border-[#a4c83a] bg-white p-4 md:gap-6 md:p-7">
-          <div className="grid justify-items-center gap-3 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#91b730] bg-[#102113] px-3 py-1 text-xs font-semibold text-[#eefbc7]">
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-accent)] text-[10px] font-black text-[#102113]">
-                ★
-              </span>
-              Avaliado por moradores da Zona Norte
+      <section className="grid gap-5 rounded-[34px] border border-[#203327] bg-[linear-gradient(145deg,#18271d_0%,#22362a_55%,#2b4737_100%)] p-5 text-white shadow-[var(--shadow-strong)] md:p-7">
+        <div className="grid gap-3 md:grid-cols-[0.95fr_1.05fr] md:items-start">
+          <div className="grid gap-3">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] text-white/80">
+              <Users size={14} className="text-[var(--brand-accent)]" />
+              Prova de confiança
             </span>
-            <h3 className="m-0 max-w-3xl text-2xl font-black leading-tight text-[#102113] md:text-4xl">
-              A confiança de quem faz a Zona Norte acontecer.
-            </h3>
-            <p className="m-0 max-w-3xl text-sm text-[#38503e] md:text-base">
-              Nossa rede de parceiros não para de crescer, unindo desde o café da sua rua preferida até marcas que você já
-              conhece e confia.
+            <h2 className="font-display m-0 max-w-xl text-3xl leading-tight text-white md:text-4xl">
+              Uma home mais limpa precisa sustentar credibilidade sem parecer genérica.
+            </h2>
+            <p className="m-0 max-w-xl text-sm leading-relaxed text-white/72 md:text-base">
+              A nova leitura privilegia sinais concretos de confiança: curadoria, clareza operacional, foco territorial e
+              depoimentos pontuais em vez de excesso de estímulos.
             </p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap gap-2">
               {trustBadges.map((badge) => (
-                <span key={badge} className="rounded-full border border-[#8eac2d] bg-[#efffbd] px-3 py-1 text-xs font-bold text-[#17301b]">
+                <span key={badge} className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5 text-xs font-bold text-white/82">
                   {badge}
                 </span>
               ))}
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {trustTestimonials.map((item) => (
-              <article key={`${item.name}-${item.neighborhood}`} className="grid gap-3 rounded-2xl border border-[#d8e7dc] bg-[#f8fcf8] p-4">
-                <p className="m-0 text-3xl font-black leading-none text-[#2b7a3f]">“</p>
-                <p className="m-0 -mt-2 text-sm leading-relaxed text-[#2f4535]">{item.quote}</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {trustTestimonials.slice(0, 3).map((item) => (
+              <article key={`${item.name}-${item.neighborhood}`} className="grid gap-3 rounded-[24px] border border-white/10 bg-white/8 p-4 backdrop-blur">
+                <p className="m-0 text-3xl font-black leading-none text-[var(--brand-accent)]">“</p>
+                <p className="m-0 -mt-2 text-sm leading-relaxed text-white/78">{item.quote}</p>
                 <div className="mt-1 flex items-center gap-2.5">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#a4c83a] bg-[var(--brand-accent)] text-xs font-black text-[#102113]">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[var(--brand-accent)] text-xs font-black text-[#152018]">
                     {getInitials(item.name)}
                   </span>
                   <div className="grid gap-0.5">
-                    <p className="m-0 text-sm font-extrabold text-[#102113]">{item.name}</p>
-                    <p className="m-0 text-xs font-semibold text-[#5a735f]">Morador(a) do {item.neighborhood}</p>
+                    <p className="m-0 text-sm font-bold text-white">{item.name}</p>
+                    <p className="m-0 text-xs text-white/62">{item.neighborhood}</p>
                   </div>
                 </div>
               </article>
@@ -730,32 +785,32 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="grid gap-5 rounded-[28px] border border-[#f2c97f] bg-[linear-gradient(135deg,#ffe2ad_0%,#ffd28a_55%,#ffc670_100%)] p-5 md:p-7">
+      <section className="grid gap-5 rounded-[34px] border border-[#ccb58a] bg-[linear-gradient(135deg,#f6ead4_0%,#f0dfc0_55%,#e7d2ac_100%)] p-5 shadow-[var(--shadow-soft)] md:p-7">
         <div className="grid gap-2 md:grid-cols-[1.1fr_0.9fr] md:items-end">
           <div className="grid gap-2">
-            <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#704110]">Bairros da Zona Norte</p>
-            <h3 className="m-0 text-2xl font-black leading-tight text-[#2f1a03] md:text-4xl">
-              {highlightNeighborhood} já está no mapa do ClubeZN. Se você mora aqui, já pode participar.
-            </h3>
+            <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#7d5620]">Bairros da Zona Norte</p>
+            <h2 className="font-display m-0 text-3xl leading-tight text-[#2f1a03] md:text-4xl">
+              {highlightNeighborhood} já está dentro da cobertura do ClubeZN.
+            </h2>
             <p className="m-0 max-w-3xl text-sm text-[#5f370a] md:text-base">
-              Estamos expandindo por toda a Zona Norte para conectar moradores a descontos locais. Procure seu bairro na lista e
-              entre para aproveitar as ofertas.
+              O mapa reforça o posicionamento territorial da marca e ajuda o usuário a entender rapidamente que a plataforma é
+              relevante para a rotina local, não um marketplace genérico.
             </p>
           </div>
           <div className="grid gap-2 md:justify-items-end">
             <Link href="/ofertas" className="btn !w-full border border-[#91520f] bg-[#2f1a03] text-white md:!w-auto md:min-w-52">
               Ver ofertas por bairro
             </Link>
-            <p className="m-0 text-xs font-semibold text-[#6e4312]">Mais bairros entram em ondas de expansão contínua.</p>
+            <p className="m-0 text-xs font-semibold text-[#6e4312]">A seleção é exibida por bairro para reduzir atrito na escolha.</p>
           </div>
         </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_0.9fr] md:items-stretch">
-          <article className="relative overflow-hidden rounded-2xl border border-[#d8a95d] bg-[#fff5e3] p-3 md:p-4">
+          <article className="relative overflow-hidden rounded-[26px] border border-[#d8a95d] bg-[#fff5e3] p-3 md:p-4">
             <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(#e8ba76_0.8px,transparent_0.8px)] [background-size:14px_14px]" />
             <div className="relative z-[1]">
-              <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#7f4c0f]">Mapa Zona Norte (contornos reais)</p>
-              <div className="relative mt-2 overflow-hidden rounded-xl border border-[#dcb276] bg-white/60 p-2">
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#7f4c0f]">Mapa Zona Norte com contornos reais</p>
+              <div className="relative mt-2 overflow-hidden rounded-[22px] border border-[#dcb276] bg-white/60 p-2">
                 <svg
                   viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
                   className="h-[200px] w-full md:h-[260px]"
@@ -820,11 +875,23 @@ export default function LandingPage() {
             </div>
           </article>
 
-          <article className="grid gap-2 rounded-2xl border border-[#d8a95d] bg-white/70 p-3 md:p-4">
-            <p className="m-0 text-sm font-extrabold text-[#552f05]">Como funciona por bairro</p>
-            <p className="m-0 text-sm text-[#6e4312]">
-              Os pins mostram bairros com presença ativa na Zona Norte. Clique no bairro para abrir a vitrine já filtrada.
-            </p>
+          <article className="grid gap-4 rounded-[26px] border border-[#d8a95d] bg-white/70 p-4 md:p-5">
+            <div className="grid gap-2">
+              <p className="m-0 text-sm font-extrabold text-[#552f05]">Como navegar por bairro</p>
+              <p className="m-0 text-sm text-[#6e4312]">
+                O bairro em destaque usa sua geolocalização quando disponível. A lista lateral permite ir direto para uma vitrine
+                filtrada e contextualizada.
+              </p>
+            </div>
+            <div className="grid gap-2 rounded-[22px] border border-[#e4c089] bg-[#fff7ea] p-4">
+              <div className="flex items-center gap-2 text-[#6b4210]">
+                <MapPinned size={18} />
+                <p className="m-0 text-sm font-bold">Seu ponto de entrada pode começar pelo bairro.</p>
+              </div>
+              <p className="m-0 text-sm text-[#7f561f]">
+                Isso ajuda a plataforma a parecer próxima, específica e útil, reforçando credibilidade pela relevância local.
+              </p>
+            </div>
             <div className="grid gap-1.5">
               {northZoneMapLayout.map((pin) => {
                 const highlighted = normalizeText(pin.name) === normalizeText(highlightNeighborhood);
@@ -832,7 +899,7 @@ export default function LandingPage() {
                   <Link
                     key={`${pin.name}-legend`}
                     href={`/ofertas?bairro=${encodeURIComponent(pin.name)}`}
-                    className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+                    className={`rounded-xl border px-3 py-2.5 text-sm font-semibold ${
                       highlighted ? "border-[#5b3307] bg-[#2f1a03] text-[#f6d8ad]" : "border-[#ddb06f] bg-white text-[#6e4312]"
                     }`}
                   >
@@ -843,19 +910,18 @@ export default function LandingPage() {
             </div>
           </article>
         </div>
-
       </section>
 
       <section
         id="como-funciona"
-        className="grid gap-5 rounded-[26px] border border-[#d3e6d7] bg-[linear-gradient(135deg,#f3fbf5_0%,#ecf8ef_55%,#e6f4ea_100%)] p-5 md:gap-6 md:p-7"
+        className="grid gap-5 rounded-[30px] border border-[#cdd8cf] bg-[linear-gradient(135deg,#f7faf5_0%,#eef4ec_55%,#e7efe8_100%)] p-5 shadow-[var(--shadow-soft)] md:gap-6 md:p-7"
       >
         <div className="grid gap-2 md:grid-cols-[1fr_auto] md:items-end">
           <div className="grid gap-2">
-            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2b7a3f]">Passo a passo</p>
-            <h3 className="m-0 text-2xl font-black text-[#102113] md:text-4xl">Como funciona o ClubeZN na prática</h3>
+            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">Fluxo de uso</p>
+            <h2 className="font-display m-0 text-3xl text-[#102113] md:text-4xl">Entendimento imediato, sem tutorial cansativo.</h2>
             <p className="m-0 max-w-3xl text-sm text-[#486048] md:text-base">
-              Processo simples, rápido e focado em economia local. Em poucos passos você já usa vantagens no seu bairro.
+              O processo foi mantido simples para sustentar conversão e confiança: poucas etapas, linguagem direta e expectativa clara.
             </p>
           </div>
           <Link href="/auth" className="btn btn-primary !w-full md:!w-auto md:min-w-48">
@@ -865,8 +931,8 @@ export default function LandingPage() {
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           {howItWorksSteps.map((item) => (
-            <article key={item.step} className="grid gap-2 rounded-2xl border border-[#cde3d2] bg-white p-4">
-              <span className="inline-flex w-fit items-center justify-center rounded-full border border-[#b6d8bd] bg-[#eaf7ee] px-2.5 py-1 text-xs font-black text-[#1f5f30]">
+            <article key={item.step} className="grid gap-2 rounded-[24px] border border-[#d6dfd8] bg-white p-4">
+              <span className="inline-flex w-fit items-center justify-center rounded-full border border-[#c9d6cb] bg-[#edf4ef] px-2.5 py-1 text-xs font-black text-[var(--brand)]">
                 Etapa {item.step}
               </span>
               <h4 className="m-0 text-base font-extrabold text-[#102113]">{item.title}</h4>
@@ -876,133 +942,113 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="parceiros" className="grid gap-4 md:grid-cols-[1.15fr_0.85fr]">
-        <article className="card !grid !gap-3 !rounded-2xl">
-          <div className="flex items-center justify-between">
-            <h3 className="m-0 text-xl font-bold text-[#102113]">Empresas parceiras</h3>
-            <div className="flex items-center gap-3">
-              <Link href="/parceiros" className="text-sm font-bold text-[#1f5f30] hover:underline">
-                Ver todas
+      <section id="parceiros" className="grid gap-4 md:grid-cols-[1.08fr_0.92fr]">
+        <article className="grid gap-4 rounded-[30px] border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-soft)] md:p-7">
+          <div className="grid gap-2 md:grid-cols-[1fr_auto] md:items-end">
+            <div className="grid gap-2">
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">Empresas parceiras</p>
+              <h2 className="font-display m-0 text-3xl leading-tight text-[#18231c] md:text-4xl">Presença comercial com mais organização e menos ruído.</h2>
+              <p className="m-0 max-w-2xl text-sm text-[var(--muted)] md:text-base">
+                Em vez de repetir módulos de parceiros, a nova home concentra os perfis mais relevantes em uma vitrine única e
+                consistente.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link href="/parceiros" className="text-sm font-bold text-[var(--brand)] hover:underline">
+                Ver todos
               </Link>
-              <Link href="/auth" className="text-sm font-bold text-[#1f5f30] hover:underline">
+              <Link href="/auth" className="text-sm font-bold text-[var(--brand)] hover:underline">
                 Quero ser parceiro
               </Link>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {partnerProfiles.map((partner) => (
-              <article key={partner.id} className="card !grid !gap-2 !rounded-xl !p-3 md:!w-[calc(50%-0.25rem)]">
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {partnerProfiles.slice(0, 6).map((partner) => (
+              <article key={partner.id} className="grid gap-3 rounded-[24px] border border-[#ddd5c8] bg-[#fbf8f2] p-4">
                 {partner.coverImage ? (
                   <Image
                     alt={`Capa de ${partner.publicName ?? partner.name}`}
-                    height={82}
+                    height={120}
                     src={partner.coverImage}
                     unoptimized
-                    width={360}
-                    style={{ width: "100%", height: 82, objectFit: "cover", borderRadius: 10 }}
+                    width={420}
+                    style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 18 }}
                   />
                 ) : null}
-                <div className="flex items-center gap-2">
-                  {partner.logoImage ? (
-                    <Image
-                      alt={`Logo de ${partner.publicName ?? partner.name}`}
-                      height={36}
-                      src={partner.logoImage}
-                      unoptimized
-                      width={36}
-                      style={{ width: 36, height: 36, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)" }}
-                    />
-                  ) : null}
-                  <p className="m-0 text-sm font-bold text-[#1f5f30]">{partner.publicName ?? partner.name}</p>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-[#d5cec2] bg-white">
+                    {partner.logoImage ? (
+                      <Image
+                        alt={`Logo de ${partner.publicName ?? partner.name}`}
+                        height={40}
+                        src={partner.logoImage}
+                        unoptimized
+                        width={40}
+                        style={{ width: 40, height: 40, borderRadius: 999, objectFit: "cover" }}
+                      />
+                    ) : (
+                      <Building2 size={18} className="text-[var(--brand)]" />
+                    )}
+                  </div>
+                  <div className="grid gap-0.5">
+                    <p className="m-0 text-base font-bold text-[#18231c]">{partner.publicName ?? partner.name}</p>
+                    <p className="m-0 text-sm text-[var(--muted)]">{partner.category}</p>
+                  </div>
                 </div>
-                <p className="m-0 break-words text-xs text-[#486048]">
+                <p className="m-0 text-sm text-[var(--muted)]">
                   {partner.addressLine || `${partner.neighborhood} - ${partner.city}/${partner.state}`}
                 </p>
-                <p className="m-0 break-all text-xs text-[#486048]">
-                  {[partner.instagram, partner.facebook, partner.website, partner.whatsapp].filter(Boolean).join(" • ") ||
-                    "Redes não informadas"}
-                </p>
-                <Link href={`/parceiros/${partner.id}`} className="text-xs font-bold text-[#1f5f30] hover:underline">
+                <Link href={`/parceiros/${partner.id}`} className="inline-flex items-center gap-2 text-sm font-bold text-[var(--brand)] hover:underline">
                   Ver perfil da empresa
+                  <ArrowRight size={15} />
                 </Link>
               </article>
             ))}
-            {partnerProfiles.length === 0 && (
-              <span className="rounded-xl border border-[#d1dfd1] bg-white px-3 py-2 text-sm font-semibold text-[#1f5f30]">
-                Sua empresa pode ser a primeira
-              </span>
-            )}
+            {partnerProfiles.length === 0 && <p className="card">Sua empresa pode ser a primeira a aparecer nesta vitrine.</p>}
           </div>
         </article>
 
-        <article className="card !grid !gap-3 !rounded-2xl !border-[#a4c83a] !bg-[var(--brand-accent)]">
-          <h3 className="m-0 text-xl font-extrabold text-[#102113]">Pronto para economizar no seu bairro?</h3>
-          <p className="m-0 text-sm text-[#486048]">Entre agora no ClubeZN e comece a usar os descontos locais.</p>
-          <Link href="/auth" className="btn btn-primary !w-full text-center">
-            Entrar no ClubeZN
-          </Link>
-        </article>
-      </section>
-
-      <section className="grid gap-4 rounded-2xl border border-[#d9dddf] bg-[#f1f2f3] p-4 md:p-6">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="m-0 text-xl font-bold text-[#1e1f22] md:text-2xl">Empresas parceiras cadastradas</h3>
-          <div className="flex items-center gap-3">
-            <Link href="/parceiros" className="text-sm font-bold text-[#38424f] hover:underline">
-              Ver todas
+        <article className="grid gap-4 rounded-[30px] border border-[#cad792] bg-[linear-gradient(145deg,#eff7c6_0%,#ddeca1_100%)] p-5 shadow-[var(--shadow-soft)] md:p-7">
+          <div className="grid gap-2">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#bac66f] bg-white/60 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#2a3418]">
+              <ShieldCheck size={14} />
+              Valor percebido
+            </span>
+            <h3 className="font-display m-0 text-3xl leading-tight text-[#1d2812]">Uma marca local precisa parecer confiável dos dois lados.</h3>
+            <p className="m-0 text-sm leading-relaxed text-[#405229]">
+              A home agora fala com o morador e com o parceiro sem parecer um template inflado: mais foco, melhores contrastes e
+              CTAs objetivos.
+            </p>
+          </div>
+          <div className="grid gap-3">
+            {partnerHighlights.map((item) => (
+              <div key={item} className="flex items-start gap-3 rounded-[22px] border border-[#c9d67b] bg-white/60 px-4 py-3">
+                <BadgeCheck size={18} className="mt-0.5 shrink-0 text-[#31431e]" />
+                <p className="m-0 text-sm font-semibold text-[#2a3418]">{item}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Link href="/auth" className="btn btn-primary !w-full text-center">
+              Entrar no ClubeZN
             </Link>
-            <Link href="/auth" className="text-sm font-bold text-[#38424f] hover:underline">
+            <Link href="/seja-parceiro" className="btn btn-ghost !w-full !border-[#a7b35a] !bg-white/75 text-center">
               Quero minha marca aqui
             </Link>
           </div>
-        </div>
-        <div className="grid grid-flow-col auto-cols-[minmax(240px,1fr)] gap-3 overflow-x-auto pb-1 md:grid-flow-row md:grid-cols-3 md:overflow-visible lg:grid-cols-5">
-          {partnerProfiles.slice(0, 10).map((partner) => (
-            <article
-              key={partner.id}
-              className="relative flex items-center gap-3 rounded-xl border border-[#cfd3d7] bg-[#f6f7f8] px-4 py-3.5 shadow-[0_1px_0_rgba(0,0,0,0.03)]"
-            >
-              <span className="absolute right-2.5 top-2 text-xs font-black text-[#ef5656]">✹</span>
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-[#d4d7db] bg-white p-2">
-                {partner.logoImage ? (
-                  <Image
-                    src={partner.logoImage}
-                    alt={`Logomarca ${partner.publicName ?? partner.name}`}
-                    width={52}
-                    height={52}
-                    unoptimized
-                    style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 999 }}
-                  />
-                ) : (
-                  <span className="text-base font-black text-[#1e1f22]">
-                    {(partner.publicName ?? partner.name).trim()[0]?.toUpperCase() ?? "P"}
-                  </span>
-                )}
-              </div>
-              <div className="grid min-w-0">
-                <p className="m-0 truncate text-[1.04rem] font-semibold leading-tight text-[#202328]">
-                  {partner.publicName ?? partner.name}
-                </p>
-                <p className="m-0 truncate text-sm text-[#7c838d]">{partner.category}</p>
-              </div>
-            </article>
-          ))}
-          {partnerProfiles.length === 0 && (
-            <article className="rounded-xl border border-[#cfd3d7] bg-white px-4 py-3 text-sm font-semibold text-[#38424f]">
-              As empresas cadastradas aparecerão aqui.
-            </article>
-          )}
-        </div>
+        </article>
       </section>
 
-      <section id="faq" className="grid gap-4 rounded-[24px] border border-[#d6e7d9] bg-[#f7fbf8] p-5 md:p-6">
+      <section id="faq" className="grid gap-4 rounded-[30px] border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-soft)] md:p-7">
         <div className="grid gap-1">
-          <h3 className="m-0 text-xl font-black text-[#102113] md:text-2xl">Perguntas frequentes</h3>
-          <p className="m-0 text-sm text-[#486048]">Dúvidas mais comuns de moradores e empresas parceiras.</p>
+          <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">Perguntas frequentes</p>
+          <h2 className="font-display m-0 text-3xl text-[#102113] md:text-4xl">Dúvidas respondidas com objetividade.</h2>
+          <p className="m-0 text-sm text-[#486048]">A seção foi mantida simples para reforçar clareza operacional e reduzir insegurança.</p>
         </div>
         <div className="grid gap-2">
           {faqItems.map((item) => (
-            <details key={item.question} className="rounded-xl border border-[#d5e4d8] bg-white px-4 py-3">
+            <details key={item.question} className="rounded-[22px] border border-[#ddd5c8] bg-[#fbf8f2] px-4 py-4">
               <summary className="cursor-pointer text-sm font-extrabold text-[#19321f]">{item.question}</summary>
               <p className="m-0 mt-2 text-sm leading-relaxed text-[#486048]">{item.answer}</p>
             </details>
@@ -1010,16 +1056,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="grid gap-6 rounded-[28px] border border-[#25432f] bg-[#102113] p-5 text-[#d7e8db] md:p-8">
+      <footer className="grid gap-6 rounded-[32px] border border-[#23382b] bg-[#18271d] p-5 text-[#d7e8db] shadow-[var(--shadow-strong)] md:p-8">
         <div className="grid gap-5 border-b border-[#294735] pb-5 md:grid-cols-[1.2fr_0.8fr] md:items-center">
           <div className="grid gap-2">
             <BrandLogo />
             <p className="m-0 max-w-xl text-sm leading-relaxed text-[#b7cdbd]">
-              ClubeZN é a plataforma de vantagens da Zona Norte de Porto Alegre, conectando moradores a parceiros locais com
-              resgate simples e seguro.
+              ClubeZN conecta moradores e negócios da Zona Norte em uma plataforma de vantagens mais organizada, mais clara e com
+              foco real na economia local.
             </p>
           </div>
-          <div className="grid gap-2 rounded-2xl border border-[#2f5440] bg-[#183426] p-4 md:justify-self-end">
+          <div className="grid gap-2 rounded-[24px] border border-[#2f5440] bg-[#20372a] p-4 md:justify-self-end">
             <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#9fc6ab]">Central de atendimento</p>
             <p className="m-0 text-sm font-semibold">contato@clubezn.com</p>
             <p className="m-0 text-sm font-semibold">WhatsApp: (51) 99999-0000</p>

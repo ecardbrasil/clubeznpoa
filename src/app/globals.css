@@ -1,19 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f3f8f3;
-  --text: #102113;
+  --bg: #f5f1e8;
+  --text: #18231c;
   --panel: #ffffff;
-  --muted: #486048;
-  --brand: #2b7a3f;
-  --brand-accent: #c9f549;
-  --brand-2: #1f5f30;
-  --line: #d1dfd1;
+  --muted: #58675d;
+  --brand: #234733;
+  --brand-accent: #d2e971;
+  --brand-2: #163225;
+  --line: #d9d3c7;
   --warn: #b52e31;
+  --shadow-soft: 0 18px 40px rgba(22, 37, 27, 0.08);
+  --shadow-strong: 0 28px 80px rgba(18, 31, 23, 0.14);
 }
 
 @theme inline {
   --font-sans: var(--font-inter);
+  --font-display: var(--font-display);
 }
 
 * {
@@ -25,6 +28,9 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-inter), sans-serif;
+  background-image:
+    radial-gradient(circle at top left, rgba(210, 233, 113, 0.18), transparent 28%),
+    radial-gradient(circle at right 20%, rgba(35, 71, 51, 0.07), transparent 24%);
   overflow-x: hidden;
 }
 
@@ -73,9 +79,9 @@ textarea:focus-visible,
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 14px;
-  box-shadow: none;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: var(--shadow-soft);
   min-width: 0;
 }
 
@@ -106,10 +112,15 @@ textarea:focus-visible,
 .btn {
   width: 100%;
   border: 0;
-  border-radius: 12px;
-  padding: 12px 14px;
+  border-radius: 999px;
+  padding: 13px 18px;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .btn:disabled {
@@ -120,16 +131,27 @@ textarea:focus-visible,
 .btn-primary {
   background: var(--brand);
   color: #fff;
+  box-shadow: 0 12px 30px rgba(35, 71, 51, 0.18);
 }
 
 .btn-primary:hover {
   background: var(--brand-2);
+  transform: translateY(-1px);
 }
 
 .btn-ghost {
   border: 1px solid var(--line);
   background: #fff;
   color: var(--text);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-ghost:hover {
+  transform: translateY(-1px);
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
 }
 
 .field {
