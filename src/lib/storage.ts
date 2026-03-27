@@ -65,6 +65,7 @@ const seedData = (): AppData => {
     email: "admin@clubezn.com",
     password: "123456",
     role: "admin",
+    blocked: false,
     createdAt,
   };
 
@@ -76,6 +77,7 @@ const seedData = (): AppData => {
     password: "123456",
     role: "partner",
     companyId: "c_1",
+    blocked: false,
     createdAt,
   };
 
@@ -86,6 +88,7 @@ const seedData = (): AppData => {
     phone: "51999990002",
     password: "123456",
     role: "consumer",
+    blocked: false,
     createdAt,
   };
 
@@ -253,6 +256,11 @@ export const getData = (): AppData => {
   if (!raw) return seedData();
   const parsed = JSON.parse(raw) as AppData;
   let changed = false;
+  parsed.users = parsed.users.map((user) => {
+    if (typeof user.blocked === "boolean") return user;
+    changed = true;
+    return { ...user, blocked: false };
+  });
   // Backward compatibility: older local storage entries may not include offer images.
   parsed.offers = parsed.offers.map((offer) => {
     const hasImages = Array.isArray((offer as Offer & { images?: string[] }).images)
@@ -320,7 +328,13 @@ export const getCurrentUser = (): User | null => {
   const session = JSON.parse(sessionRaw) as Session;
   const data = getData();
   const fromData = data.users.find((u) => u.id === session.userId);
-  if (fromData) return fromData;
+  if (fromData) {
+    if (fromData.blocked) {
+      clearSession();
+      return null;
+    }
+    return fromData;
+  }
   if (session.user && session.user.id === session.userId) return session.user;
   return null;
 };
@@ -370,6 +384,9 @@ export const signInDetailed = (identifier: string, password: string): { user?: U
   if (!user) return { error: "Conta não encontrada. Verifique o e-mail/celular." };
 
   const localUser = user as LocalUser;
+  if (localUser.blocked) {
+    return { error: "Conta bloqueada. Entre em contato com o suporte." };
+  }
   if (localUser.password !== password) {
     return { error: "Senha incorreta. Tente novamente ou redefina sua senha." };
   }
@@ -382,6 +399,7 @@ export const signInDetailed = (identifier: string, password: string): { user?: U
     neighborhood: user.neighborhood,
     role: user.role,
     companyId: user.companyId,
+    blocked: user.blocked,
     createdAt: user.createdAt,
   };
   setSession(safeUser.id, safeUser);
@@ -437,7 +455,7 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
       city: "Porto Alegre",
       state: "RS",
       ownerUserId: userId,
-      approved: true,
+      approved: false,
       createdAt: nowIso(),
     });
   }
@@ -451,6 +469,7 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
     password: input.password,
     role: input.role,
     companyId,
+    blocked: false,
     createdAt: nowIso(),
   };
 
@@ -464,6 +483,7 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
     neighborhood: localUser.neighborhood,
     role: localUser.role,
     companyId: localUser.companyId,
+    blocked: localUser.blocked,
     createdAt: localUser.createdAt,
   };
   setSession(user.id, user);
@@ -596,6 +616,13 @@ export const createOffer = (input: {
   images: string[];
 }) => {
   const data = getData();
+  const company = data.companies.find((item) => item.id === input.companyId);
+  if (!company) {
+    throw new Error("Empresa não encontrada para publicar oferta.");
+  }
+  if (!company.approved) {
+    throw new Error("Sua empresa ainda está pendente de aprovação. Aguarde para publicar ofertas.");
+  }
 
   const offer: Offer = {
     id: `o_${crypto.randomUUID()}`,
@@ -606,7 +633,7 @@ export const createOffer = (input: {
     category: input.category,
     neighborhood: input.neighborhood,
     images: input.images.slice(0, 5),
-    approved: true,
+    approved: false,
     rejected: false,
     createdAt: nowIso(),
   };
@@ -685,6 +712,74 @@ export const rejectOffer = (offerId: string) => {
   }
 
   saveData(data);
+};
+
+export const deleteOffer = (offerId: string) => {
+  const data = getData();
+
+  data.offers = data.offers.filter((item) => item.id !== offerId);
+  data.redemptions = data.redemptions.filter((item) => item.offerId !== offerId);
+  data.notifications = data.notifications.filter((item) => item.offerId !== offerId);
+
+  saveData(data);
+};
+
+const deleteCompanyCascade = (data: AppData, companyId: string) => {
+  const offerIds = new Set(data.offers.filter((item) => item.companyId === companyId).map((item) => item.id));
+  data.offers = data.offers.filter((item) => item.companyId !== companyId);
+  data.redemptions = data.redemptions.filter((item) => !offerIds.has(item.offerId));
+  data.notifications = data.notifications.filter((item) => item.companyId !== companyId && (!item.offerId || !offerIds.has(item.offerId)));
+  data.users = data.users.map((item) => (item.companyId === companyId ? { ...item, companyId: undefined } : item));
+  data.companies = data.companies.filter((item) => item.id !== companyId);
+};
+
+export const blockUser = (userId: string): { error?: string } => {
+  const data = getData();
+  const user = data.users.find((item) => item.id === userId);
+  if (!user) return { error: "Usuário não encontrado." };
+
+  data.users = data.users.map((item) => (item.id === userId ? { ...item, blocked: true } : item));
+  saveData(data);
+  return {};
+};
+
+export const unblockUser = (userId: string): { error?: string } => {
+  const data = getData();
+  const user = data.users.find((item) => item.id === userId);
+  if (!user) return { error: "Usuário não encontrado." };
+
+  data.users = data.users.map((item) => (item.id === userId ? { ...item, blocked: false } : item));
+  saveData(data);
+  return {};
+};
+
+export const updateUserRole = (userId: string, role: UserRole): { error?: string } => {
+  const data = getData();
+  const user = data.users.find((item) => item.id === userId);
+  if (!user) return { error: "Usuário não encontrado." };
+  if (user.companyId || user.role === "partner" || role === "partner") {
+    return { error: "Alteração de papel para usuários vinculados a empresa deve ser feita em fluxo dedicado." };
+  }
+
+  data.users = data.users.map((item) => (item.id === userId ? { ...item, role } : item));
+  saveData(data);
+  return {};
+};
+
+export const deleteUser = (userId: string): { error?: string } => {
+  const data = getData();
+  const user = data.users.find((item) => item.id === userId);
+  if (!user) return { error: "Usuário não encontrado." };
+
+  if (user.companyId) {
+    deleteCompanyCascade(data, user.companyId);
+  }
+
+  data.redemptions = data.redemptions.filter((item) => item.userId !== userId);
+  data.notifications = data.notifications.filter((item) => item.userId !== userId);
+  data.users = data.users.filter((item) => item.id !== userId);
+  saveData(data);
+  return {};
 };
 
 export const markNotificationAsRead = (notificationId: string, userId: string) => {

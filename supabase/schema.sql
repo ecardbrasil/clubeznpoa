@@ -49,8 +49,12 @@ create table if not exists public.users (
   password text not null,
   role public.user_role not null,
   company_id text,
+  blocked boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+alter table public.users
+  add column if not exists blocked boolean not null default false;
 
 create table if not exists public.companies (
   id text primary key,
@@ -328,4 +332,3 @@ on public.notifications
 for update
 to authenticated
 using (user_id = auth.uid()::text);
-

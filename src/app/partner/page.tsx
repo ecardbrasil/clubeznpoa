@@ -26,6 +26,12 @@ const formatDate = (value?: string) => {
   return new Date(value).toLocaleString("pt-BR");
 };
 
+const getOfferStatusLabel = (offer: Offer) => {
+  if (offer.rejected) return "Rejeitada";
+  if (!offer.approved) return "Pendente";
+  return "Publicada";
+};
+
 const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -235,6 +241,7 @@ export default function PartnerPage() {
     if (!data || !user?.companyId) return undefined;
     return data.companies.find((item) => item.id === user.companyId);
   }, [data, supabaseCompany, user?.companyId]);
+  const companyPendingApproval = company ? !company.approved : false;
 
   const companyOffers = useMemo(() => {
     if (!data || !company?.id) return [];
@@ -684,15 +691,22 @@ export default function PartnerPage() {
           return;
         }
       } else {
-        createOffer({
-          companyId: company.id,
-          title: title.trim(),
-          description: description.trim(),
-          discountLabel: discountLabel.trim(),
-          category: mainCategory,
-          neighborhood: neighborhood.trim(),
-          images,
-        });
+        try {
+          createOffer({
+            companyId: company.id,
+            title: title.trim(),
+            description: description.trim(),
+            discountLabel: discountLabel.trim(),
+            category: mainCategory,
+            neighborhood: neighborhood.trim(),
+            images,
+          });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Falha ao publicar oferta.";
+          setOfferFeedback(message);
+          showToast(message, "error");
+          return;
+        }
       }
 
       setTitle("");
@@ -702,8 +716,8 @@ export default function PartnerPage() {
       setCategorySearch("");
       setImages([]);
       setImageFeedback("");
-      setOfferFeedback("Oferta publicada com sucesso.");
-      showToast("Oferta publicada com sucesso.", "success");
+      setOfferFeedback("Oferta enviada para análise com sucesso.");
+      showToast("Oferta enviada para análise com sucesso.", "success");
       await refresh();
       setSection("overview");
     } finally {
@@ -800,11 +814,18 @@ export default function PartnerPage() {
               <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Empresa Parceira</p>
               <h1 style={{ margin: "2px 0 0", fontSize: 22 }}>{company?.publicName ?? company?.name ?? user.name}</h1>
             </div>
-            <span className="badge badge-ok">Ativa</span>
+            <span className={`badge ${companyPendingApproval ? "badge-pending" : "badge-ok"}`}>
+              {companyPendingApproval ? "Pendente" : "Ativa"}
+            </span>
           </div>
           <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
             Seção atual: <strong>{sectionTitle[section]}</strong>
           </p>
+          {companyPendingApproval && (
+            <p style={{ margin: 0, color: "var(--warn)", fontSize: 13, fontWeight: 700 }}>
+              Sua empresa ainda está em análise. As ofertas só podem ser publicadas após aprovação do administrador.
+            </p>
+          )}
           {unreadNotifications > 0 && (
             <p style={{ margin: 0, color: "var(--brand-2)", fontSize: 13, fontWeight: 700 }}>
               Você tem {unreadNotifications} notificação(ões) não lida(s).
@@ -1079,6 +1100,11 @@ export default function PartnerPage() {
           <>
             <section className="card grid gap-2.5">
               <h2 style={{ margin: 0, fontSize: 18 }}>Cadastrar nova oferta</h2>
+              {companyPendingApproval && (
+                <p style={{ margin: 0, color: "var(--warn)", fontWeight: 700 }}>
+                  A publicação de ofertas fica liberada depois que a empresa for aprovada.
+                </p>
+              )}
               <form onSubmit={createPartnerOffer} className="grid gap-2">
                 <label className="field">
                   <span>Título</span>
@@ -1107,6 +1133,7 @@ export default function PartnerPage() {
                       value={categorySearch}
                       onChange={(event) => setCategorySearch(event.target.value)}
                       placeholder="Busque e selecione categorias"
+                      disabled={companyPendingApproval}
                     />
                   </label>
 
@@ -1134,6 +1161,7 @@ export default function PartnerPage() {
                           type="checkbox"
                           checked={selectedCategories.includes(item)}
                           onChange={() => toggleCategorySelection(item)}
+                          disabled={companyPendingApproval}
                         />
                         <span>{item}</span>
                       </label>
@@ -1148,7 +1176,7 @@ export default function PartnerPage() {
                       type="button"
                       className="btn btn-ghost !w-auto !px-3 !py-1.5"
                       onClick={addCategoryFromSearch}
-                      disabled={!categorySearch.trim()}
+                      disabled={!categorySearch.trim() || companyPendingApproval}
                     >
                       Adicionar categoria nova
                     </button>
@@ -1160,7 +1188,7 @@ export default function PartnerPage() {
 
                 <label className="field">
                   <span>Bairro</span>
-                  <select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} required>
+                  <select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} required disabled={companyPendingApproval}>
                     {availableNeighborhoods.map((item) => (
                       <option key={item} value={item}>
                         {item}
@@ -1171,7 +1199,7 @@ export default function PartnerPage() {
 
                 <label className="field">
                   <span>Fotos da oferta (até 5)</span>
-                  <input accept="image/*" multiple onChange={onSelectImages} type="file" />
+                  <input accept="image/*" multiple onChange={onSelectImages} type="file" disabled={companyPendingApproval} />
                 </label>
 
                 <p style={{ margin: 0, color: "var(--muted)", fontSize: 12 }}>
@@ -1224,8 +1252,8 @@ export default function PartnerPage() {
                   </div>
                 )}
 
-                <button className="btn btn-primary" type="submit" disabled={isPublishingOffer}>
-                  {isPublishingOffer ? "Publicando oferta..." : "Publicar oferta"}
+                <button className="btn btn-primary" type="submit" disabled={isPublishingOffer || companyPendingApproval}>
+                  {isPublishingOffer ? "Enviando oferta..." : "Enviar oferta para análise"}
                 </button>
               </form>
               {offerFeedback && <p style={{ margin: 0, fontWeight: 700 }}>{offerFeedback}</p>}
@@ -1247,7 +1275,7 @@ export default function PartnerPage() {
                   )}
                   <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                    {offer.discountLabel} • {offer.images.length} foto(s) • {offer.rejected ? "Rejeitada" : "Publicada"}
+                    {offer.discountLabel} • {offer.images.length} foto(s) • {getOfferStatusLabel(offer)}
                   </p>
                 </div>
               ))}

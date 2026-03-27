@@ -5,14 +5,22 @@ import { useRouter } from "next/navigation";
 import { AdminDashboardSidebar, AdminSection } from "@/components/admin/dashboard-sidebar";
 import { useToast } from "@/components/ui/toast";
 import { isSupabaseMode } from "@/lib/runtime-config";
-import { AppData, Company, Offer, Redemption } from "@/lib/types";
+import { AppData, Company, Offer, Redemption, User, UserRole } from "@/lib/types";
 import {
+  approveCompany as approveLocalCompany,
+  approveOffer as approveLocalOffer,
+  blockUser as blockLocalUser,
   clearSession,
+  deleteUser as deleteLocalUser,
+  deleteOffer as deleteLocalOffer,
   getAuthHeaders,
   getCurrentUser,
   getData,
+  rejectOffer as rejectLocalOffer,
   routeByRole,
   syncRedemptionExpirations,
+  unblockUser as unblockLocalUser,
+  updateUserRole as updateLocalUserRole,
 } from "@/lib/storage";
 
 type ActivityItem = {
@@ -43,6 +51,19 @@ const sortByCreatedAtDesc = <T extends { createdAt: string }>(items: T[]) =>
 const sortByCreatedAtAsc = <T extends { createdAt: string }>(items: T[]) =>
   [...items].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
+const getOfferStatusLabel = (offer: Offer) => {
+  if (offer.rejected) return "Rejeitada";
+  if (!offer.approved) return "Pendente";
+  return "Ativa";
+};
+
+const getUserStatusLabel = (item: User) => {
+  if (item.blocked) return "Bloqueado";
+  return "Ativo";
+};
+
+const canChangeUserRole = (item: User) => !item.companyId && item.role !== "partner";
+
 export default function AdminPage() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -55,6 +76,9 @@ export default function AdminPage() {
   });
   const [nowTimestamp, setNowTimestamp] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
+  const [actingOfferId, setActingOfferId] = useState<string | null>(null);
+  const [actingUserId, setActingUserId] = useState<string | null>(null);
+  const [roleDrafts, setRoleDrafts] = useState<Record<string, UserRole>>({});
   const user = getCurrentUser();
   const [data, setData] = useState<AppData | null>(null);
 
@@ -81,6 +105,17 @@ export default function AdminPage() {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("clubezn_admin_sidebar_open_v1", sidebarOpen ? "1" : "0");
   }, [sidebarOpen]);
+
+  useEffect(() => {
+    if (!data) return;
+    setRoleDrafts((current) => {
+      const next = { ...current };
+      data.users.forEach((item) => {
+        next[item.id] = current[item.id] ?? item.role;
+      });
+      return next;
+    });
+  }, [data]);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +169,175 @@ export default function AdminPage() {
       cancelled = true;
     };
   }, [showToast, user?.id]);
+
+  const reloadLocalData = () => {
+    syncRedemptionExpirations();
+    setData(getData());
+  };
+
+  const loadRemoteDashboard = async () => {
+    const response = await fetch("/api/admin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({
+        action: "getDashboardData",
+      }),
+    });
+
+    const payload = (await response.json()) as { data?: AppData; error?: string };
+    if (!response.ok || payload.error || !payload.data) {
+      throw new Error(payload.error || "Falha ao carregar painel do administrador.");
+    }
+
+    setData(payload.data);
+  };
+
+  const handleOfferAction = async (action: "approveOffer" | "rejectOffer" | "deleteOffer", offer: Offer) => {
+    const actionLabel =
+      action === "approveOffer" ? "aprovar" : action === "rejectOffer" ? "rejeitar" : "excluir";
+
+    if (action === "deleteOffer") {
+      const confirmed = window.confirm(`Excluir a oferta "${offer.title}"? Esta ação remove a oferta do sistema.`);
+      if (!confirmed) return;
+    }
+
+    setActingOfferId(offer.id);
+    try {
+      if (!isSupabaseMode) {
+        if (action === "approveOffer") approveLocalOffer(offer.id);
+        if (action === "rejectOffer") rejectLocalOffer(offer.id);
+        if (action === "deleteOffer") deleteLocalOffer(offer.id);
+        reloadLocalData();
+      } else {
+        const response = await fetch("/api/admin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({
+            action,
+            offerId: offer.id,
+          }),
+        });
+
+        const payload = (await response.json().catch(() => null)) as { data?: AppData; ok?: boolean; error?: string } | null;
+        if (!response.ok || payload?.error) {
+          throw new Error(payload?.error || `Falha ao ${actionLabel} oferta.`);
+        }
+        await loadRemoteDashboard();
+      }
+
+      showToast(`Oferta ${action === "approveOffer" ? "aprovada" : action === "rejectOffer" ? "rejeitada" : "excluída"} com sucesso.`, "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : `Falha ao ${actionLabel} oferta.`, "error");
+    } finally {
+      setActingOfferId(null);
+    }
+  };
+
+  const handleCompanyApprove = async (company: Company) => {
+    try {
+      if (!isSupabaseMode) {
+        approveLocalCompany(company.id);
+        reloadLocalData();
+      } else {
+        const response = await fetch("/api/admin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify({
+            action: "approveCompany",
+            companyId: company.id,
+          }),
+        });
+
+        const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+        if (!response.ok || payload?.error) {
+          throw new Error(payload?.error || "Falha ao aprovar empresa.");
+        }
+
+        await loadRemoteDashboard();
+      }
+
+      showToast("Empresa aprovada com sucesso.", "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Falha ao aprovar empresa.", "error");
+    }
+  };
+
+  const handleUserAction = async (
+    action: "blockUser" | "unblockUser" | "deleteUser" | "updateUserRole",
+    target: User,
+    nextRole?: UserRole,
+  ) => {
+    const actionLabel =
+      action === "blockUser"
+        ? "bloquear"
+        : action === "unblockUser"
+          ? "desbloquear"
+          : action === "deleteUser"
+            ? "excluir"
+            : "alterar papel de";
+
+    if (action === "deleteUser") {
+      const confirmed = window.confirm(`Excluir o usuário "${target.name}"? Esta ação remove também dados vinculados.`);
+      if (!confirmed) return;
+    }
+
+    setActingUserId(target.id);
+    try {
+      if (!isSupabaseMode) {
+        let result: { error?: string } = {};
+        if (action === "blockUser") result = blockLocalUser(target.id);
+        if (action === "unblockUser") result = unblockLocalUser(target.id);
+        if (action === "deleteUser") result = deleteLocalUser(target.id);
+        if (action === "updateUserRole" && nextRole) result = updateLocalUserRole(target.id, nextRole);
+        if (result.error) throw new Error(result.error);
+        reloadLocalData();
+      } else {
+        const response = await fetch("/api/admin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+          body: JSON.stringify(
+            action === "updateUserRole"
+              ? { action, userId: target.id, role: nextRole }
+              : { action, userId: target.id },
+          ),
+        });
+
+        const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+        if (!response.ok || payload?.error) {
+          throw new Error(payload?.error || `Falha ao ${actionLabel} usuário.`);
+        }
+
+        await loadRemoteDashboard();
+      }
+
+      showToast(
+        action === "blockUser"
+          ? "Usuário bloqueado com sucesso."
+          : action === "unblockUser"
+            ? "Usuário desbloqueado com sucesso."
+            : action === "deleteUser"
+              ? "Usuário excluído com sucesso."
+              : "Papel do usuário atualizado com sucesso.",
+        "success",
+      );
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : `Falha ao ${actionLabel} usuário.`, "error");
+    } finally {
+      setActingUserId(null);
+    }
+  };
 
   const dashboard = useMemo(() => {
     if (!data) return null;
@@ -205,7 +409,7 @@ export default function AdminPage() {
         return {
           id: `o-${offer.id}`,
           createdAt: offer.createdAt,
-          label: offer.approved ? "Oferta aprovada" : "Nova oferta pendente",
+          label: `Oferta ${getOfferStatusLabel(offer).toLowerCase()}`,
           detail: `${offer.title} • ${company?.name ?? "Parceiro"}`,
         };
       });
@@ -349,11 +553,27 @@ export default function AdminPage() {
         )}
 
         {section === "companies" && (
-          <CompaniesList companies={sortByCreatedAtDesc(data.companies)} />
+          <CompaniesList companies={sortByCreatedAtDesc(data.companies)} onApprove={handleCompanyApprove} />
+        )}
+
+        {section === "users" && (
+          <UsersList
+            users={sortByCreatedAtDesc(data.users)}
+            currentAdminId={user.id}
+            actingUserId={actingUserId}
+            roleDrafts={roleDrafts}
+            onRoleDraftChange={(userId, role) => setRoleDrafts((current) => ({ ...current, [userId]: role }))}
+            onAction={handleUserAction}
+          />
         )}
 
         {section === "offers" && (
-          <OffersList offers={sortByCreatedAtDesc(data.offers)} companies={data.companies} />
+          <OffersList
+            offers={sortByCreatedAtDesc(data.offers)}
+            companies={data.companies}
+            actingOfferId={actingOfferId}
+            onAction={handleOfferAction}
+          />
         )}
 
         <footer className="card" style={{ fontSize: 12, color: "var(--muted)" }}>
@@ -392,7 +612,13 @@ function StatusLine({ label, value }: { label: string; value: number }) {
   );
 }
 
-function CompaniesList({ companies }: { companies: Company[] }) {
+function CompaniesList({
+  companies,
+  onApprove,
+}: {
+  companies: Company[];
+  onApprove: (company: Company) => Promise<void>;
+}) {
   return (
     <section className="card grid gap-2">
       <h2 style={{ margin: 0, fontSize: 18 }}>Empresas cadastradas</h2>
@@ -405,6 +631,13 @@ function CompaniesList({ companies }: { companies: Company[] }) {
           <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
             Criada em {formatDate(company.createdAt)} • {company.approved ? "Ativa" : "Inativa"}
           </p>
+          {!company.approved && (
+            <div className="flex flex-wrap gap-2">
+              <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onApprove(company)}>
+                Aprovar empresa
+              </button>
+            </div>
+          )}
         </article>
       ))}
       {companies.length === 0 && <p style={{ margin: 0 }}>Nenhuma empresa cadastrada.</p>}
@@ -412,13 +645,99 @@ function CompaniesList({ companies }: { companies: Company[] }) {
   );
 }
 
-function OffersList({ offers, companies }: { offers: Offer[]; companies: Company[] }) {
+function UsersList({
+  users,
+  currentAdminId,
+  actingUserId,
+  roleDrafts,
+  onRoleDraftChange,
+  onAction,
+}: {
+  users: User[];
+  currentAdminId: string;
+  actingUserId: string | null;
+  roleDrafts: Record<string, UserRole>;
+  onRoleDraftChange: (userId: string, role: UserRole) => void;
+  onAction: (action: "blockUser" | "unblockUser" | "deleteUser" | "updateUserRole", target: User, nextRole?: UserRole) => Promise<void>;
+}) {
+  return (
+    <section className="card grid gap-2">
+      <h2 style={{ margin: 0, fontSize: 18 }}>Usuários cadastrados</h2>
+      {users.map((item) => {
+        const busy = actingUserId === item.id;
+        const isSelf = item.id === currentAdminId;
+        const roleDraft = roleDrafts[item.id] ?? item.role;
+        return (
+          <article key={item.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p style={{ margin: 0, fontWeight: 700 }}>{item.name}</p>
+              <span className={item.blocked ? "badge badge-danger" : "badge badge-ok"}>{getUserStatusLabel(item)}</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
+              {item.email ?? item.phone ?? "Sem identificador"} • papel {item.role}
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+              Criado em {formatDate(item.createdAt)}{item.companyId ? " • vinculado a empresa" : ""}{isSelf ? " • sua conta atual" : ""}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              {!item.blocked ? (
+                <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("blockUser", item)} disabled={busy || isSelf}>
+                  Bloquear
+                </button>
+              ) : (
+                <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("unblockUser", item)} disabled={busy}>
+                  Desbloquear
+                </button>
+              )}
+              <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("deleteUser", item)} disabled={busy || isSelf}>
+                Excluir
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select value={roleDraft} onChange={(event) => onRoleDraftChange(item.id, event.target.value as UserRole)} disabled={busy || isSelf || !canChangeUserRole(item)}>
+                <option value="consumer">consumer</option>
+                <option value="admin">admin</option>
+                <option value="partner">partner</option>
+              </select>
+              <button
+                className="btn btn-ghost !w-auto !px-3 !py-1.5"
+                onClick={() => void onAction("updateUserRole", item, roleDraft)}
+                disabled={busy || isSelf || !canChangeUserRole(item) || roleDraft === item.role}
+              >
+                Salvar papel
+              </button>
+            </div>
+            {!canChangeUserRole(item) && (
+              <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+                Alteração de papel para parceiro ou usuário vinculado a empresa exige fluxo dedicado.
+              </p>
+            )}
+          </article>
+        );
+      })}
+      {users.length === 0 && <p style={{ margin: 0 }}>Nenhum usuário cadastrado.</p>}
+    </section>
+  );
+}
+
+function OffersList({
+  offers,
+  companies,
+  actingOfferId,
+  onAction,
+}: {
+  offers: Offer[];
+  companies: Company[];
+  actingOfferId: string | null;
+  onAction: (action: "approveOffer" | "rejectOffer" | "deleteOffer", offer: Offer) => Promise<void>;
+}) {
   const companyById = new Map(companies.map((company) => [company.id, company]));
   return (
     <section className="card grid gap-2">
       <h2 style={{ margin: 0, fontSize: 18 }}>Ofertas cadastradas</h2>
       {offers.map((offer) => {
         const company = companyById.get(offer.companyId);
+        const busy = actingOfferId === offer.id;
         return (
           <article key={offer.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
             <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
@@ -427,8 +746,23 @@ function OffersList({ offers, companies }: { offers: Offer[]; companies: Company
             </p>
             <p style={{ margin: 0, fontSize: 13 }}>{offer.description}</p>
             <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
-              Criada em {formatDate(offer.createdAt)} • {offer.rejected ? "Rejeitada" : "Ativa"}
+              Criada em {formatDate(offer.createdAt)} • {getOfferStatusLabel(offer)}
             </p>
+            <div className="flex flex-wrap gap-2">
+              {!offer.approved && (
+                <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("approveOffer", offer)} disabled={busy}>
+                  Aprovar
+                </button>
+              )}
+              {!offer.rejected && (
+                <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("rejectOffer", offer)} disabled={busy}>
+                  Rejeitar
+                </button>
+              )}
+              <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("deleteOffer", offer)} disabled={busy}>
+                Excluir
+              </button>
+            </div>
           </article>
         );
       })}

@@ -45,6 +45,7 @@ type UserRow = {
   neighborhood: string | null;
   role: "consumer" | "partner" | "admin";
   company_id: string | null;
+  blocked: boolean;
   created_at: string;
 };
 
@@ -89,6 +90,7 @@ type CompanyIdentityRow = {
   id: string;
   owner_user_id: string;
   name: string;
+  approved: boolean;
 };
 
 type StatusResponse = {
@@ -107,6 +109,7 @@ const mapUserRow = (row: UserRow): User => ({
   neighborhood: row.neighborhood ?? undefined,
   role: row.role,
   companyId: row.company_id ?? undefined,
+  blocked: row.blocked,
   createdAt: row.created_at,
 });
 
@@ -154,7 +157,7 @@ const loadOwnedCompany = async (
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from("companies")
-    .select("id, owner_user_id, name")
+    .select("id, owner_user_id, name, approved")
     .eq("id", companyId)
     .eq("owner_user_id", ownerUserId)
     .maybeSingle<CompanyIdentityRow>();
@@ -230,14 +233,14 @@ const getDashboardData = async (companyId: string, ownerUserId: string): Promise
   const [ownerUserRes, consumersRes] = await Promise.all([
     supabase
       .from("users")
-      .select("id, name, email, phone, neighborhood, role, company_id, created_at")
+      .select("id, name, email, phone, neighborhood, role, company_id, blocked, created_at")
       .eq("id", ownerUserId)
       .maybeSingle<UserRow>(),
     redemptionUserIds.length === 0
       ? Promise.resolve({ data: [], error: null })
       : supabase
           .from("users")
-          .select("id, name, email, phone, neighborhood, role, company_id, created_at")
+          .select("id, name, email, phone, neighborhood, role, company_id, blocked, created_at")
           .in("id", redemptionUserIds),
   ]);
 
@@ -364,6 +367,17 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as PartnerActionPayload;
     const supabase = getSupabaseServerClient();
+    const { data: activePartner, error: activePartnerError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", session.uid)
+      .eq("role", "partner")
+      .eq("blocked", false)
+      .maybeSingle();
+
+    if (activePartnerError || !activePartner) {
+      return NextResponse.json({ error: "Usuário parceiro sem permissão ativa." }, { status: 403 });
+    }
 
     const companyId = body.companyId?.trim();
     const ownerUserId = session.uid;
@@ -446,6 +460,9 @@ export async function POST(request: Request) {
       if (!owned.company) {
         return owned.response;
       }
+      if (!owned.company.approved) {
+        return NextResponse.json({ error: "Sua empresa ainda está pendente de aprovação. Aguarde para publicar ofertas." }, { status: 403 });
+      }
 
       const payload = body.payload;
       const now = nowIso();
@@ -458,7 +475,7 @@ export async function POST(request: Request) {
         category: payload.category.trim(),
         neighborhood: payload.neighborhood.trim(),
         images: payload.images.slice(0, 5),
-        approved: true,
+        approved: false,
         rejected: false,
         created_at: now,
       };

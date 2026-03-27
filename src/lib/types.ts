@@ -8,6 +8,7 @@ export interface User {
   neighborhood?: string;
   role: UserRole;
   companyId?: string;
+  blocked: boolean;
   createdAt: string;
 }
 

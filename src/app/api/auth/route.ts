@@ -14,6 +14,7 @@ type SupabaseUserRow = {
   password?: string;
   role: "consumer" | "partner" | "admin";
   company_id: string | null;
+  blocked: boolean;
   created_at: string;
 };
 
@@ -25,6 +26,7 @@ const mapUserRow = (row: SupabaseUserRow): User => ({
   neighborhood: row.neighborhood ?? undefined,
   role: row.role,
   companyId: row.company_id ?? undefined,
+  blocked: row.blocked,
   createdAt: row.created_at,
 });
 
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
 
       const baseQuery = supabase
         .from("users")
-        .select("id, name, email, phone, neighborhood, password, role, company_id, created_at")
+        .select("id, name, email, phone, neighborhood, password, role, company_id, blocked, created_at")
         .limit(1);
 
       const loginQuery = identifier.includes("@")
@@ -83,6 +85,9 @@ export async function POST(request: Request) {
 
       if (error || !data) {
         return NextResponse.json({ error: "Credenciais inválidas." }, { status: 401 });
+      }
+      if (data.blocked) {
+        return NextResponse.json({ error: "Conta bloqueada. Entre em contato com o suporte." }, { status: 403 });
       }
 
       const passwordCheck = verifyPassword(passwordInput, data.password ?? "");
@@ -172,6 +177,7 @@ export async function POST(request: Request) {
       neighborhood: input.neighborhood?.trim() ?? null,
       role: input.role,
       company_id: null,
+      blocked: false,
       created_at: nowIso,
       password: hashPassword(input.password),
     });
@@ -196,7 +202,7 @@ export async function POST(request: Request) {
         city: "Porto Alegre",
         state: "RS",
         owner_user_id: userId,
-        approved: true,
+        approved: false,
         created_at: nowIso,
       });
 
@@ -210,7 +216,7 @@ export async function POST(request: Request) {
 
     const { data: createdRow, error: readBackError } = await supabase
       .from("users")
-      .select("id, name, email, phone, neighborhood, role, company_id, created_at")
+      .select("id, name, email, phone, neighborhood, role, company_id, blocked, created_at")
       .eq("id", userId)
       .single<SupabaseUserRow>();
 

@@ -29,6 +29,17 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as ConsumerActionPayload;
     const supabase = getSupabaseServerClient();
+    const { data: activeUser, error: activeUserError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", session.uid)
+      .eq("role", "consumer")
+      .eq("blocked", false)
+      .maybeSingle();
+
+    if (activeUserError || !activeUser) {
+      return NextResponse.json({ error: "Usuário consumidor sem permissão ativa." }, { status: 403 });
+    }
 
     if (body.action === "getData") {
       const userId = body.userId?.trim();
@@ -46,7 +57,7 @@ export async function POST(request: Request) {
       const [usersRes, offersRes, companiesRes, redemptionsRes] = await Promise.all([
         supabase
           .from("users")
-          .select("id, name, email, phone, neighborhood, role, company_id, created_at")
+          .select("id, name, email, phone, neighborhood, role, company_id, blocked, created_at")
           .eq("id", userId)
           .maybeSingle(),
         supabase

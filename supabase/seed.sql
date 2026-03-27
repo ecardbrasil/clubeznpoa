@@ -3,7 +3,7 @@
 
 -- 1) Users first (without company_id to avoid circular FK at insert time)
 insert into public.users (
-  id, name, email, phone, neighborhood, password, role, company_id, created_at
+  id, name, email, phone, neighborhood, password, role, company_id, blocked, created_at
 )
 values
   (
@@ -12,9 +12,10 @@ values
     'admin@clubezn.com',
     null,
     null,
-    '123456',
+    'scrypt$6fd89e43c6bc7499deb795241edf7bb7$16c46e979c4987750a12a2568411f01f548548b06d76fe7e4b1346451f8222a40fb29936e7eb1dc4a7e1976f59fb43128bb3897feaa9845890a248bebc5ca0fb',
     'admin',
     null,
+    false,
     now()
   ),
   (
@@ -23,9 +24,10 @@ values
     'parceiro@sarandi.com',
     '51999990001',
     'Sarandi',
-    '123456',
+    'scrypt$b3252cd1ce042237f0ee071b9556e657$2481459bfe11c650ca2ed8018e534a0bba146482f9691df93b9ddf02ca9f1aae49439df057ab4604acc1610f6643fc6fb4b2a513e595c75f520f2c775ab2f80c',
     'partner',
     null,
+    false,
     now()
   ),
   (
@@ -34,9 +36,10 @@ values
     'cliente@clubezn.com',
     '51999990002',
     'Sarandi',
-    '123456',
+    'scrypt$3fe1afade468393a8b99bbea9383f587$0edac7d66c3aea9c69c6c5f991ad0d4afb7b1fdd3183375c2d00247c99e145d98a499139ae456ad70fdf4f39ac7a72cb9d9c54189402636f33237bd1adcb15dd',
     'consumer',
     null,
+    false,
     now()
   )
 on conflict (id) do update set
@@ -45,7 +48,8 @@ on conflict (id) do update set
   phone = excluded.phone,
   neighborhood = excluded.neighborhood,
   password = excluded.password,
-  role = excluded.role;
+  role = excluded.role,
+  blocked = excluded.blocked;
 
 -- 2) Companies
 insert into public.companies (
@@ -268,4 +272,3 @@ on conflict (id) do update set
   message = excluded.message,
   read = excluded.read,
   created_at = excluded.created_at;
-

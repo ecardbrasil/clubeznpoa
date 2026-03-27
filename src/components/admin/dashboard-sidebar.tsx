@@ -1,11 +1,11 @@
 "use client";
 
-import { Building2, LayoutDashboard, LogOut, Ticket } from "lucide-react";
+import { Building2, LayoutDashboard, LogOut, Ticket, Users } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { Sidebar, SidebarBody, SidebarItemButton } from "@/components/ui/sidebar";
 
-export type AdminSection = "dashboard" | "companies" | "offers";
+export type AdminSection = "dashboard" | "users" | "companies" | "offers";
 
 export function AdminDashboardSidebar({
   sidebarOpen,
@@ -46,6 +46,12 @@ export function AdminDashboardSidebar({
               label="Empresas"
               icon={<Building2 size={16} />}
               onClick={() => onSectionChange("companies")}
+            />
+            <SidebarItemButton
+              active={section === "users"}
+              label="Usuários"
+              icon={<Users size={16} />}
+              onClick={() => onSectionChange("users")}
             />
             <SidebarItemButton
               active={section === "offers"}

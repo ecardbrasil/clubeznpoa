@@ -351,7 +351,11 @@ export default function Home() {
         return;
       }
 
-      showToast("Conta criada com sucesso.", "success");
+      const successMessage =
+        response.user.role === "partner"
+          ? "Conta criada. Sua empresa será analisada antes da publicação das ofertas."
+          : "Conta criada com sucesso.";
+      showToast(successMessage, "success");
       router.push(routeByRole(response.user.role));
     } finally {
       setIsSubmitting(false);
