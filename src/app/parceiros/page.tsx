@@ -164,19 +164,7 @@ export default function PartnersPage() {
 
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
-      <PublicPageHeader
-        subtitle="Empresas parceiras cadastradas"
-        actions={
-          <>
-            <Link href="/ofertas" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
-              Ver ofertas
-            </Link>
-            <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
-              cadastro
-            </Link>
-          </>
-        }
-      />
+      <PublicPageHeader subtitle="Empresas parceiras cadastradas" />
 
       <section className="grid gap-3 rounded-2xl border border-[#d1dfd1] bg-white p-4 md:p-5">
         <div className="grid gap-1">

@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f5f1e8;
+  --bg: #f3f6f1;
   --text: #18231c;
   --panel: #ffffff;
-  --muted: #58675d;
-  --brand: #234733;
-  --brand-accent: #d2e971;
-  --brand-2: #163225;
-  --line: #d9d3c7;
+  --muted: #44584c;
+  --brand: #1e3228;
+  --brand-accent: #c9f549;
+  --brand-accent-strong: #b7e33d;
+  --brand-2: #13210f;
+  --line: #dfe5d4;
   --warn: #b52e31;
-  --shadow-soft: 0 18px 40px rgba(22, 37, 27, 0.08);
-  --shadow-strong: 0 28px 80px rgba(18, 31, 23, 0.14);
+  --shadow-soft: 0 14px 32px rgba(17, 35, 24, 0.08);
+  --shadow-strong: 0 22px 64px rgba(16, 33, 23, 0.14);
 }
 
 @theme inline {
@@ -28,9 +29,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-inter), sans-serif;
-  background-image:
-    radial-gradient(circle at top left, rgba(210, 233, 113, 0.18), transparent 28%),
-    radial-gradient(circle at right 20%, rgba(35, 71, 51, 0.07), transparent 24%);
+  background-image: radial-gradient(circle at top left, rgba(201, 245, 73, 0.14), transparent 34%);
   overflow-x: hidden;
 }
 
@@ -60,7 +59,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [role="button"]:focus-visible {
-  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #1f5f30;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #c9f549;
   border-radius: 10px;
 }
 
@@ -95,8 +94,8 @@ textarea:focus-visible,
 }
 
 .badge-ok {
-  background: #d4f8ea;
-  color: #075c43;
+  background: #eefbcf;
+  color: #243318;
 }
 
 .badge-pending {
@@ -111,9 +110,9 @@ textarea:focus-visible,
 
 .btn {
   width: 100%;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 999px;
-  padding: 13px 18px;
+  padding: 12px 16px;
   font-weight: 700;
   cursor: pointer;
   transition:
@@ -129,13 +128,14 @@ textarea:focus-visible,
 }
 
 .btn-primary {
-  background: var(--brand);
-  color: #fff;
-  box-shadow: 0 12px 30px rgba(35, 71, 51, 0.18);
+  background: var(--brand-accent);
+  color: #12200f;
+  border-color: #b7d84b;
+  box-shadow: 0 10px 24px rgba(171, 212, 61, 0.22);
 }
 
 .btn-primary:hover {
-  background: var(--brand-2);
+  background: var(--brand-accent-strong);
   transform: translateY(-1px);
 }
 
@@ -143,10 +143,12 @@ textarea:focus-visible,
   border: 1px solid var(--line);
   background: #fff;
   color: var(--text);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 8px 18px rgba(17, 35, 24, 0.06);
 }
 
 .btn-ghost:hover {
+  background: #f8fbf4;
+  border-color: #ced8be;
   transform: translateY(-1px);
 }
 
@@ -167,6 +169,13 @@ textarea:focus-visible,
   border: 1px solid var(--line);
   padding: 10px 12px;
   background: #fff;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: #b7d84b;
+  box-shadow: 0 0 0 3px rgba(201, 245, 73, 0.24);
 }
 
 main,

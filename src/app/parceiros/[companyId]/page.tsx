@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
@@ -231,14 +230,7 @@ export default function PartnerPublicProfilePage() {
   if (!hasCompany || !company) {
     return (
       <main className="mx-auto grid min-h-screen w-full max-w-[1200px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6">
-        <PublicPageHeader
-          subtitle="Perfil público do parceiro"
-          actions={
-            <Link href="/ofertas" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
-              Voltar para ofertas
-            </Link>
-          }
-        />
+        <PublicPageHeader subtitle="Perfil público do parceiro" />
         <section className="card grid gap-2 text-center">
           <h1 className="m-0 text-2xl font-black text-[#102113]">Parceiro não encontrado</h1>
           <p className="m-0 text-sm text-[#486048]">
@@ -251,19 +243,7 @@ export default function PartnerPublicProfilePage() {
 
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
-      <PublicPageHeader
-        subtitle="Perfil público do parceiro"
-        actions={
-          <>
-            <Link href="/ofertas" className="btn btn-ghost !w-auto !px-4 !py-2 text-sm">
-              Ver todas as ofertas
-            </Link>
-            <Link href="/auth" className="btn btn-primary !w-auto !px-4 !py-2 text-sm">
-              cadastro
-            </Link>
-          </>
-        }
-      />
+      <PublicPageHeader subtitle="Perfil público do parceiro" />
 
       <section className="grid gap-3 rounded-2xl border border-[#d1dfd1] bg-white p-3 md:p-4">
         {company.coverImage ? (

@@ -80,7 +80,7 @@ export const DesktopSidebar = ({
   return (
     <motion.div
       className={cn(
-        "relative hidden h-full flex-col border border-[#d1dfd1] bg-white px-3 py-3 md:flex md:flex-shrink-0",
+        "relative hidden h-full flex-col border border-[var(--line)] bg-white px-3 py-3 shadow-[var(--shadow-soft)] md:flex md:flex-shrink-0",
         className,
       )}
       animate={{
@@ -90,7 +90,7 @@ export const DesktopSidebar = ({
     >
       <button
         type="button"
-        className="absolute right-2 top-2 z-10 hidden h-8 w-8 items-center justify-center rounded-md border border-[#d1dfd1] bg-white text-[#1f5f30] md:inline-flex"
+        className="absolute right-2 top-2 z-10 hidden h-8 w-8 items-center justify-center rounded-md border border-[var(--line)] bg-white text-[var(--brand)] md:inline-flex"
         onClick={() => setOpen((current) => !current)}
         aria-label={open ? "Minimizar menu lateral" : "Expandir menu lateral"}
         title={open ? "Minimizar" : "Expandir"}
@@ -112,14 +112,14 @@ export const MobileSidebar = ({
     <>
       <div
         className={cn(
-          "flex w-full items-center justify-between rounded-xl border border-[#d1dfd1] bg-white px-3 py-2 md:hidden",
+          "flex w-full items-center justify-between rounded-xl border border-[var(--line)] bg-white px-3 py-2 shadow-[var(--shadow-soft)] md:hidden",
           className,
         )}
         {...props}
       >
         <button
           type="button"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d1dfd1]"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)]"
           onClick={() => setOpen(!open)}
           aria-label="Abrir menu lateral"
         >
@@ -138,7 +138,7 @@ export const MobileSidebar = ({
             <div className="mb-3 flex justify-end">
               <button
                 type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d1dfd1]"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)]"
                 onClick={() => setOpen(false)}
                 aria-label="Fechar menu lateral"
               >
@@ -174,7 +174,7 @@ export const SidebarItemButton = ({
       onClick={onClick}
       className={cn(
         "group/sidebar flex w-full items-center justify-start gap-2 rounded-lg px-2 py-2 text-left text-sm transition",
-        active ? "bg-[#2b7a3f] text-white" : "text-[#1f5f30] hover:bg-[#edf8ef]",
+        active ? "bg-[#C9F549] text-[#13210f]" : "text-[var(--brand)] hover:bg-[#f8fbf4]",
         className,
       )}
     >

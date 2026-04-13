@@ -369,18 +369,18 @@ export default function Home() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <section className="card grid gap-3 self-start">
           <div className="grid gap-1">
-            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2b7a3f]">ClubeZN</p>
+            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">ClubeZN</p>
             <h1 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Entre para economizar na Zona Norte.</h1>
-            <p className="m-0 text-sm text-[#486048]">
+            <p className="m-0 text-sm text-[var(--muted)]">
               Faça login para resgatar benefícios ou crie sua conta em poucos passos.
             </p>
           </div>
 
-          <div className="grid gap-2 rounded-xl border border-[#dce8de] bg-[#f8fcf8] p-3">
-            <p className="m-0 text-sm font-bold text-[#1f5f30]">Como funciona</p>
-            <p className="m-0 text-sm text-[#486048]">1. Escolha seu tipo de conta (consumidor ou parceiro).</p>
-            <p className="m-0 text-sm text-[#486048]">2. Preencha seus dados de acesso.</p>
-            <p className="m-0 text-sm text-[#486048]">3. Entre e acesse seu painel automaticamente.</p>
+          <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
+            <p className="m-0 text-sm font-bold text-[var(--brand)]">Como funciona</p>
+            <p className="m-0 text-sm text-[var(--muted)]">1. Escolha seu tipo de conta (consumidor ou parceiro).</p>
+            <p className="m-0 text-sm text-[var(--muted)]">2. Preencha seus dados de acesso.</p>
+            <p className="m-0 text-sm text-[var(--muted)]">3. Entre e acesse seu painel automaticamente.</p>
           </div>
         </section>
 
@@ -423,7 +423,7 @@ export default function Home() {
               <form onSubmit={handleLogin} className="grid gap-2.5" noValidate>
                 <div className="grid gap-1">
                   <h2 className="m-0 text-lg font-extrabold text-[#102113]">Acessar conta</h2>
-                  <p className="m-0 text-sm text-[#486048]">Use e-mail ou celular já cadastrados.</p>
+                  <p className="m-0 text-sm text-[var(--muted)]">Use e-mail ou celular já cadastrados.</p>
                 </div>
 
                 <label className="field" htmlFor="login-identifier">
@@ -459,7 +459,7 @@ export default function Home() {
                     />
                     <button
                       type="button"
-                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-lg border border-[#d1dfd1] bg-white p-1.5 text-[#486048]"
+                      className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-lg border border-[var(--line)] bg-white p-1.5 text-[var(--muted)]"
                       aria-label={showLoginPassword ? "Ocultar senha" : "Mostrar senha"}
                       onClick={() => setShowLoginPassword((current) => !current)}
                     >
@@ -482,7 +482,7 @@ export default function Home() {
 
               <button
                 type="button"
-                className="text-left text-sm font-bold text-[#1f5f30] underline underline-offset-2"
+                className="text-left text-sm font-bold text-[var(--brand)] underline underline-offset-2"
                 onClick={() => {
                   setRecoverOpen((current) => !current);
                   setError("");
@@ -493,8 +493,8 @@ export default function Home() {
               </button>
 
               {recoverOpen && (
-                <form onSubmit={handleRecoverPassword} className="grid gap-2 rounded-xl border border-[#dce8de] bg-[#f8fcf8] p-3" noValidate>
-                  <p className="m-0 text-sm font-bold text-[#1f5f30]">Redefinir senha</p>
+                <form onSubmit={handleRecoverPassword} className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3" noValidate>
+                  <p className="m-0 text-sm font-bold text-[var(--brand)]">Redefinir senha</p>
 
                   <label className="field" htmlFor="recover-identifier">
                     <span>E-mail ou celular</span>
@@ -525,7 +525,7 @@ export default function Home() {
                       />
                       <button
                         type="button"
-                        className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-lg border border-[#d1dfd1] bg-white p-1.5 text-[#486048]"
+                        className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-lg border border-[var(--line)] bg-white p-1.5 text-[var(--muted)]"
                         aria-label={showRecoverPassword ? "Ocultar senha" : "Mostrar senha"}
                         onClick={() => setShowRecoverPassword((current) => !current)}
                       >
@@ -548,7 +548,7 @@ export default function Home() {
                       />
                       <button
                         type="button"
-                        className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-lg border border-[#d1dfd1] bg-white p-1.5 text-[#486048]"
+                        className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-lg border border-[var(--line)] bg-white p-1.5 text-[var(--muted)]"
                         aria-label={showRecoverConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
                         onClick={() => setShowRecoverConfirmPassword((current) => !current)}
                       >
@@ -583,7 +583,7 @@ export default function Home() {
               <form onSubmit={handleRegister} className="grid gap-2.5" noValidate>
                 <div className="grid gap-1">
                   <h2 className="m-0 text-lg font-extrabold text-[#102113]">Criar nova conta</h2>
-                  <p className="m-0 text-sm text-[#486048]">Preencha os dados de acesso e o perfil da conta.</p>
+                  <p className="m-0 text-sm text-[var(--muted)]">Preencha os dados de acesso e o perfil da conta.</p>
                 </div>
 
                 <div className="grid gap-2" role="radiogroup" aria-label="Tipo de conta">
@@ -595,14 +595,14 @@ export default function Home() {
                       aria-checked={registerRole === "consumer"}
                       onClick={() => setRegisterRole("consumer")}
                       className={`grid gap-1 rounded-xl border px-3 py-2 text-left ${
-                        registerRole === "consumer" ? "border-[#2b7a3f] bg-[#edf8ef]" : "border-[#dbe8de] bg-white"
+                        registerRole === "consumer" ? "border-[#b7d84b] bg-[#f3fbd8]" : "border-[var(--line)] bg-white"
                       }`}
                     >
-                      <span className="inline-flex items-center gap-2 text-sm font-bold text-[#1f5f30]">
+                      <span className="inline-flex items-center gap-2 text-sm font-bold text-[var(--brand)]">
                         <UserRound size={16} />
                         Consumidor
                       </span>
-                      <span className="text-xs text-[#486048]">Quero resgatar ofertas e benefícios.</span>
+                      <span className="text-xs text-[var(--muted)]">Quero resgatar ofertas e benefícios.</span>
                     </button>
                     <button
                       type="button"
@@ -610,20 +610,20 @@ export default function Home() {
                       aria-checked={registerRole === "partner"}
                       onClick={() => setRegisterRole("partner")}
                       className={`grid gap-1 rounded-xl border px-3 py-2 text-left ${
-                        registerRole === "partner" ? "border-[#2b7a3f] bg-[#edf8ef]" : "border-[#dbe8de] bg-white"
+                        registerRole === "partner" ? "border-[#b7d84b] bg-[#f3fbd8]" : "border-[var(--line)] bg-white"
                       }`}
                     >
-                      <span className="inline-flex items-center gap-2 text-sm font-bold text-[#1f5f30]">
+                      <span className="inline-flex items-center gap-2 text-sm font-bold text-[var(--brand)]">
                         <Building2 size={16} />
                         Empresa parceira
                       </span>
-                      <span className="text-xs text-[#486048]">Quero publicar ofertas para clientes.</span>
+                      <span className="text-xs text-[var(--muted)]">Quero publicar ofertas para clientes.</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="grid gap-2 rounded-xl border border-[#dce8de] bg-[#f8fcf8] p-3">
-                  <p className="m-0 text-sm font-bold text-[#1f5f30]">Dados de acesso</p>
+                <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
+                  <p className="m-0 text-sm font-bold text-[var(--brand)]">Dados de acesso</p>
                   <div className="grid gap-2 md:grid-cols-2">
                     <label className="field" htmlFor="register-name">
                       <span>Seu nome</span>
@@ -678,7 +678,7 @@ export default function Home() {
                         />
                         <button
                           type="button"
-                          className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-lg border border-[#d1dfd1] bg-white p-1.5 text-[#486048]"
+                          className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center justify-center rounded-lg border border-[var(--line)] bg-white p-1.5 text-[var(--muted)]"
                           aria-label={showRegisterPassword ? "Ocultar senha" : "Mostrar senha"}
                           onClick={() => setShowRegisterPassword((current) => !current)}
                         >
@@ -695,16 +695,16 @@ export default function Home() {
                   )}
 
                   <div className="grid gap-1">
-                    <p id="register-password-rules" className="m-0 text-xs text-[#486048]">
+                    <p id="register-password-rules" className="m-0 text-xs text-[var(--muted)]">
                       Senha: mínimo de 6 caracteres, com letras e números.
                     </p>
-                    <p className={`m-0 text-xs ${hasMinLength(password) ? "text-[#1f5f30]" : "text-[#a65200]"}`}>
+                    <p className={`m-0 text-xs ${hasMinLength(password) ? "text-[var(--brand)]" : "text-[#a65200]"}`}>
                       {hasMinLength(password) ? "✓" : "○"} Mínimo de 6 caracteres
                     </p>
-                    <p className={`m-0 text-xs ${hasLetters(password) ? "text-[#1f5f30]" : "text-[#a65200]"}`}>
+                    <p className={`m-0 text-xs ${hasLetters(password) ? "text-[var(--brand)]" : "text-[#a65200]"}`}>
                       {hasLetters(password) ? "✓" : "○"} Pelo menos uma letra
                     </p>
-                    <p className={`m-0 text-xs ${hasNumbers(password) ? "text-[#1f5f30]" : "text-[#a65200]"}`}>
+                    <p className={`m-0 text-xs ${hasNumbers(password) ? "text-[var(--brand)]" : "text-[#a65200]"}`}>
                       {hasNumbers(password) ? "✓" : "○"} Pelo menos um número
                     </p>
                   </div>
@@ -731,8 +731,8 @@ export default function Home() {
                 </div>
 
                 {showNeighborhoodSuggestion && detectedNeighborhood && (
-                  <div className="grid gap-2 rounded-xl border border-[#dce8de] bg-[#f6fbff] p-3">
-                    <p className="m-0 text-sm font-bold text-[#255e8d]">Você mora no bairro {detectedNeighborhood}?</p>
+                  <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
+                    <p className="m-0 text-sm font-bold text-[var(--brand)]">Você mora no bairro {detectedNeighborhood}?</p>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -757,8 +757,8 @@ export default function Home() {
                 )}
 
                 {registerRole === "consumer" && (
-                  <div className="grid gap-2 rounded-xl border border-[#dce8de] bg-white p-3">
-                    <p className="m-0 text-sm font-bold text-[#1f5f30]">Perfil do consumidor</p>
+                  <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-white p-3">
+                    <p className="m-0 text-sm font-bold text-[var(--brand)]">Perfil do consumidor</p>
                     <label className="field" htmlFor="register-consumer-neighborhood">
                       <span>Bairro (Zona Norte)</span>
                       <select
@@ -778,8 +778,8 @@ export default function Home() {
                 )}
 
                 {registerRole === "partner" && (
-                  <div className="grid gap-2 rounded-xl border border-[#dce8de] bg-white p-3">
-                    <p className="m-0 text-sm font-bold text-[#1f5f30]">Dados da empresa parceira</p>
+                  <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-white p-3">
+                    <p className="m-0 text-sm font-bold text-[var(--brand)]">Dados da empresa parceira</p>
                     <div className="grid gap-2 md:grid-cols-2">
                       <label className="field" htmlFor="register-company-name">
                         <span>Nome da empresa</span>
@@ -813,7 +813,7 @@ export default function Home() {
                   </div>
                 )}
 
-                <label className="flex items-start gap-2 rounded-xl border border-[#dce8de] bg-white p-3 text-sm text-[#314634]" htmlFor="register-terms">
+                <label className="flex items-start gap-2 rounded-xl border border-[var(--line)] bg-white p-3 text-sm text-[#314634]" htmlFor="register-terms">
                   <input
                     id="register-terms"
                     type="checkbox"
@@ -822,8 +822,8 @@ export default function Home() {
                     className="mt-0.5 h-4 w-4"
                   />
                   <span>
-                    Li e aceito os <Link href="/termos-de-uso" className="font-bold text-[#1f5f30]">termos de uso</Link> e a{" "}
-                    <Link href="/privacidade" className="font-bold text-[#1f5f30]">política de privacidade</Link>.
+                    Li e aceito os <Link href="/termos-de-uso" className="font-bold text-[var(--brand)]">termos de uso</Link> e a{" "}
+                    <Link href="/privacidade" className="font-bold text-[var(--brand)]">política de privacidade</Link>.
                   </span>
                 </label>
 
@@ -856,3 +856,4 @@ export default function Home() {
     </main>
   );
 }
+

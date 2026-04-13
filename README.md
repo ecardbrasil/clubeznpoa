@@ -36,6 +36,7 @@ MVP web mobile-first do ClubeZN (clube de vantagens para a Zona Norte de Porto A
 
 - Cor oficial da identidade visual ClubeZN: `#C9F549`
 - Uso recomendado: banners, seções de destaque e elementos de chamada visual
+- Padrão visual oficial (UI, botões, cards, tom e consistência): `docs/PLATAFORMA_CLUBEZN.md` (seção 7)
 
 ### Credenciais de demonstração
 
