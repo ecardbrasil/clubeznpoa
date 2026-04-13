@@ -152,7 +152,7 @@ export default function PartnerPublicProfilePage() {
         supabase.from("redemptions").select("offer_id, status"),
       ]);
 
-      if (companyRes.error || !companyRes.data || offersRes.error || redemptionsRes.error) {
+      if (companyRes.error || !companyRes.data || offersRes.error) {
         if (!cancelled) {
           setCompany(null);
           setOffers([]);
@@ -162,7 +162,11 @@ export default function PartnerPublicProfilePage() {
       }
 
       const mappedCompany = mapSupabaseCompany(companyRes.data);
-      const usageScoreByOffer = ((redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>)
+      const redemptions = redemptionsRes.error
+        ? []
+        : ((redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>);
+
+      const usageScoreByOffer = redemptions
         .reduce<Record<string, number>>((acc, redemption) => {
           const score = redemption.status === "used" ? 2 : redemption.status === "generated" ? 1 : 0;
           if (score <= 0) return acc;
@@ -206,7 +210,13 @@ export default function PartnerPublicProfilePage() {
       }
     };
 
-    void load();
+    void load().catch(() => {
+      if (!cancelled) {
+        setCompany(null);
+        setOffers([]);
+        setLoading(false);
+      }
+    });
     return () => {
       cancelled = true;
     };

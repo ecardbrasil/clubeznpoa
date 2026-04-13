@@ -48,6 +48,15 @@ type SupabaseCompanyRow = {
   whatsapp: string | null;
 };
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return fallback;
+};
+
 const mapLocalOffers = (): PublicOffer[] => {
   initStorage();
   const data = getData();
@@ -98,13 +107,14 @@ const mapSupabaseOffers = async (): Promise<PublicOffer[]> => {
     supabase.from("redemptions").select("offer_id, status"),
   ]);
 
-  if (offersRes.error) throw offersRes.error;
-  if (companiesRes.error) throw companiesRes.error;
-  if (redemptionsRes.error) throw redemptionsRes.error;
+  if (offersRes.error) throw new Error(getErrorMessage(offersRes.error, "Falha ao consultar ofertas no Supabase."));
+  if (companiesRes.error) throw new Error(getErrorMessage(companiesRes.error, "Falha ao consultar empresas no Supabase."));
 
   const offers = (offersRes.data ?? []) as SupabaseOfferRow[];
   const companies = (companiesRes.data ?? []) as SupabaseCompanyRow[];
-  const redemptions = (redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>;
+  const redemptions = redemptionsRes.error
+    ? []
+    : ((redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>);
 
   const companiesById = new Map(companies.map((company) => [company.id, company]));
 
@@ -165,7 +175,7 @@ function OffersPageContent() {
       } catch (error) {
         if (!cancelled) {
           setAllOffers([]);
-          setLoadingError(error instanceof Error ? error.message : "Falha ao carregar ofertas.");
+          setLoadingError(getErrorMessage(error, "Falha ao carregar ofertas."));
         }
       } finally {
         if (!cancelled) {

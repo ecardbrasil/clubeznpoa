@@ -188,6 +188,15 @@ const trustTestimonials = [
 
 const trustBadges = ["Parceiros verificados", "Ofertas com curadoria", "Suporte local Zona Norte"];
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return fallback;
+};
+
 const getInitials = (fullName: string) =>
   fullName
     .split(" ")
@@ -396,13 +405,14 @@ const mapSupabaseLandingData = async () => {
     supabase.from("redemptions").select("offer_id, status"),
   ]);
 
-  if (offersRes.error) throw offersRes.error;
-  if (companiesRes.error) throw companiesRes.error;
-  if (redemptionsRes.error) throw redemptionsRes.error;
+  if (offersRes.error) throw new Error(getErrorMessage(offersRes.error, "Falha ao consultar ofertas no Supabase."));
+  if (companiesRes.error) throw new Error(getErrorMessage(companiesRes.error, "Falha ao consultar empresas no Supabase."));
 
   const offers = (offersRes.data ?? []) as SupabaseOfferRow[];
   const companies = (companiesRes.data ?? []) as SupabaseCompanyRow[];
-  const redemptions = (redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>;
+  const redemptions = redemptionsRes.error
+    ? []
+    : ((redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>);
 
   const companiesById = new Map(companies.map((company) => [company.id, company]));
 
@@ -495,7 +505,7 @@ export default function LandingPage() {
         if (cancelled) return;
         setFeaturedOffers([]);
         setPartnerProfiles([]);
-        setOffersLoadingError(error instanceof Error ? error.message : "Falha ao carregar dados.");
+        setOffersLoadingError(getErrorMessage(error, "Falha ao carregar dados."));
       }
     };
 
