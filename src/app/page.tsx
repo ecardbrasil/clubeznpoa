@@ -70,16 +70,17 @@ const partnerBenefits = [
   "Fortaleça sua presença local",
 ];
 
-const northZoneNeighborhoods = [
-  "Sarandi",
-  "Passo d'Areia",
-  "Jardim Lindóia",
-  "São João",
-  "Cristo Redentor",
-  "Vila Ipiranga",
-  "Rubem Berta",
-  "Jardim Leopoldina",
-];
+const northZoneNeighborhoods = ["Sarandi", "Passo d'Areia", "Jardim Lindóia", "São João", "Cristo Redentor", "Vila Ipiranga", "Rubem Berta", "Jardim Leopoldina"];
+
+const STYLES = {
+  badge: "inline-flex w-fit rounded-full bg-[#eef5e5] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]",
+  badgeAlt: "inline-flex w-fit rounded-full bg-[#C9F549] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#13210f]",
+  neighborhoodTag: "rounded-full border border-[#d8e3c4] bg-[#f8fbf4] px-3 py-1 text-xs font-bold text-[#2a3f2f]",
+  cardBorder: "border border-[#dfe5d4] bg-white",
+  cardBg: "rounded-xl border border-[#e7eddc] bg-[#f8fbf4] px-3 py-3",
+  heading2: "m-0 text-2xl font-black text-[#102113] md:text-3xl",
+  heading3: "m-0 text-base font-extrabold text-[#102113]",
+};
 
 const trustPoints = [
   "Plataforma com foco exclusivo na realidade da Zona Norte.",
@@ -110,14 +111,8 @@ const faqItems = [
   },
 ];
 
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
-    return error.message;
-  }
-  return fallback;
-};
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : typeof error === "string" ? error : fallback;
 
 type SupabaseOfferRow = {
   id: string;
@@ -151,47 +146,53 @@ type SupabaseCompanyRow = {
   whatsapp: string | null;
 };
 
+const countOffersByCompanyId = (offers: Array<{ companyId?: string; company_id?: string; approved?: boolean; rejected?: boolean }>) =>
+  offers
+    .filter((o) => o.approved && !o.rejected)
+    .reduce<Record<string, number>>((acc, o) => {
+      const id = o.companyId || o.company_id;
+      if (id) acc[id] = (acc[id] ?? 0) + 1;
+      return acc;
+    }, {});
+
 const mapLocalLandingData = () => {
   initStorage();
   const data = getData();
   const hotOfferIds = getHotOfferIds(data, 3);
-  const approvedOffers = data.offers.filter((offer) => offer.approved && !offer.rejected);
-  const approvedCompanies = data.companies.filter((company) => company.approved);
-  const companiesById = new Map(approvedCompanies.map((company) => [company.id, company]));
-  const offerCountByCompanyId = approvedOffers.reduce<Record<string, number>>((acc, offer) => {
-    acc[offer.companyId] = (acc[offer.companyId] ?? 0) + 1;
-    return acc;
-  }, {});
+  const approvedOffers = data.offers.filter((o) => o.approved && !o.rejected);
+  const companiesById = new Map(data.companies.filter((c) => c.approved).map((c) => [c.id, c]));
+  const offerCountByCompanyId = countOffersByCompanyId(approvedOffers);
 
   const featuredOffers: OfferCardData[] = approvedOffers
-    .filter((offer) => companiesById.has(offer.companyId))
+    .filter((o) => companiesById.has(o.companyId))
     .slice(0, 6)
-    .map((offer) => ({
-      id: offer.id,
-      companyId: offer.companyId,
-      title: offer.title,
-      description: offer.description,
-      discountLabel: offer.discountLabel,
-      category: offer.category,
-      neighborhood: offer.neighborhood,
-      isHot: hotOfferIds.has(offer.id),
-      companyName:
-        companiesById.get(offer.companyId)?.publicName ?? companiesById.get(offer.companyId)?.name ?? "Parceiro ClubeZN",
-      images: offer.images,
-      partnerLogoImage: companiesById.get(offer.companyId)?.logoImage,
-      partnerCoverImage: companiesById.get(offer.companyId)?.coverImage,
-      partnerAddressLine: companiesById.get(offer.companyId)?.addressLine,
-      partnerInstagram: companiesById.get(offer.companyId)?.instagram,
-      partnerFacebook: companiesById.get(offer.companyId)?.facebook,
-      partnerWebsite: companiesById.get(offer.companyId)?.website,
-      partnerWhatsapp: companiesById.get(offer.companyId)?.whatsapp,
-    }));
+    .map((o) => {
+      const company = companiesById.get(o.companyId);
+      return {
+        id: o.id,
+        companyId: o.companyId,
+        title: o.title,
+        description: o.description,
+        discountLabel: o.discountLabel,
+        category: o.category,
+        neighborhood: o.neighborhood,
+        isHot: hotOfferIds.has(o.id),
+        companyName: company?.publicName ?? company?.name ?? "Parceiro ClubeZN",
+        images: o.images,
+        partnerLogoImage: company?.logoImage,
+        partnerCoverImage: company?.coverImage,
+        partnerAddressLine: company?.addressLine,
+        partnerInstagram: company?.instagram,
+        partnerFacebook: company?.facebook,
+        partnerWebsite: company?.website,
+        partnerWhatsapp: company?.whatsapp,
+      };
+    });
 
-  const partnerProfiles = approvedCompanies
+  const partnerProfiles = Array.from(companiesById.values())
     .sort((a, b) => {
-      const offersDiff = (offerCountByCompanyId[b.id] ?? 0) - (offerCountByCompanyId[a.id] ?? 0);
-      if (offersDiff !== 0) return offersDiff;
-      return (a.publicName ?? a.name).localeCompare(b.publicName ?? b.name, "pt-BR");
+      const diff = (offerCountByCompanyId[b.id] ?? 0) - (offerCountByCompanyId[a.id] ?? 0);
+      return diff !== 0 ? diff : (a.publicName ?? a.name).localeCompare(b.publicName ?? b.name, "pt-BR");
     })
     .slice(0, 6);
 
@@ -199,21 +200,12 @@ const mapLocalLandingData = () => {
 };
 
 const mapSupabaseLandingData = async () => {
-  if (!hasSupabaseEnv()) {
-    throw new Error("Variáveis do Supabase não configuradas.");
-  }
+  if (!hasSupabaseEnv()) throw new Error("Variáveis do Supabase não configuradas.");
 
   const supabase = getSupabaseBrowserClient();
-
   const [offersRes, companiesRes, redemptionsRes] = await Promise.all([
-    supabase
-      .from("offers")
-      .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected"),
-    supabase
-      .from("companies")
-      .select(
-        "id, name, public_name, category, neighborhood, city, state, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp",
-      ),
+    supabase.from("offers").select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected"),
+    supabase.from("companies").select("id, name, public_name, category, neighborhood, city, state, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp"),
     supabase.from("redemptions").select("offer_id, status"),
   ]);
 
@@ -222,72 +214,63 @@ const mapSupabaseLandingData = async () => {
 
   const offers = (offersRes.data ?? []) as SupabaseOfferRow[];
   const companies = (companiesRes.data ?? []) as SupabaseCompanyRow[];
-  const redemptions = redemptionsRes.error
-    ? []
-    : ((redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>);
+  const redemptions = redemptionsRes.error ? [] : (redemptionsRes.data ?? []);
 
-  const companiesById = new Map(companies.map((company) => [company.id, company]));
+  const companiesById = new Map(companies.map((c) => [c.id, c]));
   const hotOfferIds = getHotOfferIdsFromSupabase(redemptions, 3);
+  const offerCountByCompanyId = countOffersByCompanyId(offers);
 
   const featuredOffers: OfferCardData[] = offers
-    .filter((offer) => offer.approved && !offer.rejected && companiesById.has(offer.company_id))
+    .filter((o) => o.approved && !o.rejected && companiesById.has(o.company_id))
     .slice(0, 6)
-    .map((offer) => {
-      const company = companiesById.get(offer.company_id);
+    .map((o) => {
+      const c = companiesById.get(o.company_id)!;
       return {
-        id: offer.id,
-        companyId: offer.company_id,
-        title: offer.title,
-        description: offer.description,
-        discountLabel: offer.discount_label,
-        category: offer.category,
-        neighborhood: offer.neighborhood,
-        isHot: hotOfferIds.has(offer.id),
-        companyName: company?.public_name ?? company?.name ?? "Parceiro ClubeZN",
-        images: Array.isArray(offer.images) ? offer.images : [],
-        partnerLogoImage: company?.logo_image ?? undefined,
-        partnerCoverImage: company?.cover_image ?? undefined,
-        partnerAddressLine: company?.address_line ?? undefined,
-        partnerInstagram: company?.instagram ?? undefined,
-        partnerFacebook: company?.facebook ?? undefined,
-        partnerWebsite: company?.website ?? undefined,
-        partnerWhatsapp: company?.whatsapp ?? undefined,
+        id: o.id,
+        companyId: o.company_id,
+        title: o.title,
+        description: o.description,
+        discountLabel: o.discount_label,
+        category: o.category,
+        neighborhood: o.neighborhood,
+        isHot: hotOfferIds.has(o.id),
+        companyName: c.public_name ?? c.name ?? "Parceiro ClubeZN",
+        images: Array.isArray(o.images) ? o.images : [],
+        partnerLogoImage: c.logo_image,
+        partnerCoverImage: c.cover_image,
+        partnerAddressLine: c.address_line,
+        partnerInstagram: c.instagram,
+        partnerFacebook: c.facebook,
+        partnerWebsite: c.website,
+        partnerWhatsapp: c.whatsapp,
       };
     });
 
-  const offerCountByCompanyId = offers
-    .filter((offer) => offer.approved && !offer.rejected)
-    .reduce<Record<string, number>>((acc, offer) => {
-      acc[offer.company_id] = (acc[offer.company_id] ?? 0) + 1;
-      return acc;
-    }, {});
-
-  const partnerProfiles: Company[] = companies
-    .filter((company) => company.approved)
+  const partnerProfiles: Company[] = Array.from(companiesById.values())
+    .filter((c) => c.approved)
     .sort((a, b) => {
-      const offersDiff = (offerCountByCompanyId[b.id] ?? 0) - (offerCountByCompanyId[a.id] ?? 0);
-      if (offersDiff !== 0) return offersDiff;
-      return (a.public_name ?? a.name).localeCompare(b.public_name ?? b.name, "pt-BR");
+      const diff = (offerCountByCompanyId[b.id] ?? 0) - (offerCountByCompanyId[a.id] ?? 0);
+      return diff !== 0 ? diff : (a.public_name ?? a.name).localeCompare(b.public_name ?? b.name, "pt-BR");
     })
     .slice(0, 6)
-    .map((company) => ({
-      id: company.id,
-      name: company.name,
-      publicName: company.public_name ?? undefined,
-      category: company.category,
-      neighborhood: company.neighborhood,
-      city: company.city,
-      state: company.state,
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      publicName: c.public_name,
+      category: c.category,
+      neighborhood: c.neighborhood,
+      city: c.city,
+      state: c.state,
       ownerUserId: "",
-      approved: company.approved,
-      logoImage: company.logo_image ?? undefined,
-      coverImage: company.cover_image ?? undefined,
-      addressLine: company.address_line ?? undefined,
-      bio: company.bio ?? undefined,
-      instagram: company.instagram ?? undefined,
-      facebook: company.facebook ?? undefined,
-      website: company.website ?? undefined,
-      whatsapp: company.whatsapp ?? undefined,
+      approved: c.approved,
+      logoImage: c.logo_image,
+      coverImage: c.cover_image,
+      addressLine: c.address_line,
+      bio: c.bio,
+      instagram: c.instagram,
+      facebook: c.facebook,
+      website: c.website,
+      whatsapp: c.whatsapp,
       createdAt: "",
     }));
 
@@ -410,10 +393,8 @@ export default function LandingPage() {
 
       <div className="mx-auto grid w-full max-w-[1180px] gap-5 px-4 py-6 md:gap-6 md:px-6 md:py-8">
       <section className="grid gap-4 border border-[#dfe5d4] bg-white p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full bg-[#eef5e5] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]">
-          Apresentação
-        </span>
-        <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">O que é o ClubeZN?</h2>
+        <span className={STYLES.badge}>Apresentação</span>
+        <h2 className={STYLES.heading2}>O que é o ClubeZN?</h2>
         <p className="m-0 text-sm leading-relaxed text-[#3f5646] md:text-base">
           O ClubeZN é uma plataforma criada para aproximar moradores da Zona Norte de Porto Alegre de empresas parceiras da região.
           Aqui, o consumidor encontra ofertas ativas, resgata benefícios com facilidade e descobre oportunidades locais em poucos
@@ -421,19 +402,17 @@ export default function LandingPage() {
         </p>
       </section>
 
-      <section id="vantagens" className="grid gap-4 border border-[#dfe5d4] bg-white p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full bg-[#eef5e5] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]">
-          Benefícios para moradores
-        </span>
-        <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Por que usar o ClubeZN?</h2>
+      <section id="vantagens" className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
+        <span className={STYLES.badge}>Benefícios para moradores</span>
+        <h2 className={STYLES.heading2}>Por que usar o ClubeZN?</h2>
         <div className="grid gap-2 md:grid-cols-2">
           {userBenefits.map((item) => (
-            <article key={item.title} className="grid gap-2 rounded-xl border border-[#e7eddc] bg-[#f8fbf4] px-3 py-3">
+            <article key={item.title} className={STYLES.cardBg}>
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#C9F549] text-[#14220f]">
                   <BadgeCheck size={15} />
                 </span>
-                <h3 className="m-0 text-base font-extrabold text-[#102113]">{item.title}</h3>
+                <h3 className={STYLES.heading3}>{item.title}</h3>
               </div>
               <p className="m-0 text-sm text-[#44584c]">{item.text}</p>
             </article>
@@ -441,15 +420,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="como-funciona" className="grid gap-4 border border-[#dfe5d4] bg-white p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full bg-[#eef5e5] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]">
-          Como funciona
-        </span>
-        <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Como funciona?</h2>
+      <section id="como-funciona" className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
+        <span className={STYLES.badge}>Como funciona</span>
+        <h2 className={STYLES.heading2}>Como funciona?</h2>
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-          {howItWorksSteps.map((item, index) => (
-            <article key={item.text} className="grid gap-1 rounded-xl border border-[#e7eddc] bg-[#f8fbf4] p-3">
-              <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#324639]">Passo {index + 1}</p>
+          {howItWorksSteps.map((item, i) => (
+            <article key={item.text} className={STYLES.cardBg}>
+              <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#324639]">Passo {i + 1}</p>
               <p className="m-0 text-sm font-semibold text-[#1f3328]">{item.text}</p>
             </article>
           ))}
@@ -458,12 +435,10 @@ export default function LandingPage() {
       </section>
 
       <section id="empresas" className="grid gap-4 border border-[#d4dfbf] bg-[#f6fbe9] p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#13210f]">
-          Para empresas parceiras
-        </span>
+        <span className={STYLES.badgeAlt}>Para empresas parceiras</span>
         <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
           <div className="grid gap-2">
-            <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Sua empresa mais visível para quem está perto.</h2>
+            <h2 className={STYLES.heading2}>Sua empresa mais visível para quem está perto.</h2>
             <p className="m-0 text-sm text-[#3f5646] md:text-base">
               O ClubeZN também foi feito para negócios locais que querem atrair mais clientes e divulgar ofertas com agilidade. A empresa
               parceira pode cadastrar seu perfil, publicar ofertas e validar resgates de forma simples, sem processos complicados.
@@ -505,36 +480,28 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 border border-[#dfe5d4] bg-white p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full bg-[#eef5e5] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]">
-          Destaque regional
-        </span>
-        <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Foco na Zona Norte de Porto Alegre</h2>
+      <section className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
+        <span className={STYLES.badge}>Destaque regional</span>
+        <h2 className={STYLES.heading2}>Foco na Zona Norte de Porto Alegre</h2>
         <p className="m-0 text-sm text-[#3f5646] md:text-base">
           O ClubeZN nasce com foco na valorização do comércio local e na criação de uma rede de vantagens realmente útil para quem vive,
           circula e consome na Zona Norte. A proposta é fortalecer conexões entre moradores e empresas parceiras, começando pela região e
           crescendo com densidade por bairro e categoria.
         </p>
         <div className="flex flex-wrap gap-2">
-          {northZoneNeighborhoods.map((neighborhood) => (
-            <Link
-              key={neighborhood}
-              href={`/ofertas?bairro=${encodeURIComponent(neighborhood)}`}
-              className="rounded-full border border-[#d8e3c4] bg-[#f8fbf4] px-3 py-1.5 text-xs font-bold text-[#2a3f2f] no-underline"
-            >
-              {neighborhood}
+          {northZoneNeighborhoods.map((n) => (
+            <Link key={n} href={`/ofertas?bairro=${encodeURIComponent(n)}`} className={`${STYLES.neighborhoodTag} py-1.5 no-underline`}>
+              {n}
             </Link>
           ))}
         </div>
       </section>
 
-      <section id="ofertas" className="grid gap-4 border border-[#dfe5d4] bg-white p-5 md:p-7">
+      <section id="ofertas" className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div className="grid gap-1">
-            <span className="inline-flex w-fit rounded-full bg-[#eef5e5] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]">
-              Ofertas em destaque
-            </span>
-            <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Ofertas em destaque</h2>
+            <span className={STYLES.badge}>Ofertas em destaque</span>
+            <h2 className={STYLES.heading2}>Ofertas em destaque</h2>
             <p className="m-0 text-sm text-[#44584c] md:text-base">
               Confira algumas das vantagens que já estão disponíveis na plataforma e descubra novas oportunidades perto de você.
             </p>
@@ -568,10 +535,8 @@ export default function LandingPage() {
       </section>
 
       <section className="grid gap-4 border border-[#d4dfbf] bg-[#f6fbe9] p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#13210f]">
-          Confiança e proposta de valor
-        </span>
-        <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Mais praticidade para quem busca. Mais visibilidade para quem vende.</h2>
+        <span className={STYLES.badgeAlt}>Confiança e proposta de valor</span>
+        <h2 className={STYLES.heading2}>Mais praticidade para quem busca. Mais visibilidade para quem vende.</h2>
         <p className="m-0 text-sm text-[#44584c] md:text-base">
           O ClubeZN reúne consumidores e empresas da mesma região em uma plataforma simples, direta e funcional. Para quem mora na Zona
           Norte, fica mais fácil encontrar vantagens locais. Para os parceiros, fica mais fácil transformar oferta em movimento real.
@@ -602,14 +567,12 @@ export default function LandingPage() {
         </ul>
       </section>
 
-      <section id="faq" className="grid gap-4 border border-[#dfe5d4] bg-white p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full bg-[#eef5e5] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]">
-          FAQ
-        </span>
-        <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Dúvidas frequentes</h2>
+      <section id="faq" className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
+        <span className={STYLES.badge}>FAQ</span>
+        <h2 className={STYLES.heading2}>Dúvidas frequentes</h2>
         <div className="grid gap-2">
           {faqItems.map((item) => (
-            <details key={item.question} className="rounded-xl border border-[#e7eddc] bg-[#f8fbf4] px-3 py-3">
+            <details key={item.question} className={STYLES.cardBg}>
               <summary className="flex cursor-pointer items-center gap-2 text-sm font-extrabold text-[#102113]">
                 <CircleHelp size={14} />
                 {item.question}
@@ -621,10 +584,8 @@ export default function LandingPage() {
       </section>
 
       <section className="grid gap-4 border border-[#d4dfbf] bg-[#C9F549] p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full border border-[#aecf3f] bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#13210f]">
-          Comece agora
-        </span>
-        <h2 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Comece a aproveitar as vantagens do ClubeZN.</h2>
+        <span className="inline-flex w-fit rounded-full border border-[#aecf3f] bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#13210f]">Comece agora</span>
+        <h2 className={STYLES.heading2}>Comece a aproveitar as vantagens do ClubeZN.</h2>
         <p className="m-0 text-sm text-[#1f3318] md:text-base">
           Entre agora para descobrir ofertas locais ou cadastre sua empresa e faça parte da rede de parceiros da Zona Norte.
         </p>
