@@ -256,7 +256,7 @@ const mapSupabaseLandingData = async () => {
     .map((c) => ({
       id: c.id,
       name: c.name,
-      publicName: c.public_name,
+      publicName: c.public_name ?? undefined,
       category: c.category,
       neighborhood: c.neighborhood,
       city: c.city,
