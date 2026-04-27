@@ -315,18 +315,7 @@ export default function LandingPage() {
   return (
     <main id="conteudo-principal" className="grid min-h-screen w-full gap-0 px-0 py-0">
       <section className="grid gap-4 bg-[#C9F549] p-3 md:gap-6 md:p-6">
-        <SiteHeader
-          sticky
-          smallLogo
-          links={[
-            { label: "Início", href: "/" },
-            { label: "Como funciona", href: "/#como-funciona" },
-            { label: "Ofertas", href: "/ofertas" },
-            { label: "Para empresas", href: "/#empresas" },
-            { label: "Entrar", href: "/auth" },
-          ]}
-          className="md:px-6"
-        />
+        <SiteHeader sticky smallLogo className="md:px-6" />
 
         <section className="grid gap-5 px-1 pb-1 pt-1 md:grid-cols-[1.05fr_0.95fr] md:items-center">
           <div className="grid gap-3">
