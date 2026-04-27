@@ -39,6 +39,12 @@ const normalizeText = (value: string) =>
     .toLowerCase()
     .trim();
 
+const filterNeighborhoods = (neighborhoods: string[], query: string) => {
+  if (!query.trim()) return neighborhoods;
+  const normalized = normalizeText(query);
+  return neighborhoods.filter((n) => normalizeText(n).includes(normalized));
+};
+
 const extractPhoneDigits = (value: string) => value.replace(/\D/g, "").slice(0, 11);
 
 const formatPhoneInput = (value: string) => {
@@ -51,7 +57,7 @@ const formatPhoneInput = (value: string) => {
 };
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(value.trim());
-const isValidPhone = (digits: string) => digits.length === 10 || digits.length === 11;
+const isValidPhone = (digits: string) => digits.length >= 9 && digits.length <= 11;
 const hasLetters = (value: string) => /[A-Za-z]/.test(value);
 const hasNumbers = (value: string) => /\d/.test(value);
 const hasMinLength = (value: string) => value.length >= 6;
@@ -94,10 +100,12 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [consumerNeighborhood, setConsumerNeighborhood] = useState("Sarandi");
+  const [neighborhoodSearch, setNeighborhoodSearch] = useState("");
 
   const [companyName, setCompanyName] = useState("");
   const [companyCategory, setCompanyCategory] = useState("");
   const [companyNeighborhood, setCompanyNeighborhood] = useState("Sarandi");
+  const [companyNeighborhoodSearch, setCompanyNeighborhoodSearch] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,6 +124,7 @@ export default function Home() {
   const emailInvalid = email.trim().length > 0 && !isValidEmail(email);
   const phoneInvalid = phoneDigits.length > 0 && !isValidPhone(phoneDigits);
   const passwordInvalid = mode === "register" && password.length > 0 && !isReasonablePassword(password);
+  const passwordValid = mode === "register" && isReasonablePassword(password);
 
   const identifierTrimmed = identifier.trim();
   const identifierDigits = extractPhoneDigits(identifierTrimmed);
@@ -146,9 +155,9 @@ export default function Home() {
 
   const suggestNeighborhoodFromLocation = () => {
     if (!("geolocation" in navigator)) {
-      const message = "Seu navegador não suporta geolocalização.";
+      const message = "Seu navegador não suporta geolocalização. Escolha o bairro manualmente.";
       setError(message);
-      showToast(message, "error");
+      showToast(message, "info");
       return;
     }
 
@@ -161,7 +170,8 @@ export default function Home() {
         try {
           const rawNeighborhood = await getNeighborhoodByCoordinates(position.coords.latitude, position.coords.longitude);
           if (!rawNeighborhood.trim()) {
-            showToast("Não foi possível identificar seu bairro automaticamente.", "info");
+            showToast("Não conseguimos identificar seu bairro. Escolha manualmente abaixo.", "info");
+            setLocationLoading(false);
             return;
           }
 
@@ -170,22 +180,23 @@ export default function Home() {
           );
 
           if (!matched) {
-            showToast("Seu bairro não foi identificado na Zona Norte automaticamente.", "info");
+            showToast("Seu local está fora da Zona Norte. Escolha um bairro disponível abaixo.", "info");
+            setLocationLoading(false);
             return;
           }
 
           setDetectedNeighborhood(matched);
           setShowNeighborhoodSuggestion(true);
-          setInfo(`Bairro sugerido: ${matched}.`);
+          showToast(`Bairro detectado: ${matched}`, "success");
         } catch {
-          showToast("Falha ao consultar sua localização.", "error");
+          showToast("Erro ao detectar localização. Escolha o bairro manualmente.", "error");
         } finally {
           setLocationLoading(false);
         }
       },
       () => {
         setLocationLoading(false);
-        showToast("Permissão de localização negada.", "info");
+        showToast("Você recusou acesso à localização. Sem problema, escolha o bairro manualmente.", "info");
       },
       {
         enableHighAccuracy: false,
@@ -202,7 +213,7 @@ export default function Home() {
     setInfo("");
 
     if (!identifierTrimmed) {
-      const message = "Informe e-mail ou celular.";
+      const message = "Informe seu e-mail ou celular.";
       setError(message);
       showToast(message, "error");
       return;
@@ -242,7 +253,7 @@ export default function Home() {
     setInfo("");
 
     if (!recoverIdentifierTrimmed) {
-      const message = "Informe o e-mail ou celular da conta.";
+      const message = "Informe seu e-mail ou celular.";
       setError(message);
       showToast(message, "error");
       return;
@@ -301,7 +312,7 @@ export default function Home() {
     setInfo("");
 
     if (!email.trim() && !phoneDigits) {
-      const message = "Informe ao menos e-mail ou celular.";
+      const message = "Preencha pelo menos um: e-mail ou celular.";
       setError(message);
       showToast(message, "error");
       return;
@@ -319,13 +330,13 @@ export default function Home() {
       return;
     }
     if (!isReasonablePassword(password)) {
-      const message = "Senha fraca. Use pelo menos 6 caracteres com letras e números.";
+      const message = "Crie uma senha com pelo menos 6 caracteres, incluindo letras e números.";
       setError(message);
       showToast(message, "error");
       return;
     }
     if (!termsAccepted) {
-      const message = "Você precisa aceitar os termos de uso e a política de privacidade.";
+      const message = "Aceite os termos de uso e a política de privacidade para criar sua conta.";
       setError(message);
       showToast(message, "error");
       return;
@@ -368,54 +379,82 @@ export default function Home() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <section className="card grid gap-3 self-start">
-          <div className="grid gap-1">
-            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">ClubeZN</p>
-            <h1 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Entre para economizar na Zona Norte.</h1>
-            <p className="m-0 text-sm text-[var(--muted)]">
-              Faça login para resgatar benefícios ou crie sua conta em poucos passos.
-            </p>
+          <div className="grid gap-2">
+            <div className="grid gap-1">
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">ClubeZN</p>
+              <h1 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Economize na Zona Norte com ofertas exclusivas.</h1>
+              <p className="m-0 text-sm text-[var(--muted)]">
+                Crie sua conta ou faça login para acessar benefícios e promoções especiais.
+              </p>
+            </div>
+            <div className="rounded-lg bg-gradient-to-r from-[#b7d84b] to-[#92c025] p-1">
+              <p className="m-0 text-sm font-bold text-white px-2 py-1">✓ Acesso instantâneo a centenas de ofertas</p>
+            </div>
           </div>
 
           <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
-            <p className="m-0 text-sm font-bold text-[var(--brand)]">Como funciona</p>
-            <p className="m-0 text-sm text-[var(--muted)]">1. Escolha seu tipo de conta (consumidor ou parceiro).</p>
-            <p className="m-0 text-sm text-[var(--muted)]">2. Preencha seus dados de acesso.</p>
-            <p className="m-0 text-sm text-[var(--muted)]">3. Entre e acesse seu painel automaticamente.</p>
+            <p className="m-0 text-sm font-bold text-[var(--brand)]">Como começar</p>
+            <div className="grid gap-2">
+              <p className="m-0 text-xs">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white">1</span>
+                <span className="ml-2">Escolha o tipo de conta (consumidor ou parceiro)</span>
+              </p>
+              <p className="m-0 text-xs">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white">2</span>
+                <span className="ml-2">Preencha e-mail ou celular + senha (ou use dados existentes para login)</span>
+              </p>
+              <p className="m-0 text-xs">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white">3</span>
+                <span className="ml-2">Confirme os termos e crie sua conta</span>
+              </p>
+              <p className="m-0 text-xs">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#2e7d32] text-xs font-bold text-white">✓</span>
+                <span className="ml-2 font-semibold text-[#2e7d32]">Acesso instantâneo ao seu painel</span>
+              </p>
+            </div>
           </div>
         </section>
 
         <section className="card grid gap-3">
-          <div role="tablist" aria-label="Escolha entre login e cadastro" className="grid grid-cols-2 gap-2">
-            <button
-              id="tab-login"
-              role="tab"
-              type="button"
-              aria-selected={mode === "login"}
-              aria-controls="panel-login"
-              className={`btn ${mode === "login" ? "btn-primary" : "btn-ghost"}`}
-              onClick={() => {
-                setMode("login");
-                setError("");
-                setInfo("");
-              }}
-            >
-              Entrar
-            </button>
-            <button
-              id="tab-register"
-              role="tab"
-              type="button"
-              aria-selected={mode === "register"}
-              aria-controls="panel-register"
-              className={`btn ${mode === "register" ? "btn-primary" : "btn-ghost"}`}
-              onClick={() => {
-                setMode("register");
-                setError("");
-                setInfo("");
-              }}
-            >
-              Criar conta
-            </button>
+          <div className="grid gap-2">
+            <div className="rounded-lg border-2 border-[#b7d84b] bg-[#f3fbd8] p-3">
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2e7d32]">Novo por aqui?</p>
+              <p className="m-0 text-sm text-[#314634]">
+                Se é sua primeira vez, comece criando uma conta. Já é membro? Faça login abaixo.
+              </p>
+            </div>
+            <div role="tablist" aria-label="Escolha entre login e cadastro" className="grid grid-cols-2 gap-2">
+              <button
+                id="tab-login"
+                role="tab"
+                type="button"
+                aria-selected={mode === "login"}
+                aria-controls="panel-login"
+                className={`btn ${mode === "login" ? "btn-primary" : "btn-ghost"}`}
+                onClick={() => {
+                  setMode("login");
+                  setError("");
+                  setInfo("");
+                }}
+              >
+                Entrar
+              </button>
+              <button
+                id="tab-register"
+                role="tab"
+                type="button"
+                aria-selected={mode === "register"}
+                aria-controls="panel-register"
+                className={`btn ${mode === "register" ? "btn-primary" : "btn-ghost"}`}
+                onClick={() => {
+                  setMode("register");
+                  setError("");
+                  setInfo("");
+                }}
+              >
+                Criar conta
+              </button>
+            </div>
           </div>
 
           {mode === "login" && (
@@ -623,19 +662,23 @@ export default function Home() {
                 </div>
 
                 <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
-                  <p className="m-0 text-sm font-bold text-[var(--brand)]">Dados de acesso</p>
+                  <div className="grid gap-1">
+                    <p className="m-0 text-sm font-bold text-[var(--brand)]">Dados de acesso</p>
+                    <p className="m-0 text-xs text-[var(--muted)]">Preencha seu nome, senha e pelo menos um dos dois: e-mail ou celular.</p>
+                  </div>
                   <div className="grid gap-2 md:grid-cols-2">
                     <label className="field" htmlFor="register-name">
                       <span>Seu nome</span>
                       <input id="register-name" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
                     </label>
                     <label className="field" htmlFor="register-email">
-                      <span>E-mail</span>
+                      <span>E-mail (opcional)</span>
                       <input
                         id="register-email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         type="email"
+                        placeholder="nome@dominio.com"
                         autoComplete="email"
                         aria-invalid={emailInvalid}
                         aria-describedby={emailInvalid ? "register-email-error" : undefined}
@@ -650,12 +693,12 @@ export default function Home() {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <label className="field" htmlFor="register-phone">
-                      <span>Celular</span>
+                      <span>Celular (opcional)</span>
                       <input
                         id="register-phone"
                         value={phone}
                         onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
-                        placeholder="(51) 99999-0000"
+                        placeholder="(51) 99999-0000 ou 51999990000"
                         inputMode="numeric"
                         autoComplete="tel"
                         aria-invalid={phoneInvalid}
@@ -690,33 +733,40 @@ export default function Home() {
 
                   {phoneInvalid && (
                     <p id="register-phone-error" className="m-0 text-xs font-bold text-[#a65200]" role="alert">
-                      Digite o celular com DDD (10 ou 11 dígitos).
+                      Digite um celular válido (9 a 11 dígitos). Exemplo: 51999990000 ou (51) 99999-0000
                     </p>
                   )}
 
-                  <div className="grid gap-1">
-                    <p id="register-password-rules" className="m-0 text-xs text-[var(--muted)]">
-                      Senha: mínimo de 6 caracteres, com letras e números.
+                  <div className={`grid gap-2 rounded-lg p-2 ${
+                    passwordValid ? "bg-[#e8f5e9]" : password.length > 0 ? "bg-[#fff3e0]" : "bg-white"
+                  }`}>
+                    <p id="register-password-rules" className="m-0 text-xs font-semibold text-[#314634]">
+                      Requisitos da senha:
                     </p>
-                    <p className={`m-0 text-xs ${hasMinLength(password) ? "text-[var(--brand)]" : "text-[#a65200]"}`}>
+                    <p className={`m-0 text-xs ${hasMinLength(password) ? "text-[#2e7d32] font-semibold" : "text-[#666]"}`}>
                       {hasMinLength(password) ? "✓" : "○"} Mínimo de 6 caracteres
                     </p>
-                    <p className={`m-0 text-xs ${hasLetters(password) ? "text-[var(--brand)]" : "text-[#a65200]"}`}>
+                    <p className={`m-0 text-xs ${hasLetters(password) ? "text-[#2e7d32] font-semibold" : "text-[#666]"}`}>
                       {hasLetters(password) ? "✓" : "○"} Pelo menos uma letra
                     </p>
-                    <p className={`m-0 text-xs ${hasNumbers(password) ? "text-[var(--brand)]" : "text-[#a65200]"}`}>
+                    <p className={`m-0 text-xs ${hasNumbers(password) ? "text-[#2e7d32] font-semibold" : "text-[#666]"}`}>
                       {hasNumbers(password) ? "✓" : "○"} Pelo menos um número
                     </p>
+                    {passwordValid && (
+                      <p className="m-0 text-xs font-bold text-[#2e7d32]">✓ Senha forte!</p>
+                    )}
                   </div>
 
-                  {passwordInvalid && (
-                    <p id="register-password-error" className="m-0 text-xs font-bold text-[#a65200]" role="alert">
-                      Senha fraca. Combine pelo menos uma letra e um número.
-                    </p>
-                  )}
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="grid gap-2 rounded-lg border border-[var(--line)] bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="m-0 text-sm font-semibold text-[#314634]">Detectar bairro automaticamente</p>
+                    <span className="text-xs font-bold text-[var(--muted)]">Opcional</span>
+                  </div>
+                  <p className="m-0 text-xs text-[var(--muted)]">
+                    Deixe seu navegador acessar sua localização para sugerirmos seu bairro automaticamente.
+                  </p>
                   <button
                     type="button"
                     className="btn btn-ghost !w-auto !px-3 !py-2"
@@ -725,14 +775,15 @@ export default function Home() {
                   >
                     <span className="inline-flex items-center gap-1.5">
                       {locationLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
-                      Usar minha localização
+                      {locationLoading ? "Detectando..." : "Usar minha localização"}
                     </span>
                   </button>
                 </div>
 
                 {showNeighborhoodSuggestion && detectedNeighborhood && (
-                  <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
-                    <p className="m-0 text-sm font-bold text-[var(--brand)]">Você mora no bairro {detectedNeighborhood}?</p>
+                  <div className="grid gap-2 rounded-xl border-2 border-[#b7d84b] bg-[#f3fbd8] p-3">
+                    <p className="m-0 text-sm font-bold text-[#2e7d32]">✓ Bairro detectado: {detectedNeighborhood}</p>
+                    <p className="m-0 text-xs text-[#314634]">Usar esta localização?</p>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -743,42 +794,59 @@ export default function Home() {
                           setShowNeighborhoodSuggestion(false);
                         }}
                       >
-                        Sim
+                        Sim, confirmar
                       </button>
                       <button
                         type="button"
                         className="btn btn-ghost !w-auto !px-3 !py-2"
                         onClick={() => setShowNeighborhoodSuggestion(false)}
                       >
-                        Não, alterar
+                        Não, escolher outro
                       </button>
                     </div>
                   </div>
                 )}
 
                 {registerRole === "consumer" && (
-                  <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-white p-3">
-                    <p className="m-0 text-sm font-bold text-[var(--brand)]">Perfil do consumidor</p>
-                    <label className="field" htmlFor="register-consumer-neighborhood">
-                      <span>Bairro (Zona Norte)</span>
-                      <select
-                        id="register-consumer-neighborhood"
-                        value={consumerNeighborhood}
-                        onChange={(e) => setConsumerNeighborhood(e.target.value)}
-                        required
-                      >
-                        {northZoneNeighborhoods.map((neighborhood) => (
-                          <option key={neighborhood} value={neighborhood}>
-                            {neighborhood}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                  <div className="grid gap-3 rounded-xl border border-[var(--line)] bg-white p-3">
+                    <div className="grid gap-1">
+                      <p className="m-0 text-sm font-bold text-[var(--brand)]">Qual é seu bairro?</p>
+                      <p className="m-0 text-xs text-[var(--muted)]">Escolha um bairro da Zona Norte</p>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Buscar bairro..."
+                      value={neighborhoodSearch}
+                      onChange={(e) => setNeighborhoodSearch(e.target.value)}
+                      className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                    />
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {filterNeighborhoods(northZoneNeighborhoods, neighborhoodSearch).map((neighborhood) => (
+                        <button
+                          key={neighborhood}
+                          type="button"
+                          onClick={() => {
+                            setConsumerNeighborhood(neighborhood);
+                            setNeighborhoodSearch("");
+                          }}
+                          className={`rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-colors ${
+                            consumerNeighborhood === neighborhood
+                              ? "border-[#b7d84b] bg-[#f3fbd8] text-[#2e7d32]"
+                              : "border-[var(--line)] bg-white text-[#314634] hover:border-[#b7d84b]"
+                          }`}
+                        >
+                          {neighborhood}
+                        </button>
+                      ))}
+                    </div>
+                    {filterNeighborhoods(northZoneNeighborhoods, neighborhoodSearch).length === 0 && (
+                      <p className="m-0 text-xs text-[#a65200]">Nenhum bairro encontrado. Tente outra busca.</p>
+                    )}
                   </div>
                 )}
 
                 {registerRole === "partner" && (
-                  <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-white p-3">
+                  <div className="grid gap-3 rounded-xl border border-[var(--line)] bg-white p-3">
                     <p className="m-0 text-sm font-bold text-[var(--brand)]">Dados da empresa parceira</p>
                     <div className="grid gap-2 md:grid-cols-2">
                       <label className="field" htmlFor="register-company-name">
@@ -795,44 +863,73 @@ export default function Home() {
                         />
                       </label>
                     </div>
-                    <label className="field" htmlFor="register-company-neighborhood">
-                      <span>Bairro</span>
-                      <select
-                        id="register-company-neighborhood"
-                        value={companyNeighborhood}
-                        onChange={(e) => setCompanyNeighborhood(e.target.value)}
-                        required
-                      >
-                        {northZoneNeighborhoods.map((neighborhood) => (
-                          <option key={neighborhood} value={neighborhood}>
+                    <div className="grid gap-2">
+                      <div className="grid gap-1">
+                        <label htmlFor="register-company-neighborhood-search" className="text-sm font-semibold text-[#314634]">
+                          Em qual bairro está localizada?
+                        </label>
+                        <p className="m-0 text-xs text-[var(--muted)]">Escolha um bairro da Zona Norte</p>
+                      </div>
+                      <input
+                        id="register-company-neighborhood-search"
+                        type="text"
+                        placeholder="Buscar bairro..."
+                        value={companyNeighborhoodSearch}
+                        onChange={(e) => setCompanyNeighborhoodSearch(e.target.value)}
+                        className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                      />
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {filterNeighborhoods(northZoneNeighborhoods, companyNeighborhoodSearch).map((neighborhood) => (
+                          <button
+                            key={neighborhood}
+                            type="button"
+                            onClick={() => {
+                              setCompanyNeighborhood(neighborhood);
+                              setCompanyNeighborhoodSearch("");
+                            }}
+                            className={`rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-colors ${
+                              companyNeighborhood === neighborhood
+                                ? "border-[#b7d84b] bg-[#f3fbd8] text-[#2e7d32]"
+                                : "border-[var(--line)] bg-white text-[#314634] hover:border-[#b7d84b]"
+                            }`}
+                          >
                             {neighborhood}
-                          </option>
+                          </button>
                         ))}
-                      </select>
-                    </label>
+                      </div>
+                      {filterNeighborhoods(northZoneNeighborhoods, companyNeighborhoodSearch).length === 0 && (
+                        <p className="m-0 text-xs text-[#a65200]">Nenhum bairro encontrado. Tente outra busca.</p>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                <label className="flex items-start gap-2 rounded-xl border border-[var(--line)] bg-white p-3 text-sm text-[#314634]" htmlFor="register-terms">
+                <label className={`flex items-start gap-3 rounded-xl border-2 p-3 text-sm text-[#314634] cursor-pointer transition-colors ${
+                  termsAccepted
+                    ? "border-[#b7d84b] bg-[#f3fbd8]"
+                    : "border-[#e74c3c] bg-[#fadbd8]"
+                }`} htmlFor="register-terms">
                   <input
                     id="register-terms"
                     type="checkbox"
                     checked={termsAccepted}
                     onChange={(e) => setTermsAccepted(e.target.checked)}
-                    className="mt-0.5 h-4 w-4"
+                    className="mt-1 h-5 w-5 cursor-pointer"
                   />
                   <span>
-                    Li e aceito os <Link href="/termos-de-uso" className="font-bold text-[var(--brand)]">termos de uso</Link> e a{" "}
+                    <strong>Obrigatório:</strong> Li e aceito os <Link href="/termos-de-uso" className="font-bold text-[var(--brand)]">termos de uso</Link> e a{" "}
                     <Link href="/privacidade" className="font-bold text-[var(--brand)]">política de privacidade</Link>.
                   </span>
                 </label>
 
-                <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+                <button className="btn btn-primary" type="submit" disabled={isSubmitting || !passwordValid}>
                   {isSubmitting ? (
                     <span className="inline-flex items-center gap-2">
                       <Loader2 size={16} className="animate-spin" />
                       Carregando...
                     </span>
+                  ) : !passwordValid ? (
+                    "Complete a senha para continuar"
                   ) : (
                     "Criar e entrar"
                   )}
