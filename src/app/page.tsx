@@ -265,12 +265,12 @@ const mapSupabaseLandingData = async () => {
       approved: c.approved,
       logoImage: c.logo_image ?? undefined,
       coverImage: c.cover_image ?? undefined,
-      addressLine: c.address_line,
-      bio: c.bio,
-      instagram: c.instagram,
-      facebook: c.facebook,
-      website: c.website,
-      whatsapp: c.whatsapp,
+      addressLine: c.address_line ?? undefined,
+      bio: c.bio ?? undefined,
+      instagram: c.instagram ?? undefined,
+      facebook: c.facebook ?? undefined,
+      website: c.website ?? undefined,
+      whatsapp: c.whatsapp ?? undefined,
       createdAt: "",
     }));
 
