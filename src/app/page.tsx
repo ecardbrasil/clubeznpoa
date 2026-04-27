@@ -236,13 +236,13 @@ const mapSupabaseLandingData = async () => {
         isHot: hotOfferIds.has(o.id),
         companyName: c.public_name ?? c.name ?? "Parceiro ClubeZN",
         images: Array.isArray(o.images) ? o.images : [],
-        partnerLogoImage: c.logo_image,
-        partnerCoverImage: c.cover_image,
-        partnerAddressLine: c.address_line,
-        partnerInstagram: c.instagram,
-        partnerFacebook: c.facebook,
-        partnerWebsite: c.website,
-        partnerWhatsapp: c.whatsapp,
+        partnerLogoImage: c.logo_image ?? undefined,
+        partnerCoverImage: c.cover_image ?? undefined,
+        partnerAddressLine: c.address_line ?? undefined,
+        partnerInstagram: c.instagram ?? undefined,
+        partnerFacebook: c.facebook ?? undefined,
+        partnerWebsite: c.website ?? undefined,
+        partnerWhatsapp: c.whatsapp ?? undefined,
       };
     });
 
