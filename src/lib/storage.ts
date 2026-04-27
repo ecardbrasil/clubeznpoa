@@ -491,6 +491,69 @@ export const signUp = (input: SignUpInput): { user?: User; error?: string } => {
   return { user };
 };
 
+export interface ConsumerProfileInput {
+  name: string;
+  email?: string;
+  phone?: string;
+  neighborhood?: string;
+}
+
+export const updateConsumerProfile = (
+  userId: string,
+  input: ConsumerProfileInput,
+): { user?: User; error?: string } => {
+  const data = getData();
+  const userIndex = data.users.findIndex((item) => item.id === userId);
+  if (userIndex < 0) return { error: "Usuário não encontrado." };
+
+  const currentUser = data.users[userIndex];
+  if (currentUser.role !== "consumer") {
+    return { error: "Apenas contas de consumidor podem ser atualizadas neste fluxo." };
+  }
+
+  const normalizedName = input.name.trim();
+  if (!normalizedName) {
+    return { error: "Informe seu nome." };
+  }
+
+  const normalizedEmail = input.email?.trim().toLowerCase() || undefined;
+  const normalizedPhone = input.phone?.trim() || undefined;
+  const normalizedNeighborhood = input.neighborhood?.trim() || undefined;
+
+  if (!normalizedEmail && !normalizedPhone) {
+    return { error: "Informe e-mail ou celular." };
+  }
+
+  const duplicated = data.users.find((item) => {
+    if (item.id === userId) return false;
+    const emailMatch = Boolean(normalizedEmail && item.email?.toLowerCase() === normalizedEmail);
+    const phoneMatch = Boolean(normalizedPhone && item.phone === normalizedPhone);
+    return emailMatch || phoneMatch;
+  });
+
+  if (duplicated) {
+    return { error: "Já existe usuário com esse e-mail/celular." };
+  }
+
+  const updatedUser: User = {
+    ...currentUser,
+    name: normalizedName,
+    email: normalizedEmail,
+    phone: normalizedPhone,
+    neighborhood: normalizedNeighborhood,
+  };
+
+  data.users[userIndex] = updatedUser;
+  saveData(data);
+
+  const sessionUser = getCurrentUser();
+  if (sessionUser?.id === userId) {
+    setSession(updatedUser.id, updatedUser, getSessionToken() ?? undefined);
+  }
+
+  return { user: updatedUser };
+};
+
 type SignInApiResponse = { user?: User; token?: string; error?: string };
 type SignUpApiResponse = { user?: User; token?: string; error?: string };
 type ResetPasswordApiResponse = { ok?: boolean; error?: string };

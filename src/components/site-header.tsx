@@ -106,7 +106,7 @@ export function SiteHeader({
         </div>
       </div>
 
-      {subtitle ? <p className="m-0 mt-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{subtitle}</p> : null}
+      {subtitle && <p className="m-0 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{subtitle}</p>}
     </header>
   );
 }

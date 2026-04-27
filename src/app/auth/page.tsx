@@ -364,7 +364,7 @@ export default function Home() {
 
   return (
     <main className="clubezn-shell grid gap-4">
-      <PublicPageHeader subtitle="Acesso e cadastro da plataforma" smallLogo />
+      <PublicPageHeader smallLogo />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <section className="card grid gap-3 self-start">

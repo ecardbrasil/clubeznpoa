@@ -20,6 +20,7 @@ Este documento prepara o projeto para sair de `localStorage` e evoluir para banc
 - `offers`
 - `redemptions`
 - `notifications`
+4. Sempre que houver mudanca de schema no repositorio, rode novamente o `supabase/schema.sql` para aplicar alteracoes incrementais (`alter table ... add column if not exists ...`).
 
 ## 3) Variaveis de ambiente locais
 
@@ -79,3 +80,25 @@ Credenciais demo inseridas:
 - Admin: `admin@clubezn.com` / `123456`
 - Parceiro: `parceiro@sarandi.com` / `123456`
 - Consumidor: `cliente@clubezn.com` / `123456`
+
+## 8) Troubleshooting rapido
+
+### Erro ao criar usuario: `POST /api/auth` retorna `400`
+
+Sintoma comum:
+- cadastro falha no frontend;
+- no runtime da Vercel aparece `POST /api/auth 400`.
+
+Causa recorrente:
+- schema do Supabase desatualizado em relacao ao codigo (ex.: coluna `users.blocked` ausente).
+
+Correcao imediata:
+1. Abra o `SQL Editor` no Supabase.
+2. Rode:
+
+```sql
+alter table public.users
+  add column if not exists blocked boolean not null default false;
+```
+
+3. Em seguida, execute `supabase/schema.sql` completo para alinhar o restante do schema.
