@@ -310,7 +310,7 @@ function OffersPageContent() {
 
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
-      <PublicPageHeader subtitle={viewer?.role === "consumer" ? "Vitrine de ofertas - cliente logado" : "Vitrine pública de ofertas"} />
+      <PublicPageHeader />
 
       <section className="grid gap-2 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] md:p-5">
         <div className="flex items-center gap-2">
