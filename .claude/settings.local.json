@@ -18,7 +18,8 @@
       "Bash(start http://localhost:3000)",
       "Bash(start http://localhost:3001)",
       "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
-      "PowerShell(Stop-Process -Force)"
+      "PowerShell(Stop-Process -Force)",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq \"node\" } | Stop-Process -Force -ErrorAction SilentlyContinue; Write-Host \"Processos Node parados\")"
     ]
   }
 }
