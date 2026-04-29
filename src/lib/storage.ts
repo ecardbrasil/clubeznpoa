@@ -1,7 +1,7 @@
 // Client-side auth helpers and storage stubs
 // Data persistence is handled via Supabase; session token stored in sessionStorage
 
-import type { User, UserRole } from "@/lib/types";
+import type { AppData, User, UserRole } from "@/lib/types";
 
 // ---------- Types ----------
 
@@ -21,8 +21,8 @@ export type SignUpInput = {
 
 export function initStorage() {}
 
-export function getData() {
-  return { offers: [], companies: [] };
+export function getData(): AppData {
+  return { offers: [], companies: [], users: [], redemptions: [], notifications: [] };
 }
 
 export function saveData() {}
@@ -158,4 +158,65 @@ export async function resetPasswordWithProvider(
 
 export function generateRedemption(_userId: string, _offerId: string): void {
   // Redemption creation is handled server-side via /api/consumer
+}
+
+export function syncRedemptionExpirations(): void {}
+
+// ---------- Admin stubs (real logic via /api/admin) ----------
+
+export function approveCompany(_companyId: string): { error?: string } {
+  return {};
+}
+
+export function approveOffer(_offerId: string): { error?: string } {
+  return {};
+}
+
+export function blockUser(_userId: string): { error?: string } {
+  return {};
+}
+
+export function deleteUser(_userId: string): { error?: string } {
+  return {};
+}
+
+export function deleteOffer(_offerId: string): { error?: string } {
+  return {};
+}
+
+export function rejectOffer(_offerId: string): { error?: string } {
+  return {};
+}
+
+export function unblockUser(_userId: string): { error?: string } {
+  return {};
+}
+
+export function updateUserRole(_userId: string, _role: UserRole): { error?: string } {
+  return {};
+}
+
+// ---------- Partner stubs (real logic via /api/partner) ----------
+
+export async function createOffer(_payload: Record<string, unknown>): Promise<{ error?: string }> {
+  return {};
+}
+
+export function markNotificationAsRead(_notificationId: string, _userId?: string): void {}
+
+export function markAllNotificationsAsRead(_userId?: string): void {}
+
+export function updateCompanyProfile(_companyId: string, _payload: Record<string, unknown>): void {}
+
+export function validateCode(_code: string, _companyId?: string): { ok: boolean; message: string } {
+  return { ok: false, message: "Modo local não disponível." };
+}
+
+// ---------- Consumer stubs (real logic via /api/consumer) ----------
+
+export function updateConsumerProfile(
+  _userId: string,
+  _payload: Record<string, unknown>,
+): { error?: string; user?: User } {
+  return {};
 }
