@@ -312,17 +312,24 @@ function OffersPageContent() {
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <PublicPageHeader subtitle={viewer?.role === "consumer" ? "Vitrine de ofertas - cliente logado" : "Vitrine pública de ofertas"} />
 
-      <section className="grid gap-2 rounded-2xl border border-[#d1dfd1] bg-white p-4 md:p-5">
-        <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2b7a3f]">Ofertas abertas</p>
-        <h1 className="m-0 text-3xl font-black leading-tight text-[#102113] md:text-4xl">Escolha por bairro, categoria e parceiro.</h1>
-        <p className="m-0 max-w-3xl text-sm text-[#486048] md:text-base">
+      <section className="grid gap-2 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] md:p-5">
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-flex h-1 w-6 rounded-full"
+            style={{ background: "linear-gradient(90deg, #c9f549 0%, #a8d63a 100%)" }}
+            aria-hidden="true"
+          />
+          <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Ofertas abertas</p>
+        </div>
+        <h1 className="m-0 text-3xl leading-tight md:text-4xl" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>Escolha por bairro, categoria e parceiro.</h1>
+        <p className="m-0 max-w-3xl text-sm text-[var(--muted)] md:text-base" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
           Explore os benefícios da Zona Norte com filtros completos para encontrar a melhor oferta para o seu dia.
         </p>
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-start">
-        <aside className="grid gap-3 rounded-2xl border border-[#d1dfd1] bg-white p-3 md:sticky md:top-6">
-          <h2 className="m-0 text-base font-extrabold text-[#102113]">Filtrar ofertas</h2>
+        <aside className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[var(--shadow-soft)] md:sticky md:top-6">
+          <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Filtrar ofertas</h2>
 
           <label className="field">
             <span>Busca por termo</span>
@@ -387,21 +394,21 @@ function OffersPageContent() {
         </aside>
 
         <section className="grid gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#d1dfd1] bg-white px-3 py-2.5">
-            <p className="m-0 text-sm font-semibold text-[#1f5f30]">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--line)] bg-white px-3 py-2.5">
+            <p className="m-0 text-sm font-semibold text-[var(--success-text)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
               {loading ? "Carregando ofertas..." : `${filteredOffers.length} oferta(s) encontrada(s) com os filtros atuais`}
             </p>
             {viewer?.role === "consumer" ? (
-              <span className="text-sm font-semibold text-[#1f5f30]">Você está logado e já pode resgatar códigos.</span>
+              <span className="badge badge-ok" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Logado — pode resgatar</span>
             ) : (
-              <Link href="/auth" className="text-sm font-bold text-[#1f5f30] hover:underline">
+              <Link href="/auth" className="text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                 Quero acessar com login
               </Link>
             )}
           </div>
 
           {loadingError ? (
-            <article className="rounded-2xl border border-[#f0c8c8] bg-[#fff2f2] px-3 py-2 text-sm text-[#7c2323]">
+            <article className="status-error rounded-2xl px-3 py-2 text-sm">
               Não foi possível carregar as ofertas do Supabase. Detalhe: {loadingError}
             </article>
           ) : null}
@@ -419,9 +426,9 @@ function OffersPageContent() {
           </div>
 
           {filteredOffers.length === 0 && (
-            <article className="grid gap-2 rounded-2xl border border-[#d1dfd1] bg-white p-5 text-center">
-              <h3 className="m-0 text-lg font-extrabold text-[#102113]">Nenhuma oferta encontrada</h3>
-              <p className="m-0 text-sm text-[#486048]">Ajuste os filtros ou limpe a busca para ver mais resultados.</p>
+            <article className="grid gap-2 rounded-2xl border border-[var(--line)] bg-white p-5 text-center shadow-[var(--shadow-soft)]">
+              <h3 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Nenhuma oferta encontrada</h3>
+              <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Ajuste os filtros ou limpe a busca para ver mais resultados.</p>
               <button type="button" className="btn btn-primary mx-auto !w-auto" onClick={resetFilters}>
                 Limpar filtros agora
               </button>

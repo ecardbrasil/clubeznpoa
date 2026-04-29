@@ -27,9 +27,26 @@ export default function FaqPage() {
       description="Respostas rápidas para dúvidas comuns sobre a plataforma."
     >
       {faqItems.map((item) => (
-        <details key={item.question} className="rounded-xl border border-[#d5e4d8] bg-white px-4 py-3">
-          <summary className="cursor-pointer text-sm font-extrabold text-[#19321f]">{item.question}</summary>
-          <p className="m-0 mt-2 text-sm leading-relaxed text-[#486048]">{item.answer}</p>
+        <details
+          key={item.question}
+          className="group rounded-xl border border-[var(--line)] bg-white px-4 py-3 transition-all duration-200 open:border-[#c9f549] open:bg-[#f8fbf4]"
+        >
+          <summary
+            className="cursor-pointer list-none flex items-center justify-between gap-3"
+            style={{ fontFamily: "var(--font-poppins), sans-serif" }}
+          >
+            <span className="text-sm font-bold text-[#0f1a13]">{item.question}</span>
+            <span
+              className="flex-shrink-0 inline-flex h-6 w-6 items-center justify-center rounded-full transition-all duration-200 group-open:rotate-45"
+              style={{ background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)", color: "#0f1a13" }}
+              aria-hidden="true"
+            >
+              +
+            </span>
+          </summary>
+          <p className="m-0 mt-2 text-sm leading-relaxed text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+            {item.answer}
+          </p>
         </details>
       ))}
     </PublicStaticPage>

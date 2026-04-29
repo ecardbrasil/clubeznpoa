@@ -166,10 +166,18 @@ export default function PartnersPage() {
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <PublicPageHeader subtitle="Empresas parceiras cadastradas" />
 
-      <section className="grid gap-3 rounded-2xl border border-[#d1dfd1] bg-white p-4 md:p-5">
+      <section className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] md:p-5">
         <div className="grid gap-1">
-          <h1 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Encontre empresas da rede ClubeZN</h1>
-          <p className="m-0 text-sm text-[#486048]">
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex h-1 w-6 rounded-full"
+              style={{ background: "linear-gradient(90deg, #c9f549 0%, #a8d63a 100%)" }}
+              aria-hidden="true"
+            />
+            <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Rede de parceiros</p>
+          </div>
+          <h1 className="m-0 text-2xl md:text-3xl" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>Encontre empresas da rede ClubeZN</h1>
+          <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
             Lista pública das empresas cadastradas e aprovadas na plataforma.
           </p>
         </div>
@@ -185,7 +193,7 @@ export default function PartnersPage() {
       </section>
 
       {loadingError ? (
-        <article className="rounded-2xl border border-[#f0c8c8] bg-[#fff2f2] px-3 py-2 text-sm text-[#7c2323]">
+        <article className="status-error rounded-2xl px-3 py-2 text-sm">
           Não foi possível carregar os parceiros. Detalhe: {loadingError}
         </article>
       ) : null}
@@ -218,23 +226,26 @@ export default function PartnersPage() {
                     style={{ width: 40, height: 40, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)" }}
                   />
                 ) : (
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#d1dfd1] bg-[#f7faf7] text-sm font-black text-[#1f5f30]">
+                  <span
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-[#0f1a13]"
+                    style={{ background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)", fontFamily: "var(--font-poppins), sans-serif" }}
+                  >
                     {(partner.publicName ?? partner.name).trim()[0]?.toUpperCase() ?? "P"}
                   </span>
                 )}
                 <div className="grid gap-0.5">
-                  <p className="m-0 text-sm font-extrabold text-[#102113]">{partner.publicName ?? partner.name}</p>
-                  <p className="m-0 text-xs text-[#486048]">{partner.category}</p>
+                  <p className="m-0 text-sm font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>{partner.publicName ?? partner.name}</p>
+                  <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>{partner.category}</p>
                 </div>
               </div>
 
-              <p className="m-0 text-xs text-[#486048]">
+              <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                 {partner.addressLine || `${partner.neighborhood} - ${partner.city}/${partner.state}`}
               </p>
 
               <div className="flex items-center justify-between gap-2">
                 <span className="badge badge-ok">{partner.offersCount} oferta(s)</span>
-                <Link href={`/parceiros/${partner.id}`} className="text-xs font-bold text-[#1f5f30] hover:underline">
+                <Link href={`/parceiros/${partner.id}`} className="text-xs font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                   Ver perfil da empresa
                 </Link>
               </div>

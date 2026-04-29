@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
 :root {
   --bg: #f3f6f1;
@@ -13,11 +14,25 @@
   --warn: #b52e31;
   --shadow-soft: 0 14px 32px rgba(17, 35, 24, 0.08);
   --shadow-strong: 0 22px 64px rgba(16, 33, 23, 0.14);
+
+  /* Fontes */
+  --font-poppins: 'Poppins', sans-serif;
+  --font-dm: 'DM Sans', sans-serif;
+
+  /* Estados semânticos */
+  --success-text: #1f5f30;
+  --success-bg: #f0fdf4;
+  --success-border: #b7d84b;
+  --error-text: #7c2323;
+  --error-bg: #fff3f3;
+  --error-border: #f0c8c8;
+  --warn-text: #815303;
+  --warn-bg: #fff3d4;
 }
 
 @theme inline {
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-display);
+  --font-sans: var(--font-dm);
+  --font-display: var(--font-poppins);
 }
 
 * {
@@ -28,7 +43,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-dm), sans-serif;
   background-image: radial-gradient(circle at top left, rgba(201, 245, 73, 0.14), transparent 34%);
   overflow-x: hidden;
 }
@@ -88,6 +103,11 @@ textarea:focus-visible,
   padding: 16px;
   box-shadow: var(--shadow-soft);
   min-width: 0;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.card:hover {
+  border-color: rgba(201, 245, 73, 0.4);
 }
 
 .badge {
@@ -97,6 +117,8 @@ textarea:focus-visible,
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;
+  font-family: var(--font-poppins), sans-serif;
+  letter-spacing: 0.02em;
 }
 
 .badge-ok {
@@ -104,14 +126,24 @@ textarea:focus-visible,
   color: #243318;
 }
 
+.badge-accent {
+  background: linear-gradient(135deg, #c9f549 0%, #a8d63a 100%);
+  color: #0f1a13;
+}
+
 .badge-pending {
-  background: #fff3d4;
-  color: #815303;
+  background: var(--warn-bg);
+  color: var(--warn-text);
 }
 
 .badge-danger {
-  background: #fde0e0;
-  color: #8a1f1f;
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+
+.badge-info {
+  background: #e8f4fd;
+  color: #1a4a6e;
 }
 
 .btn {
@@ -119,13 +151,15 @@ textarea:focus-visible,
   height: 44px;
   border: 1px solid transparent;
   border-radius: 999px;
-  padding: 0 16px;
+  padding: 0 20px;
   font-weight: 700;
+  font-family: var(--font-poppins), sans-serif;
   cursor: pointer;
   transition:
     background-color 140ms ease,
     border-color 140ms ease,
-    box-shadow 140ms ease;
+    box-shadow 140ms ease,
+    transform 140ms ease;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -133,6 +167,11 @@ textarea:focus-visible,
   white-space: nowrap;
   box-sizing: border-box;
   overflow: hidden;
+  letter-spacing: 0.01em;
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 .btn:disabled {
@@ -142,36 +181,114 @@ textarea:focus-visible,
 
 .btn-primary {
   background: var(--brand-accent);
-  color: #12200f;
+  color: #0f1a13;
   border-color: var(--brand-accent);
   border: 1px solid var(--brand-accent);
-  box-shadow: 0 8px 18px rgba(171, 212, 61, 0.12);
+  box-shadow: 0 8px 18px rgba(171, 212, 61, 0.22);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--brand-accent-strong);
   border-color: var(--brand-accent-strong);
+  box-shadow: 0 12px 24px rgba(171, 212, 61, 0.32);
+}
+
+.btn-dark {
+  background: #0a0f0c;
+  color: #ffffff;
+  border-color: #0a0f0c;
+  box-shadow: 0 8px 18px rgba(10, 15, 12, 0.18);
+}
+
+.btn-dark:hover:not(:disabled) {
+  background: #1a2a20;
+  border-color: #1a2a20;
 }
 
 .btn-ghost {
   border: 1px solid var(--line);
   background: #fff;
   color: var(--text);
-  box-shadow: 0 8px 18px rgba(17, 35, 24, 0.06);
+  box-shadow: 0 4px 12px rgba(17, 35, 24, 0.06);
 }
 
-.btn-ghost:hover {
+.btn-ghost:hover:not(:disabled) {
   background: #f8fbf4;
   border-color: #ced8be;
 }
 
 .font-display {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-poppins), sans-serif;
+}
+
+/* Utilitários de tipografia da identidade visual */
+.heading-display {
+  font-family: var(--font-poppins), sans-serif;
+  font-weight: 800;
+  color: #0f1a13;
+  line-height: 1.15;
+}
+
+.text-brand-muted {
+  color: var(--muted);
+  font-family: var(--font-dm), sans-serif;
+}
+
+/* Badge de ícone (estilo da home) */
+.icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #c9f549 0%, #a8d63a 100%);
+  color: #0a0f0c;
+  flex-shrink: 0;
+}
+
+/* Mensagens de status */
+.status-success {
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-warn {
+  background: var(--warn-bg);
+  border: 1px solid #eed49a;
+  color: var(--warn-text);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .field {
   display: grid;
   gap: 6px;
+}
+
+.field > span,
+.field > label {
+  font-family: var(--font-dm), sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
 }
 
 .field input,
@@ -182,6 +299,8 @@ textarea:focus-visible,
   border: 1px solid var(--line);
   padding: 10px 12px;
   background: #fff;
+  font-family: var(--font-dm), sans-serif;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
 .field input:focus,
@@ -189,6 +308,7 @@ textarea:focus-visible,
 .field textarea:focus {
   border-color: #b7d84b;
   box-shadow: 0 0 0 3px rgba(201, 245, 73, 0.24);
+  outline: none;
 }
 
 main,

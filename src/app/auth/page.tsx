@@ -380,35 +380,42 @@ export default function Home() {
         <section className="card grid gap-3 self-start">
           <div className="grid gap-2">
             <div className="grid gap-1">
-              <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">ClubeZN</p>
-              <h1 className="m-0 text-2xl font-black text-[#102113] md:text-3xl">Economize na Zona Norte com ofertas exclusivas.</h1>
-              <p className="m-0 text-sm text-[var(--muted)]">
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-flex h-1 w-6 rounded-full"
+                  style={{ background: "linear-gradient(90deg, #c9f549 0%, #a8d63a 100%)" }}
+                  aria-hidden="true"
+                />
+                <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>ClubeZN</p>
+              </div>
+              <h1 className="m-0 text-2xl md:text-3xl" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13", lineHeight: 1.2 }}>Economize na Zona Norte com ofertas exclusivas.</h1>
+              <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                 Crie sua conta ou faça login para acessar benefícios e promoções especiais.
               </p>
             </div>
-            <div className="rounded-lg bg-gradient-to-r from-[#b7d84b] to-[#92c025] p-1">
-              <p className="m-0 text-sm font-bold text-white px-2 py-1">✓ Acesso instantâneo a centenas de ofertas</p>
+            <div className="rounded-xl p-3" style={{ background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)" }}>
+              <p className="m-0 text-sm font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>✓ Acesso instantâneo a centenas de ofertas</p>
             </div>
           </div>
 
           <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
-            <p className="m-0 text-sm font-bold text-[var(--brand)]">Como começar</p>
+            <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Como começar</p>
             <div className="grid gap-2">
-              <p className="m-0 text-xs">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white">1</span>
+              <p className="m-0 text-xs" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>1</span>
                 <span className="ml-2">Escolha o tipo de conta (consumidor ou parceiro)</span>
               </p>
-              <p className="m-0 text-xs">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white">2</span>
+              <p className="m-0 text-xs" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>2</span>
                 <span className="ml-2">Preencha e-mail ou celular + senha (ou use dados existentes para login)</span>
               </p>
-              <p className="m-0 text-xs">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white">3</span>
+              <p className="m-0 text-xs" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>3</span>
                 <span className="ml-2">Confirme os termos e crie sua conta</span>
               </p>
-              <p className="m-0 text-xs">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#2e7d32] text-xs font-bold text-white">✓</span>
-                <span className="ml-2 font-semibold text-[#2e7d32]">Acesso instantâneo ao seu painel</span>
+              <p className="m-0 text-xs" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold text-[#0f1a13]" style={{ background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)", fontFamily: "var(--font-poppins), sans-serif" }}>✓</span>
+                <span className="ml-2 font-semibold text-[var(--success-text)]">Acesso instantâneo ao seu painel</span>
               </p>
             </div>
           </div>
@@ -416,9 +423,9 @@ export default function Home() {
 
         <section className="card grid gap-3">
           <div className="grid gap-2">
-            <div className="rounded-lg border-2 border-[#b7d84b] bg-[#f3fbd8] p-3">
-              <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2e7d32]">Novo por aqui?</p>
-              <p className="m-0 text-sm text-[#314634]">
+            <div className="rounded-xl p-3" style={{ background: "var(--success-bg)", border: "1.5px solid var(--success-border)" }}>
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.08em]" style={{ color: "var(--success-text)", fontFamily: "var(--font-poppins), sans-serif" }}>Novo por aqui?</p>
+              <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                 Se é sua primeira vez, comece criando uma conta. Já é membro? Faça login abaixo.
               </p>
             </div>
@@ -460,8 +467,8 @@ export default function Home() {
             <div id="panel-login" role="tabpanel" aria-labelledby="tab-login" className="grid gap-2.5">
               <form onSubmit={handleLogin} className="grid gap-2.5" noValidate>
                 <div className="grid gap-1">
-                  <h2 className="m-0 text-lg font-extrabold text-[#102113]">Acessar conta</h2>
-                  <p className="m-0 text-sm text-[var(--muted)]">Use e-mail ou celular já cadastrados.</p>
+                  <h2 className="m-0 text-lg" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>Acessar conta</h2>
+                  <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Use e-mail ou celular já cadastrados.</p>
                 </div>
 
                 <label className="field" htmlFor="login-identifier">
@@ -478,7 +485,7 @@ export default function Home() {
                   />
                 </label>
                 {identifierInvalid && (
-                  <p id="login-identifier-error" className="m-0 text-xs font-bold text-[#a65200]" role="alert">
+                  <p id="login-identifier-error" className="m-0 text-xs font-bold" role="alert" style={{ color: "var(--warn)" }}>
                     Digite um e-mail válido ou celular com DDD.
                   </p>
                 )}
@@ -521,6 +528,7 @@ export default function Home() {
               <button
                 type="button"
                 className="text-left text-sm font-bold text-[var(--brand)] underline underline-offset-2"
+                style={{ fontFamily: "var(--font-dm), sans-serif" }}
                 onClick={() => {
                   setRecoverOpen((current) => !current);
                   setError("");
@@ -532,7 +540,7 @@ export default function Home() {
 
               {recoverOpen && (
                 <form onSubmit={handleRecoverPassword} className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3" noValidate>
-                  <p className="m-0 text-sm font-bold text-[var(--brand)]">Redefinir senha</p>
+                  <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Redefinir senha</p>
 
                   <label className="field" htmlFor="recover-identifier">
                     <span>E-mail ou celular</span>
@@ -546,7 +554,7 @@ export default function Home() {
                     />
                   </label>
                   {recoverIdentifierInvalid && (
-                    <p id="recover-identifier-error" className="m-0 text-xs font-bold text-[#a65200]" role="alert">
+                    <p id="recover-identifier-error" className="m-0 text-xs font-bold" style={{ color: "var(--warn)" }} role="alert">
                       Digite um e-mail válido ou celular com DDD.
                     </p>
                   )}
@@ -596,7 +604,7 @@ export default function Home() {
                   </label>
 
                   {recoverPasswordMismatch && (
-                    <p id="recover-confirm-error" className="m-0 text-xs font-bold text-[#a65200]" role="alert">
+                    <p id="recover-confirm-error" className="m-0 text-xs font-bold" style={{ color: "var(--warn)" }} role="alert">
                       A confirmação da senha não confere.
                     </p>
                   )}
@@ -620,12 +628,12 @@ export default function Home() {
             <div id="panel-register" role="tabpanel" aria-labelledby="tab-register" className="grid gap-2.5">
               <form onSubmit={handleRegister} className="grid gap-2.5" noValidate>
                 <div className="grid gap-1">
-                  <h2 className="m-0 text-lg font-extrabold text-[#102113]">Criar nova conta</h2>
-                  <p className="m-0 text-sm text-[var(--muted)]">Preencha os dados de acesso e o perfil da conta.</p>
+                  <h2 className="m-0 text-lg" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>Criar nova conta</h2>
+                  <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Preencha os dados de acesso e o perfil da conta.</p>
                 </div>
 
                 <div className="grid gap-2" role="radiogroup" aria-label="Tipo de conta">
-                  <span className="text-sm font-semibold text-[#314634]">Tipo de conta</span>
+                  <span className="text-sm font-semibold text-[var(--brand)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Tipo de conta</span>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <button
                       type="button"
@@ -633,7 +641,7 @@ export default function Home() {
                       aria-checked={registerRole === "consumer"}
                       onClick={() => setRegisterRole("consumer")}
                       className={`grid gap-1 rounded-xl border px-3 py-2 text-left ${
-                        registerRole === "consumer" ? "border-[#b7d84b] bg-[#f3fbd8]" : "border-[var(--line)] bg-white"
+                        registerRole === "consumer" ? "border-[#c9f549] bg-[#f8fbf4]" : "border-[var(--line)] bg-white"
                       }`}
                     >
                       <span className="inline-flex items-center gap-2 text-sm font-bold text-[var(--brand)]">
@@ -648,7 +656,7 @@ export default function Home() {
                       aria-checked={registerRole === "partner"}
                       onClick={() => setRegisterRole("partner")}
                       className={`grid gap-1 rounded-xl border px-3 py-2 text-left ${
-                        registerRole === "partner" ? "border-[#b7d84b] bg-[#f3fbd8]" : "border-[var(--line)] bg-white"
+                        registerRole === "partner" ? "border-[#c9f549] bg-[#f8fbf4]" : "border-[var(--line)] bg-white"
                       }`}
                     >
                       <span className="inline-flex items-center gap-2 text-sm font-bold text-[var(--brand)]">
@@ -662,8 +670,8 @@ export default function Home() {
 
                 <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
                   <div className="grid gap-1">
-                    <p className="m-0 text-sm font-bold text-[var(--brand)]">Dados de acesso</p>
-                    <p className="m-0 text-xs text-[var(--muted)]">Preencha seu nome, e-mail, celular e senha.</p>
+                    <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Dados de acesso</p>
+                    <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Preencha seu nome, e-mail, celular e senha.</p>
                   </div>
                   <div className="grid gap-2 md:grid-cols-2">
                     <label className="field" htmlFor="register-name">
@@ -686,7 +694,7 @@ export default function Home() {
                     </label>
                   </div>
                   {emailInvalid && (
-                    <p id="register-email-error" className="m-0 text-xs font-bold text-[#a65200]" role="alert">
+                    <p id="register-email-error" className="m-0 text-xs font-bold" style={{ color: "var(--warn)" }} role="alert">
                       Digite um e-mail válido. Ex.: nome@dominio.com
                     </p>
                   )}
@@ -733,28 +741,28 @@ export default function Home() {
                   </div>
 
                   {phoneInvalid && (
-                    <p id="register-phone-error" className="m-0 text-xs font-bold text-[#a65200]" role="alert">
+                    <p id="register-phone-error" className="m-0 text-xs font-bold" style={{ color: "var(--warn)" }} role="alert">
                       Digite um celular válido (9 a 11 dígitos). Exemplo: 51999990000 ou (51) 99999-0000
                     </p>
                   )}
 
                   <div className={`grid gap-2 rounded-lg p-2 ${
-                    passwordValid ? "bg-[#e8f5e9]" : password.length > 0 ? "bg-[#fff3e0]" : "bg-white"
-                  }`}>
-                    <p id="register-password-rules" className="m-0 text-xs font-semibold text-[#314634]">
+                    passwordValid ? "bg-[#f8fbf4]" : password.length > 0 ? "bg-[#fff3d4]" : "bg-white"
+                  }`} style={{ border: passwordValid ? "1px solid #c9f549" : password.length > 0 ? "1px solid #eed49a" : "1px solid var(--line)" }}>
+                    <p id="register-password-rules" className="m-0 text-xs font-semibold text-[var(--brand)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                       Requisitos da senha:
                     </p>
-                    <p className={`m-0 text-xs ${hasMinLength(password) ? "text-[#2e7d32] font-semibold" : "text-[#666]"}`}>
+                    <p className={`m-0 text-xs`} style={{ color: hasMinLength(password) ? "var(--success-text)" : "var(--muted)", fontWeight: hasMinLength(password) ? 600 : 400 }}>
                       {hasMinLength(password) ? "✓" : "○"} Mínimo de 6 caracteres
                     </p>
-                    <p className={`m-0 text-xs ${hasLetters(password) ? "text-[#2e7d32] font-semibold" : "text-[#666]"}`}>
+                    <p className={`m-0 text-xs`} style={{ color: hasLetters(password) ? "var(--success-text)" : "var(--muted)", fontWeight: hasLetters(password) ? 600 : 400 }}>
                       {hasLetters(password) ? "✓" : "○"} Pelo menos uma letra
                     </p>
-                    <p className={`m-0 text-xs ${hasNumbers(password) ? "text-[#2e7d32] font-semibold" : "text-[#666]"}`}>
+                    <p className={`m-0 text-xs`} style={{ color: hasNumbers(password) ? "var(--success-text)" : "var(--muted)", fontWeight: hasNumbers(password) ? 600 : 400 }}>
                       {hasNumbers(password) ? "✓" : "○"} Pelo menos um número
                     </p>
                     {passwordValid && (
-                      <p className="m-0 text-xs font-bold text-[#2e7d32]">✓ Senha forte!</p>
+                      <p className="m-0 text-xs font-bold" style={{ color: "var(--success-text)", fontFamily: "var(--font-poppins), sans-serif" }}>✓ Senha forte!</p>
                     )}
                   </div>
 
@@ -762,10 +770,10 @@ export default function Home() {
 
                 <div className="grid gap-2 rounded-lg border border-[var(--line)] bg-white p-3">
                   <div className="flex items-center justify-between">
-                    <p className="m-0 text-sm font-semibold text-[#314634]">Detectar bairro automaticamente</p>
+                    <p className="m-0 text-sm font-semibold text-[var(--brand)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Detectar bairro automaticamente</p>
                     <span className="text-xs font-bold text-[var(--muted)]">Opcional</span>
                   </div>
-                  <p className="m-0 text-xs text-[var(--muted)]">
+                  <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                     Deixe seu navegador acessar sua localização para sugerirmos seu bairro automaticamente.
                   </p>
                   <button
@@ -782,9 +790,9 @@ export default function Home() {
                 </div>
 
                 {showNeighborhoodSuggestion && detectedNeighborhood && (
-                  <div className="grid gap-2 rounded-xl border-2 border-[#b7d84b] bg-[#f3fbd8] p-3">
-                    <p className="m-0 text-sm font-bold text-[#2e7d32]">✓ Bairro detectado: {detectedNeighborhood}</p>
-                    <p className="m-0 text-xs text-[#314634]">Usar esta localização?</p>
+                  <div className="grid gap-2 rounded-xl border-2 border-[#c9f549] bg-[#f8fbf4] p-3">
+                    <p className="m-0 text-sm font-bold" style={{ color: "var(--success-text)", fontFamily: "var(--font-poppins), sans-serif" }}>✓ Bairro detectado: {detectedNeighborhood}</p>
+                    <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Usar esta localização?</p>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
@@ -811,8 +819,8 @@ export default function Home() {
                 {registerRole === "consumer" && (
                   <div className="grid gap-3 rounded-xl border border-[var(--line)] bg-white p-3">
                     <div className="grid gap-1">
-                      <p className="m-0 text-sm font-bold text-[var(--brand)]">Qual é seu bairro?</p>
-                      <p className="m-0 text-xs text-[var(--muted)]">Escolha um bairro da Zona Norte</p>
+                      <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Qual é seu bairro?</p>
+                      <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Escolha um bairro da Zona Norte</p>
                     </div>
                     <select
                       value={consumerNeighborhood}
@@ -830,7 +838,7 @@ export default function Home() {
 
                 {registerRole === "partner" && (
                   <div className="grid gap-3 rounded-xl border border-[var(--line)] bg-white p-3">
-                    <p className="m-0 text-sm font-bold text-[var(--brand)]">Dados da empresa parceira</p>
+                    <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Dados da empresa parceira</p>
                     <div className="grid gap-2 md:grid-cols-2">
                       <label className="field" htmlFor="register-company-name">
                         <span>Nome da empresa</span>
@@ -848,7 +856,7 @@ export default function Home() {
                     </div>
                     <div className="grid gap-2">
                       <div className="grid gap-1">
-                        <label htmlFor="register-company-neighborhood" className="text-sm font-semibold text-[#314634]">
+                        <label htmlFor="register-company-neighborhood" className="text-sm font-semibold text-[var(--brand)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                           Em qual bairro está localizada?
                         </label>
                         <p className="m-0 text-xs text-[var(--muted)]">Escolha um bairro da Zona Norte</p>
@@ -869,11 +877,11 @@ export default function Home() {
                   </div>
                 )}
 
-                <label className={`flex items-start gap-3 rounded-xl border-2 p-3 text-sm text-[#314634] cursor-pointer transition-colors ${
+                <label className={`flex items-start gap-3 rounded-xl border-2 p-3 text-sm cursor-pointer transition-colors ${
                   termsAccepted
-                    ? "border-[#b7d84b] bg-[#f3fbd8]"
-                    : "border-[#e74c3c] bg-[#fadbd8]"
-                }`} htmlFor="register-terms">
+                    ? "border-[#c9f549] bg-[#f8fbf4] text-[var(--brand)]"
+                    : "border-[var(--error-border)] bg-[var(--error-bg)] text-[var(--error-text)]"
+                }`} style={{ fontFamily: "var(--font-dm), sans-serif" }} htmlFor="register-terms">
                   <input
                     id="register-terms"
                     type="checkbox"
@@ -904,12 +912,12 @@ export default function Home() {
           )}
 
           {error && (
-            <p style={{ margin: 0, color: "var(--warn)", fontWeight: 700 }} role="alert" aria-live="assertive">
+            <p className="status-error" role="alert" aria-live="assertive" style={{ margin: 0 }}>
               {error}
             </p>
           )}
           {info && (
-            <p style={{ margin: 0, color: "#1f5f30", fontWeight: 700 }} role="status" aria-live="polite">
+            <p className="status-success" role="status" aria-live="polite" style={{ margin: 0 }}>
               {info}
             </p>
           )}

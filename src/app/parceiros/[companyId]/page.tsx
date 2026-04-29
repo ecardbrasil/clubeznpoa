@@ -232,8 +232,8 @@ export default function PartnerPublicProfilePage() {
       <main className="mx-auto grid min-h-screen w-full max-w-[1200px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6">
         <PublicPageHeader subtitle="Perfil público do parceiro" />
         <section className="card grid gap-2 text-center">
-          <h1 className="m-0 text-2xl font-black text-[#102113]">Parceiro não encontrado</h1>
-          <p className="m-0 text-sm text-[#486048]">
+          <h1 className="m-0 text-2xl font-black text-[#0f1a13]">Parceiro não encontrado</h1>
+          <p className="m-0 text-sm text-[var(--muted)]">
             Este perfil não existe ou ainda não está aprovado para exibição pública.
           </p>
         </section>
@@ -245,7 +245,7 @@ export default function PartnerPublicProfilePage() {
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <PublicPageHeader subtitle="Perfil público do parceiro" />
 
-      <section className="grid gap-3 rounded-2xl border border-[#d1dfd1] bg-white p-3 md:p-4">
+      <section className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[var(--shadow-soft)] md:p-4">
         {company.coverImage ? (
           <Image
             src={company.coverImage}
@@ -273,11 +273,13 @@ export default function PartnerPublicProfilePage() {
                   width: 84,
                   height: 84,
                   borderRadius: 999,
-                  border: "1px solid var(--line)",
+                  background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)",
                   display: "grid",
                   placeItems: "center",
                   fontWeight: 800,
-                  color: "var(--muted)",
+                  color: "#0f1a13",
+                  fontSize: 28,
+                  fontFamily: "var(--font-poppins), sans-serif",
                 }}
               >
                 {(company.publicName ?? company.name).trim()[0]?.toUpperCase() ?? "P"}
@@ -285,12 +287,15 @@ export default function PartnerPublicProfilePage() {
             )}
           </div>
           <div className="grid gap-1.5">
-            <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[#2b7a3f]">Perfil do parceiro</p>
-            <h1 className="m-0 text-3xl font-black leading-tight text-[#102113]">{company.publicName ?? company.name}</h1>
-            <p className="m-0 text-sm text-[#486048]">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-1 w-5 rounded-full" style={{ background: "linear-gradient(90deg, #c9f549 0%, #a8d63a 100%)" }} aria-hidden="true" />
+              <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Perfil do parceiro</p>
+            </div>
+            <h1 className="m-0 text-3xl leading-tight text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800 }}>{company.publicName ?? company.name}</h1>
+            <p className="m-0 text-sm text-[var(--muted)]">
               {company.category} • {company.neighborhood} • {company.city}/{company.state}
             </p>
-            <p className="m-0 text-sm text-[#486048]">
+            <p className="m-0 text-sm text-[var(--muted)]">
               {company.addressLine || `${company.neighborhood}, ${company.city}/${company.state}`}
             </p>
             {company.bio ? <p className="m-0 text-sm text-[#314634]">{company.bio}</p> : null}
@@ -341,7 +346,7 @@ export default function PartnerPublicProfilePage() {
 
       <section className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="m-0 text-xl font-bold text-[#102113] md:text-2xl">Ofertas online deste parceiro</h2>
+          <h2 className="m-0 text-xl md:text-2xl text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700 }}>Ofertas online deste parceiro</h2>
           <span className="badge badge-ok">{offers.length} oferta(s) ativa(s)</span>
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -351,7 +356,7 @@ export default function PartnerPublicProfilePage() {
         </div>
         {offers.length === 0 ? (
           <article className="card">
-            <p className="m-0 text-sm text-[#486048]">Este parceiro ainda não possui ofertas online no momento.</p>
+            <p className="m-0 text-sm text-[var(--muted)]">Este parceiro ainda não possui ofertas online no momento.</p>
           </article>
         ) : null}
       </section>

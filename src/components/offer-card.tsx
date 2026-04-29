@@ -334,12 +334,12 @@ export function OfferCard({
                   position: "absolute",
                   top: 8,
                   left: 8,
-                  background: "#c12b2b",
-                  color: "#fff",
-                  border: "1px solid rgba(255,255,255,0.65)",
+                  background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)",
+                  color: "#0f1a13",
+                  fontFamily: "var(--font-poppins), sans-serif",
                 }}
               >
-                Quente agora
+                🔥 Quente agora
               </span>
             ) : null}
             {hasGallery && (
@@ -378,12 +378,12 @@ export function OfferCard({
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-2 text-xs text-[#486048]">
-          <span className="badge badge-ok">{offer.discountLabel}</span>
-          <span>{offer.neighborhood}</span>
+        <div className="flex items-center justify-between gap-2 text-xs text-[var(--muted)]">
+          <span className="badge badge-accent">{offer.discountLabel}</span>
+          <span style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.neighborhood}</span>
         </div>
-        <h4 className="m-0 text-lg font-extrabold leading-tight text-[#102113]">{offer.title}</h4>
-        <p className="m-0 text-sm text-[#486048]">{offer.description}</p>
+        <h4 className="m-0 text-lg leading-tight text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700 }}>{offer.title}</h4>
+        <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.description}</p>
         <div className="grid gap-1.5">
           <div className="flex items-center gap-2">
             {offer.partnerLogoImage ? (
@@ -399,13 +399,14 @@ export function OfferCard({
             <Link
               href={partnerProfileHref}
               onClick={(event) => event.stopPropagation()}
-              className="m-0 text-xs font-semibold uppercase tracking-wide text-[#486048] hover:text-[#1f5f30] hover:underline"
+              className="m-0 text-xs font-semibold uppercase tracking-wide text-[var(--muted)] hover:text-[var(--brand)] hover:underline"
+              style={{ fontFamily: "var(--font-dm), sans-serif" }}
             >
               {subtitle}
             </Link>
           </div>
           {offer.partnerAddressLine ? (
-            <p className="m-0 text-xs text-[#486048]">{offer.partnerAddressLine}</p>
+            <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.partnerAddressLine}</p>
           ) : null}
         </div>
       </article>
@@ -424,8 +425,8 @@ export function OfferCard({
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "start" }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 22 }}>{offer.title}</h3>
-                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--muted)" }}>{subtitle}</p>
+                  <h3 style={{ margin: 0, fontSize: 22, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>{offer.title}</h3>
+                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-dm), sans-serif" }}>{subtitle}</p>
                 </div>
               <button
                 className="btn btn-ghost"
@@ -527,8 +528,8 @@ export function OfferCard({
 
               <div className="offer-modal-details">
                 {offer.isHot ? (
-                  <span className="badge" style={{ width: "fit-content", background: "#c12b2b", color: "#fff" }}>
-                    Oferta em alta
+                  <span className="badge" style={{ width: "fit-content", background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)", color: "#0f1a13", fontFamily: "var(--font-poppins), sans-serif" }}>
+                    🔥 Oferta em alta
                   </span>
                 ) : null}
                 {offer.partnerCoverImage ? (
@@ -541,10 +542,10 @@ export function OfferCard({
                     style={{ width: "100%", height: 96, objectFit: "cover", borderRadius: 12 }}
                   />
                 ) : null}
-                <span className="badge badge-ok" style={{ width: "fit-content" }}>
+                <span className="badge badge-accent" style={{ width: "fit-content" }}>
                   {offer.discountLabel}
                 </span>
-                <p style={{ margin: 0, lineHeight: 1.5 }}>{offer.description}</p>
+                <p style={{ margin: 0, lineHeight: 1.6, fontFamily: "var(--font-dm), sans-serif", color: "var(--muted)" }}>{offer.description}</p>
                 <div className="offer-modal-metadata">
                   <span>Bairro: {offer.neighborhood}</span>
                   <span>Categoria: {offer.category}</span>
@@ -563,7 +564,7 @@ export function OfferCard({
                 </div>
                 {offer.partnerAddressLine && companyCoordinates && mapEmbedUrl ? (
                   <div className="card !grid !gap-2 !rounded-xl !p-2">
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 700 }}>
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif" }}>
                       Localização da empresa parceira
                     </p>
                     <iframe
@@ -578,7 +579,7 @@ export function OfferCard({
                   <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Carregando mapa...</p>
                 ) : null}
                 <div className="card !grid !gap-1.5 !rounded-xl !p-3">
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 700 }}>Perfil do parceiro</p>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif" }}>Perfil do parceiro</p>
                   <div className="flex items-center gap-2">
                     {offer.partnerLogoImage ? (
                       <Image
@@ -590,7 +591,7 @@ export function OfferCard({
                         style={{ width: 36, height: 36, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)" }}
                       />
                     ) : null}
-                    <p style={{ margin: 0, fontWeight: 700 }}>{offer.companyName}</p>
+                    <p style={{ margin: 0, fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13" }}>{offer.companyName}</p>
                   </div>
                   {offer.partnerAddressLine ? <p style={{ margin: 0, fontSize: 13 }}>{offer.partnerAddressLine}</p> : null}
                   {socialLinks.length > 0 ? (

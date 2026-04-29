@@ -472,7 +472,7 @@ export default function AdminPage() {
 
             <section className="grid gap-2.5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] xl:items-start">
               <article className="card grid gap-2">
-                <h2 style={{ margin: 0, fontSize: 18 }}>Funil operacional</h2>
+                <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Funil operacional</h2>
                 <FunnelRow label="Empresas cadastradas" value={dashboard.funnel.companiesTotal} />
                 <FunnelRow label="Empresas ativas" value={dashboard.funnel.companiesApproved} />
                 <FunnelRow label="Ofertas cadastradas" value={dashboard.funnel.offersTotal} />
@@ -485,7 +485,7 @@ export default function AdminPage() {
               </article>
 
               <article className="card grid gap-2">
-                <h2 style={{ margin: 0, fontSize: 18 }}>Status dos códigos</h2>
+                <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Status dos códigos</h2>
                 <StatusLine label="Gerados" value={dashboard.redemptionsByStatus.generated} />
                 <StatusLine label="Usados" value={dashboard.redemptionsByStatus.used} />
                 <StatusLine label="Expirados" value={dashboard.redemptionsByStatus.expired} />
@@ -495,7 +495,7 @@ export default function AdminPage() {
             <section className="grid gap-2.5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:items-start">
               <article className="card grid gap-2">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 style={{ margin: 0, fontSize: 18 }}>Top ofertas por uso</h2>
+                  <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Top ofertas por uso</h2>
                   <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => setSection("offers")}>
                     Gerenciar ofertas
                   </button>
@@ -511,7 +511,7 @@ export default function AdminPage() {
 
               <article className="card grid gap-2">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 style={{ margin: 0, fontSize: 18 }}>Resumo operacional</h2>
+                  <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Resumo operacional</h2>
                   <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => setSection("companies")}>
                     Abrir empresas
                   </button>
@@ -539,7 +539,7 @@ export default function AdminPage() {
             </section>
 
             <section className="card grid gap-2">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Atividade recente</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Atividade recente</h2>
               {dashboard.activity.map((item) => (
                 <div key={item.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
                   <p style={{ margin: 0, fontWeight: 700 }}>{item.label}</p>
@@ -588,7 +588,7 @@ function MetricCard({ label, value, helper }: { label: string; value: number; he
   return (
     <article className="card grid gap-1">
       <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{label}</p>
-      <p style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>{value}</p>
+      <p style={{ margin: 0, fontSize: 30, fontWeight: 800, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13" }}>{value}</p>
       <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>{helper}</p>
     </article>
   );
@@ -621,7 +621,7 @@ function CompaniesList({
 }) {
   return (
     <section className="card grid gap-2">
-      <h2 style={{ margin: 0, fontSize: 18 }}>Empresas cadastradas</h2>
+      <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Empresas cadastradas</h2>
       {companies.map((company) => (
         <article key={company.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
           <p style={{ margin: 0, fontWeight: 700 }}>{company.name}</p>
@@ -662,7 +662,7 @@ function UsersList({
 }) {
   return (
     <section className="card grid gap-2">
-      <h2 style={{ margin: 0, fontSize: 18 }}>Usuários cadastrados</h2>
+      <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Usuários cadastrados</h2>
       {users.map((item) => {
         const busy = actingUserId === item.id;
         const isSelf = item.id === currentAdminId;
@@ -734,7 +734,7 @@ function OffersList({
   const companyById = new Map(companies.map((company) => [company.id, company]));
   return (
     <section className="card grid gap-2">
-      <h2 style={{ margin: 0, fontSize: 18 }}>Ofertas cadastradas</h2>
+      <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Ofertas cadastradas</h2>
       {offers.map((offer) => {
         const company = companyById.get(offer.companyId);
         const busy = actingOfferId === offer.id;

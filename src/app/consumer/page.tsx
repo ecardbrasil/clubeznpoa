@@ -378,7 +378,7 @@ export default function ConsumerPage() {
       <div className="grid gap-3">
         <section className="card grid gap-1">
           <p className="m-0 text-xs font-bold uppercase tracking-[0.08em] text-[var(--brand)]">Painel do consumidor</p>
-          <h1 className="m-0 text-2xl font-black text-[#102113]">Olá, {user.name.split(" ")[0]}.</h1>
+          <h1 className="m-0 text-2xl text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800 }}>Olá, {user.name.split(" ")[0]}.</h1>
           <p className="m-0 text-sm text-[var(--muted)]">
             Acompanhe seus códigos, gere novos resgates e mantenha seu perfil atualizado.
           </p>
@@ -395,7 +395,7 @@ export default function ConsumerPage() {
 
             <section className="card grid gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 style={{ margin: 0, fontSize: 18 }}>Códigos ativos agora</h2>
+                <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Códigos ativos agora</h2>
                 <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => setSection("history")} type="button">
                   Ver histórico completo
                 </button>
@@ -421,7 +421,7 @@ export default function ConsumerPage() {
             </section>
 
             <section className="card grid gap-2">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Ações rápidas</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Ações rápidas</h2>
               <div className="grid gap-2 sm:grid-cols-2">
                 <button className="btn btn-primary" onClick={() => setSection("offers")} type="button">
                   Gerar novo código
@@ -437,7 +437,7 @@ export default function ConsumerPage() {
         {section === "history" && (
           <section className="card grid gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Meus códigos gerados</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Meus códigos gerados</h2>
               <select
                 value={historyFilter}
                 onChange={(event) => setHistoryFilter(event.target.value as RedemptionFilter)}
@@ -474,7 +474,7 @@ export default function ConsumerPage() {
         {section === "offers" && (
           <section className="card grid gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Ofertas para gerar código</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Ofertas para gerar código</h2>
               <Link href="/ofertas" className="btn btn-ghost !w-auto !px-3 !py-1.5 text-center">
                 Ver vitrine completa
               </Link>
@@ -521,7 +521,7 @@ export default function ConsumerPage() {
 
         {section === "profile" && (
           <section className="card grid gap-2">
-            <h2 style={{ margin: 0, fontSize: 18 }}>Meu perfil</h2>
+            <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Meu perfil</h2>
             <form className="grid gap-2" onSubmit={handleSaveProfile}>
               <label className="field">
                 <span>Nome</span>
@@ -572,7 +572,7 @@ function MetricCard({ label, value, helper }: { label: string; value: number; he
   return (
     <article className="card grid gap-1">
       <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{label}</p>
-      <p style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>{value}</p>
+      <p style={{ margin: 0, fontSize: 30, fontWeight: 800, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13" }}>{value}</p>
       <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>{helper}</p>
     </article>
   );

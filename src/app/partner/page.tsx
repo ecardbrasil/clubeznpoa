@@ -838,7 +838,7 @@ export default function PartnerPage() {
             <section className="card grid gap-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 style={{ margin: 0, fontSize: 18 }}>Checklist inicial do parceiro</h2>
+                  <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Checklist inicial do parceiro</h2>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
                     {onboardingExpanded
                       ? "Conclua estes passos para deixar o perfil pronto e começar a gerar resultados."
@@ -888,7 +888,7 @@ export default function PartnerPage() {
             <section className="card grid gap-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 style={{ margin: 0, fontSize: 18 }}>Ações rápidas</h2>
+                  <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Ações rápidas</h2>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
                     A validação de código está disponível aqui para uso frequente.
                   </p>
@@ -912,14 +912,14 @@ export default function PartnerPage() {
 
             <div className="grid gap-4 xl:grid-cols-2">
               <section className="card grid gap-2">
-                <h2 style={{ margin: 0, fontSize: 18 }}>Painel operacional</h2>
+                <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Painel operacional</h2>
                 <StatusLine label="Códigos gerados" value={dashboard.statusCount.generated} tone="pending" />
                 <StatusLine label="Códigos usados" value={dashboard.statusCount.used} tone="ok" />
                 <StatusLine label="Códigos expirados" value={dashboard.statusCount.expired} tone="danger" />
               </section>
 
               <section className="card grid gap-2">
-                <h2 style={{ margin: 0, fontSize: 18 }}>Performance por oferta</h2>
+                <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Performance por oferta</h2>
                 {dashboard.topOfferPerformance.map((item) => (
                   <div key={item.offer?.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
                     <p style={{ margin: 0, fontWeight: 700 }}>{item.offer?.title}</p>
@@ -936,7 +936,7 @@ export default function PartnerPage() {
 
         {section === "profile" && (
           <section className="card grid gap-2.5">
-            <h2 style={{ margin: 0, fontSize: 18 }}>Perfil público da empresa</h2>
+            <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Perfil público da empresa</h2>
             <form onSubmit={saveProfile} className="grid gap-2">
               <label className="field">
                   <span>Nome público</span>
@@ -1080,7 +1080,7 @@ export default function PartnerPage() {
 
         {section === "validate" && (
           <section className="card grid gap-2.5">
-            <h2 style={{ margin: 0, fontSize: 18 }}>Validar código de benefício</h2>
+            <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Validar código de benefício</h2>
             <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
               <input
                 value={code}
@@ -1099,7 +1099,7 @@ export default function PartnerPage() {
         {section === "offer" && (
           <>
             <section className="card grid gap-2.5">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Cadastrar nova oferta</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Cadastrar nova oferta</h2>
               {companyPendingApproval && (
                 <p style={{ margin: 0, color: "var(--warn)", fontWeight: 700 }}>
                   A publicação de ofertas fica liberada depois que a empresa for aprovada.
@@ -1260,7 +1260,7 @@ export default function PartnerPage() {
             </section>
 
             <section className="card grid gap-2">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Ofertas da empresa</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Ofertas da empresa</h2>
               {companyOffers.map((offer) => (
                 <div key={offer.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
                   {offer.images[0] && (
@@ -1287,7 +1287,7 @@ export default function PartnerPage() {
         {section === "notifications" && (
           <section className="card grid gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Notificações de status</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Notificações de status</h2>
               <div className="flex items-center gap-2">
                 <span className={`badge ${unreadNotifications > 0 ? "badge-pending" : "badge-ok"}`}>
                   {unreadNotifications} não lida(s)
@@ -1369,7 +1369,7 @@ export default function PartnerPage() {
         {section === "redemptions" && (
           <section className="card grid gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Últimos resgates</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Últimos resgates</h2>
               <select
                 value={redemptionFilter}
                 onChange={(event) => setRedemptionFilter(event.target.value as RedemptionFilter)}
@@ -1399,7 +1399,7 @@ export default function PartnerPage() {
 
         {section === "activity" && (
           <section className="card grid gap-2">
-            <h2 style={{ margin: 0, fontSize: 18 }}>Atividade recente</h2>
+            <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Atividade recente</h2>
             {dashboard.recentActivity.map((item) => (
               <div key={item.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
                 <p style={{ margin: 0, fontWeight: 700 }}>{item.label}</p>
@@ -1414,7 +1414,7 @@ export default function PartnerPage() {
         {section === "customers" && (
           <section className="card grid gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 style={{ margin: 0, fontSize: 18 }}>Clientes que geraram código</h2>
+              <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Clientes que geraram código</h2>
               <span className="badge badge-ok">{customerInsights.length} cliente(s)</span>
             </div>
 
@@ -1454,7 +1454,7 @@ function MetricCard({ label, value, helper }: { label: string; value: number; he
   return (
     <article className="card grid gap-1">
       <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{label}</p>
-      <p style={{ margin: 0, fontSize: 30, fontWeight: 800 }}>{value}</p>
+      <p style={{ margin: 0, fontSize: 30, fontWeight: 800, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13" }}>{value}</p>
       <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>{helper}</p>
     </article>
   );
