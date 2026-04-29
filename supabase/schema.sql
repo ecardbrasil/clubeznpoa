@@ -214,6 +214,19 @@ create index if not exists idx_redemptions_user on public.redemptions(user_id);
 create index if not exists idx_redemptions_status on public.redemptions(status);
 create index if not exists idx_notifications_user_created on public.notifications(user_id, created_at desc);
 
+create table if not exists public.password_reset_tokens (
+  id text primary key,
+  user_id text not null references public.users(id) on delete cascade,
+  token_hash text not null,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_prt_user on public.password_reset_tokens(user_id);
+create index if not exists idx_prt_expires on public.password_reset_tokens(expires_at);
+
+alter table public.password_reset_tokens enable row level security;
+
 -- Row Level Security baseline
 alter table public.users enable row level security;
 alter table public.companies enable row level security;

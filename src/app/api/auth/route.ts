@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { createApiSessionToken } from "@/lib/server-auth";
 import type { SignUpInput } from "@/lib/storage";
@@ -63,7 +63,8 @@ export async function POST(request: Request) {
     const body = (await request.json()) as
       | { action: "login"; identifier: string; password: string }
       | { action: "register"; payload: SignUpInput }
-      | { action: "resetPassword"; identifier: string; newPassword: string };
+      | { action: "requestPasswordReset"; identifier: string }
+      | { action: "confirmPasswordReset"; identifier: string; otp: string; newPassword: string };
 
     const supabase = getSupabaseServerClient();
 
@@ -107,27 +108,96 @@ export async function POST(request: Request) {
       return NextResponse.json({ user, token });
     }
 
-    if (body.action === "resetPassword") {
+    if (body.action === "requestPasswordReset") {
       const identifier = body.identifier.trim();
-      const newPassword = body.newPassword;
       if (!identifier) {
         return NextResponse.json({ error: "Informe e-mail ou celular." }, { status: 400 });
       }
-      if (!newPassword || newPassword.length < 6) {
-        return NextResponse.json({ error: "Senha inválida para redefinição." }, { status: 400 });
-      }
 
-      const baseQuery = supabase.from("users").select("id, password").limit(1);
+      const baseQuery = supabase.from("users").select("id").limit(1);
       const lookupQuery = identifier.includes("@")
         ? baseQuery.eq("email", identifier.toLowerCase())
         : baseQuery.eq("phone", identifier);
 
-      const { data, error } = await lookupQuery.maybeSingle<{ id: string; password?: string }>();
-      if (error || !data) {
-        return NextResponse.json({ error: "Conta não encontrada para o identificador informado." }, { status: 404 });
+      const { data } = await lookupQuery.maybeSingle<{ id: string }>();
+      // Always return success to avoid user enumeration
+      if (!data) {
+        return NextResponse.json({ ok: true });
       }
 
-      const { error: updateError } = await supabase.from("users").update({ password: hashPassword(newPassword) }).eq("id", data.id);
+      // Delete any existing tokens for this user
+      await supabase.from("password_reset_tokens").delete().eq("user_id", data.id);
+
+      const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
+      const tokenHash = createHash("sha256").update(rawOtp).digest("hex");
+      const tokenId = `prt_${crypto.randomUUID()}`;
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+      await supabase.from("password_reset_tokens").insert({
+        id: tokenId,
+        user_id: data.id,
+        token_hash: tokenHash,
+        expires_at: expiresAt,
+        created_at: new Date().toISOString(),
+      });
+
+      // TODO: deliver rawOtp via email/SMS to the user instead of returning it here
+      return NextResponse.json({ ok: true, otp: rawOtp });
+    }
+
+    if (body.action === "confirmPasswordReset") {
+      const identifier = body.identifier.trim();
+      const { otp, newPassword } = body;
+
+      if (!identifier || !otp || !newPassword) {
+        return NextResponse.json({ error: "Dados incompletos para redefinição de senha." }, { status: 400 });
+      }
+      if (newPassword.length < 6) {
+        return NextResponse.json({ error: "Senha inválida para redefinição." }, { status: 400 });
+      }
+
+      const baseQuery = supabase.from("users").select("id").limit(1);
+      const lookupQuery = identifier.includes("@")
+        ? baseQuery.eq("email", identifier.toLowerCase())
+        : baseQuery.eq("phone", identifier);
+
+      const { data: userData } = await lookupQuery.maybeSingle<{ id: string }>();
+      if (!userData) {
+        return NextResponse.json({ error: "Código inválido ou expirado." }, { status: 400 });
+      }
+
+      const { data: tokenRow } = await supabase
+        .from("password_reset_tokens")
+        .select("id, token_hash, expires_at")
+        .eq("user_id", userData.id)
+        .maybeSingle<{ id: string; token_hash: string; expires_at: string }>();
+
+      if (!tokenRow) {
+        return NextResponse.json({ error: "Código inválido ou expirado." }, { status: 400 });
+      }
+
+      if (new Date(tokenRow.expires_at) < new Date()) {
+        await supabase.from("password_reset_tokens").delete().eq("id", tokenRow.id);
+        return NextResponse.json({ error: "Código expirado. Solicite um novo." }, { status: 400 });
+      }
+
+      const providedHash = createHash("sha256").update(otp.trim()).digest("hex");
+      const expectedBuf = Buffer.from(tokenRow.token_hash, "hex");
+      const providedBuf = Buffer.from(providedHash, "hex");
+      const otpValid =
+        expectedBuf.length === providedBuf.length && timingSafeEqual(expectedBuf, providedBuf);
+
+      if (!otpValid) {
+        return NextResponse.json({ error: "Código inválido ou expirado." }, { status: 400 });
+      }
+
+      await supabase.from("password_reset_tokens").delete().eq("id", tokenRow.id);
+
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ password: hashPassword(newPassword) })
+        .eq("id", userData.id);
+
       if (updateError) {
         return NextResponse.json({ error: "Não foi possível redefinir a senha." }, { status: 400 });
       }

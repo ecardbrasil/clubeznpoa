@@ -30,6 +30,7 @@ const northZoneNeighborhoods = [
   "Cristo Redentor",
   "Vila Ipiranga",
   "Passo da Areia",
+  "Outro",
 ];
 
 const normalizeText = (value: string) =>
@@ -38,12 +39,6 @@ const normalizeText = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-
-const filterNeighborhoods = (neighborhoods: string[], query: string) => {
-  if (!query.trim()) return neighborhoods;
-  const normalized = normalizeText(query);
-  return neighborhoods.filter((n) => normalizeText(n).includes(normalized));
-};
 
 const extractPhoneDigits = (value: string) => value.replace(/\D/g, "").slice(0, 11);
 
@@ -100,12 +95,10 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [consumerNeighborhood, setConsumerNeighborhood] = useState("Sarandi");
-  const [neighborhoodSearch, setNeighborhoodSearch] = useState("");
 
   const [companyName, setCompanyName] = useState("");
   const [companyCategory, setCompanyCategory] = useState("");
   const [companyNeighborhood, setCompanyNeighborhood] = useState("Sarandi");
-  const [companyNeighborhoodSearch, setCompanyNeighborhoodSearch] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -311,8 +304,14 @@ export default function Home() {
     setError("");
     setInfo("");
 
-    if (!email.trim() && !phoneDigits) {
-      const message = "Preencha pelo menos um: e-mail ou celular.";
+    if (!email.trim()) {
+      const message = "Informe seu e-mail.";
+      setError(message);
+      showToast(message, "error");
+      return;
+    }
+    if (!phoneDigits) {
+      const message = "Informe seu celular.";
       setError(message);
       showToast(message, "error");
       return;
@@ -664,7 +663,7 @@ export default function Home() {
                 <div className="grid gap-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3">
                   <div className="grid gap-1">
                     <p className="m-0 text-sm font-bold text-[var(--brand)]">Dados de acesso</p>
-                    <p className="m-0 text-xs text-[var(--muted)]">Preencha seu nome, senha e pelo menos um dos dois: e-mail ou celular.</p>
+                    <p className="m-0 text-xs text-[var(--muted)]">Preencha seu nome, e-mail, celular e senha.</p>
                   </div>
                   <div className="grid gap-2 md:grid-cols-2">
                     <label className="field" htmlFor="register-name">
@@ -672,7 +671,7 @@ export default function Home() {
                       <input id="register-name" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
                     </label>
                     <label className="field" htmlFor="register-email">
-                      <span>E-mail (opcional)</span>
+                      <span>E-mail</span>
                       <input
                         id="register-email"
                         value={email}
@@ -680,6 +679,7 @@ export default function Home() {
                         type="email"
                         placeholder="nome@dominio.com"
                         autoComplete="email"
+                        required
                         aria-invalid={emailInvalid}
                         aria-describedby={emailInvalid ? "register-email-error" : undefined}
                       />
@@ -693,7 +693,7 @@ export default function Home() {
 
                   <div className="grid gap-2 md:grid-cols-2">
                     <label className="field" htmlFor="register-phone">
-                      <span>Celular (opcional)</span>
+                      <span>Celular</span>
                       <input
                         id="register-phone"
                         value={phone}
@@ -701,6 +701,7 @@ export default function Home() {
                         placeholder="(51) 99999-0000 ou 51999990000"
                         inputMode="numeric"
                         autoComplete="tel"
+                        required
                         aria-invalid={phoneInvalid}
                         aria-describedby={phoneInvalid ? "register-phone-error" : undefined}
                       />
@@ -813,35 +814,17 @@ export default function Home() {
                       <p className="m-0 text-sm font-bold text-[var(--brand)]">Qual é seu bairro?</p>
                       <p className="m-0 text-xs text-[var(--muted)]">Escolha um bairro da Zona Norte</p>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Buscar bairro..."
-                      value={neighborhoodSearch}
-                      onChange={(e) => setNeighborhoodSearch(e.target.value)}
+                    <select
+                      value={consumerNeighborhood}
+                      onChange={(e) => setConsumerNeighborhood(e.target.value)}
                       className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                    />
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {filterNeighborhoods(northZoneNeighborhoods, neighborhoodSearch).map((neighborhood) => (
-                        <button
-                          key={neighborhood}
-                          type="button"
-                          onClick={() => {
-                            setConsumerNeighborhood(neighborhood);
-                            setNeighborhoodSearch("");
-                          }}
-                          className={`rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-colors ${
-                            consumerNeighborhood === neighborhood
-                              ? "border-[#b7d84b] bg-[#f3fbd8] text-[#2e7d32]"
-                              : "border-[var(--line)] bg-white text-[#314634] hover:border-[#b7d84b]"
-                          }`}
-                        >
+                    >
+                      {northZoneNeighborhoods.map((neighborhood) => (
+                        <option key={neighborhood} value={neighborhood}>
                           {neighborhood}
-                        </button>
+                        </option>
                       ))}
-                    </div>
-                    {filterNeighborhoods(northZoneNeighborhoods, neighborhoodSearch).length === 0 && (
-                      <p className="m-0 text-xs text-[#a65200]">Nenhum bairro encontrado. Tente outra busca.</p>
-                    )}
+                    </select>
                   </div>
                 )}
 
@@ -865,41 +848,23 @@ export default function Home() {
                     </div>
                     <div className="grid gap-2">
                       <div className="grid gap-1">
-                        <label htmlFor="register-company-neighborhood-search" className="text-sm font-semibold text-[#314634]">
+                        <label htmlFor="register-company-neighborhood" className="text-sm font-semibold text-[#314634]">
                           Em qual bairro está localizada?
                         </label>
                         <p className="m-0 text-xs text-[var(--muted)]">Escolha um bairro da Zona Norte</p>
                       </div>
-                      <input
-                        id="register-company-neighborhood-search"
-                        type="text"
-                        placeholder="Buscar bairro..."
-                        value={companyNeighborhoodSearch}
-                        onChange={(e) => setCompanyNeighborhoodSearch(e.target.value)}
+                      <select
+                        id="register-company-neighborhood"
+                        value={companyNeighborhood}
+                        onChange={(e) => setCompanyNeighborhood(e.target.value)}
                         className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                      />
-                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                        {filterNeighborhoods(northZoneNeighborhoods, companyNeighborhoodSearch).map((neighborhood) => (
-                          <button
-                            key={neighborhood}
-                            type="button"
-                            onClick={() => {
-                              setCompanyNeighborhood(neighborhood);
-                              setCompanyNeighborhoodSearch("");
-                            }}
-                            className={`rounded-lg border-2 px-3 py-2 text-sm font-semibold transition-colors ${
-                              companyNeighborhood === neighborhood
-                                ? "border-[#b7d84b] bg-[#f3fbd8] text-[#2e7d32]"
-                                : "border-[var(--line)] bg-white text-[#314634] hover:border-[#b7d84b]"
-                            }`}
-                          >
+                      >
+                        {northZoneNeighborhoods.map((neighborhood) => (
+                          <option key={neighborhood} value={neighborhood}>
                             {neighborhood}
-                          </button>
+                          </option>
                         ))}
-                      </div>
-                      {filterNeighborhoods(northZoneNeighborhoods, companyNeighborhoodSearch).length === 0 && (
-                        <p className="m-0 text-xs text-[#a65200]">Nenhum bairro encontrado. Tente outra busca.</p>
-                      )}
+                      </select>
                     </div>
                   </div>
                 )}

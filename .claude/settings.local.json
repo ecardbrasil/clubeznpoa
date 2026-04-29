@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(npm run *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(wmic logicaldisk *)",
+      "Bash(git show *)",
+      "Read(//tmp/**)",
+      "Bash(npx tsc *)",
+      "Bash(xargs grep *)"
     ]
   }
 }

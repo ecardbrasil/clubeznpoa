@@ -283,8 +283,14 @@ export default function ConsumerPage() {
       showToast(message, "error");
       return;
     }
-    if (!normalizedEmail && !normalizedPhone) {
-      const message = "Informe e-mail ou celular.";
+    if (!normalizedEmail) {
+      const message = "Informe seu e-mail.";
+      setProfileFeedback(message);
+      showToast(message, "error");
+      return;
+    }
+    if (!normalizedPhone) {
+      const message = "Informe seu celular.";
       setProfileFeedback(message);
       showToast(message, "error");
       return;
@@ -529,6 +535,7 @@ export default function ConsumerPage() {
                   onChange={(event) => setEmail(event.target.value)}
                   type="email"
                   placeholder="nome@dominio.com"
+                  required
                 />
               </label>
 
@@ -539,6 +546,7 @@ export default function ConsumerPage() {
                   onChange={(event) => setPhone(event.target.value)}
                   inputMode="numeric"
                   placeholder="51999990000"
+                  required
                 />
               </label>
 
