@@ -142,7 +142,7 @@ export function SiteHeader({
                 href="/auth"
                 className="rounded-full bg-[#13210f] px-3 py-2 text-xs font-black text-white no-underline"
               >
-                Cadastrar empresa
+                Cadastrar
               </Link>
             </>
           )}
@@ -215,7 +215,7 @@ export function SiteHeader({
                   onClick={() => setMobileOpen(false)}
                   className="rounded-full bg-[#13210f] px-3 py-2 text-center text-xs font-black text-white no-underline"
                 >
-                  Cadastrar empresa
+                  Cadastrar
                 </Link>
               </>
             )}

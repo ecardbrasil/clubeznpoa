@@ -867,7 +867,7 @@ export default function LandingPage() {
               href="/auth"
               className="inline-flex items-center justify-center rounded-lg border-2 border-[#0a0f0c] bg-white px-6 py-3 font-black text-[#0a0f0c] no-underline transition-all hover:bg-[#fafaf8] active:scale-95"
             >
-              Cadastrar empresa
+              Cadastrar
             </Link>
           </div>
         </div>

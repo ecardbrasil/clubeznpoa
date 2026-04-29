@@ -768,71 +768,61 @@ export default function Home() {
 
                 </div>
 
-                <div className="grid gap-2 rounded-lg border border-[var(--line)] bg-white p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="m-0 text-sm font-semibold text-[var(--brand)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Detectar bairro automaticamente</p>
-                    <span className="text-xs font-bold text-[var(--muted)]">Opcional</span>
-                  </div>
-                  <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-                    Deixe seu navegador acessar sua localização para sugerirmos seu bairro automaticamente.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn btn-ghost !w-auto !px-3 !py-2"
-                    onClick={suggestNeighborhoodFromLocation}
-                    disabled={locationLoading}
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      {locationLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
-                      {locationLoading ? "Detectando..." : "Usar minha localização"}
-                    </span>
-                  </button>
-                </div>
-
-                {showNeighborhoodSuggestion && detectedNeighborhood && (
-                  <div className="grid gap-2 rounded-xl border-2 border-[#c9f549] bg-[#f8fbf4] p-3">
-                    <p className="m-0 text-sm font-bold" style={{ color: "var(--success-text)", fontFamily: "var(--font-poppins), sans-serif" }}>✓ Bairro detectado: {detectedNeighborhood}</p>
-                    <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Usar esta localização?</p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        className="btn btn-primary !w-auto !px-3 !py-2"
-                        onClick={() => {
-                          setConsumerNeighborhood(detectedNeighborhood);
-                          setCompanyNeighborhood(detectedNeighborhood);
-                          setShowNeighborhoodSuggestion(false);
-                        }}
-                      >
-                        Sim, confirmar
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-ghost !w-auto !px-3 !py-2"
-                        onClick={() => setShowNeighborhoodSuggestion(false)}
-                      >
-                        Não, escolher outro
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 {registerRole === "consumer" && (
                   <div className="grid gap-3 rounded-xl border border-[var(--line)] bg-white p-3">
                     <div className="grid gap-1">
                       <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Qual é seu bairro?</p>
                       <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Escolha um bairro da Zona Norte</p>
                     </div>
-                    <select
-                      value={consumerNeighborhood}
-                      onChange={(e) => setConsumerNeighborhood(e.target.value)}
-                      className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                    >
-                      {northZoneNeighborhoods.map((neighborhood) => (
-                        <option key={neighborhood} value={neighborhood}>
-                          {neighborhood}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex gap-2 items-stretch">
+                      <select
+                        value={consumerNeighborhood}
+                        onChange={(e) => setConsumerNeighborhood(e.target.value)}
+                        className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                      >
+                        {northZoneNeighborhoods.map((neighborhood) => (
+                          <option key={neighborhood} value={neighborhood}>
+                            {neighborhood}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        className="btn btn-ghost !px-3 !py-2 whitespace-nowrap"
+                        onClick={suggestNeighborhoodFromLocation}
+                        disabled={locationLoading}
+                        title="Detectar sua localização automaticamente"
+                      >
+                        <span className="inline-flex items-center gap-1.5">
+                          {locationLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
+                          <span className="hidden sm:inline text-xs">{locationLoading ? "Detectando..." : "Auto"}</span>
+                        </span>
+                      </button>
+                    </div>
+                    {showNeighborhoodSuggestion && detectedNeighborhood && (
+                      <div className="grid gap-2 rounded-lg border-2 border-[#c9f549] bg-[#f8fbf4] p-2">
+                        <p className="m-0 text-sm font-bold" style={{ color: "var(--success-text)", fontFamily: "var(--font-poppins), sans-serif" }}>✓ Detectado: {detectedNeighborhood}</p>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-primary !w-auto !px-3 !py-2 text-xs"
+                            onClick={() => {
+                              setConsumerNeighborhood(detectedNeighborhood);
+                              setShowNeighborhoodSuggestion(false);
+                            }}
+                          >
+                            Confirmar
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-ghost !w-auto !px-3 !py-2 text-xs"
+                            onClick={() => setShowNeighborhoodSuggestion(false)}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -861,18 +851,56 @@ export default function Home() {
                         </label>
                         <p className="m-0 text-xs text-[var(--muted)]">Escolha um bairro da Zona Norte</p>
                       </div>
-                      <select
-                        id="register-company-neighborhood"
-                        value={companyNeighborhood}
-                        onChange={(e) => setCompanyNeighborhood(e.target.value)}
-                        className="rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
-                      >
-                        {northZoneNeighborhoods.map((neighborhood) => (
-                          <option key={neighborhood} value={neighborhood}>
-                            {neighborhood}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex gap-2 items-stretch">
+                        <select
+                          id="register-company-neighborhood"
+                          value={companyNeighborhood}
+                          onChange={(e) => setCompanyNeighborhood(e.target.value)}
+                          className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm"
+                        >
+                          {northZoneNeighborhoods.map((neighborhood) => (
+                            <option key={neighborhood} value={neighborhood}>
+                              {neighborhood}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="btn btn-ghost !px-3 !py-2 whitespace-nowrap"
+                          onClick={suggestNeighborhoodFromLocation}
+                          disabled={locationLoading}
+                          title="Detectar sua localização automaticamente"
+                        >
+                          <span className="inline-flex items-center gap-1.5">
+                            {locationLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
+                            <span className="hidden sm:inline text-xs">{locationLoading ? "Detectando..." : "Auto"}</span>
+                          </span>
+                        </button>
+                      </div>
+                      {showNeighborhoodSuggestion && detectedNeighborhood && (
+                        <div className="grid gap-2 rounded-lg border-2 border-[#c9f549] bg-[#f8fbf4] p-2">
+                          <p className="m-0 text-sm font-bold" style={{ color: "var(--success-text)", fontFamily: "var(--font-poppins), sans-serif" }}>✓ Detectado: {detectedNeighborhood}</p>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-primary !w-auto !px-3 !py-2 text-xs"
+                              onClick={() => {
+                                setCompanyNeighborhood(detectedNeighborhood);
+                                setShowNeighborhoodSuggestion(false);
+                              }}
+                            >
+                              Confirmar
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-ghost !w-auto !px-3 !py-2 text-xs"
+                              onClick={() => setShowNeighborhoodSuggestion(false)}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

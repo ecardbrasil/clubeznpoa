@@ -143,9 +143,9 @@ Estas diretrizes devem ser seguidas em todas as paginas publicas e internas do p
 
 ### 7.4.2 Comportamento do header por sessao
 - Usuario deslogado:
-  - exibir acoes `Entrar` e `Cadastrar empresa`.
+  - exibir acoes `Entrar` e `Cadastrar`.
 - Usuario logado:
-  - ocultar `Entrar` e `Cadastrar empresa`.
+  - ocultar `Entrar` e `Cadastrar`.
   - exibir `Meu painel` e `Sair`.
 - A navegacao deve adaptar o item de acesso:
   - deslogado: `Entrar`
