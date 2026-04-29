@@ -14,14 +14,13 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { BrandLogo } from "@/components/brand-logo";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
 import { SiteHeader } from "@/components/site-header";
-import { isSupabaseMode } from "@/lib/runtime-config";
-import { getData, initStorage } from "@/lib/storage";
 import { getSupabaseBrowserClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import type { Company } from "@/lib/types";
-import { getHotOfferIds, getHotOfferIdsFromSupabase } from "@/lib/utils";
+import { getHotOfferIdsFromSupabase } from "@/lib/utils";
 
 const heroHighlights = [
   { title: "Para moradores", text: "Descontos reais perto de casa, em poucos cliques.", icon: Wallet },
@@ -71,16 +70,6 @@ const partnerBenefits = [
 ];
 
 const northZoneNeighborhoods = ["Sarandi", "Passo d'Areia", "Jardim Lindóia", "São João", "Cristo Redentor", "Vila Ipiranga", "Rubem Berta", "Jardim Leopoldina"];
-
-const STYLES = {
-  badge: "inline-flex w-fit rounded-full bg-[#eef5e5] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]",
-  badgeAlt: "inline-flex w-fit rounded-full bg-[#C9F549] px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#13210f]",
-  neighborhoodTag: "rounded-full border border-[#d8e3c4] bg-[#f8fbf4] px-3 py-1 text-xs font-bold text-[#2a3f2f]",
-  cardBorder: "border border-[#dfe5d4] bg-white",
-  cardBg: "rounded-xl border border-[#e7eddc] bg-[#f8fbf4] px-3 py-3",
-  heading2: "m-0 text-2xl font-black text-[#102113] md:text-3xl",
-  heading3: "m-0 text-base font-extrabold text-[#102113]",
-};
 
 const trustPoints = [
   "Plataforma com foco exclusivo na realidade da Zona Norte.",
@@ -155,49 +144,6 @@ const countOffersByCompanyId = (offers: Array<{ companyId?: string; company_id?:
       return acc;
     }, {});
 
-const mapLocalLandingData = () => {
-  initStorage();
-  const data = getData();
-  const hotOfferIds = getHotOfferIds(data, 3);
-  const approvedOffers = data.offers.filter((o) => o.approved && !o.rejected);
-  const companiesById = new Map(data.companies.filter((c) => c.approved).map((c) => [c.id, c]));
-  const offerCountByCompanyId = countOffersByCompanyId(approvedOffers);
-
-  const featuredOffers: OfferCardData[] = approvedOffers
-    .filter((o) => companiesById.has(o.companyId))
-    .slice(0, 6)
-    .map((o) => {
-      const company = companiesById.get(o.companyId);
-      return {
-        id: o.id,
-        companyId: o.companyId,
-        title: o.title,
-        description: o.description,
-        discountLabel: o.discountLabel,
-        category: o.category,
-        neighborhood: o.neighborhood,
-        isHot: hotOfferIds.has(o.id),
-        companyName: company?.publicName ?? company?.name ?? "Parceiro ClubeZN",
-        images: o.images,
-        partnerLogoImage: company?.logoImage,
-        partnerCoverImage: company?.coverImage,
-        partnerAddressLine: company?.addressLine,
-        partnerInstagram: company?.instagram,
-        partnerFacebook: company?.facebook,
-        partnerWebsite: company?.website,
-        partnerWhatsapp: company?.whatsapp,
-      };
-    });
-
-  const partnerProfiles = Array.from(companiesById.values())
-    .sort((a, b) => {
-      const diff = (offerCountByCompanyId[b.id] ?? 0) - (offerCountByCompanyId[a.id] ?? 0);
-      return diff !== 0 ? diff : (a.publicName ?? a.name).localeCompare(b.publicName ?? b.name, "pt-BR");
-    })
-    .slice(0, 6);
-
-  return { featuredOffers, partnerProfiles };
-};
 
 const mapSupabaseLandingData = async () => {
   if (!hasSupabaseEnv()) throw new Error("Variáveis do Supabase não configuradas.");
@@ -290,7 +236,7 @@ export default function LandingPage() {
       try {
         setLoading(true);
         setOffersLoadingError("");
-        const mapped = isSupabaseMode ? await mapSupabaseLandingData() : mapLocalLandingData();
+        const mapped = await mapSupabaseLandingData();
         if (cancelled) return;
         setFeaturedOffers(mapped.featuredOffers);
         setPartnerProfiles(mapped.partnerProfiles);
@@ -313,305 +259,656 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <main id="conteudo-principal" className="grid min-h-screen w-full gap-0 px-0 py-0">
-      <section className="grid gap-4 bg-[#C9F549] p-3 md:gap-6 md:p-6">
-        <SiteHeader sticky smallLogo className="md:px-6" />
+    <main id="conteudo-principal" className="grid w-full gap-0 overflow-hidden px-0 py-0">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
 
-        <section className="grid gap-5 px-1 pb-1 pt-1 md:grid-cols-[1.05fr_0.95fr] md:items-center">
-          <div className="grid gap-3">
-            <span className="inline-flex w-fit rounded-full border border-[#bddf43] bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#12200f]">
-              Plataforma de vantagens locais
-            </span>
-            <h1 className="m-0 text-3xl font-black leading-tight text-[#102113] md:text-6xl">
-              As melhores vantagens da Zona Norte, em um só lugar.
-            </h1>
-            <p className="m-0 max-w-2xl text-sm leading-relaxed text-[#1f3318] md:text-base">
-              Descubra ofertas, benefícios e descontos de empresas parceiras da região. O ClubeZN conecta moradores da Zona Norte de
-              Porto Alegre a oportunidades locais de forma simples, rápida e prática.
-            </p>
-            <div className="grid gap-2 sm:grid-cols-2 sm:items-center">
-              <Link
-                href="/auth"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#13210f] px-4 py-2.5 text-sm font-black text-white no-underline"
+        :root {
+          --font-poppins: 'Poppins', sans-serif;
+          --font-dm: 'DM Sans', sans-serif;
+        }
+
+        .hero-grid {
+          background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hero-grid::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          right: -10%;
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(circle, rgba(201, 245, 73, 0.08) 0%, transparent 70%);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+
+        .hero-grid::after {
+          content: '';
+          position: absolute;
+          bottom: -30%;
+          left: -5%;
+          width: 400px;
+          height: 400px;
+          background: linear-gradient(135deg, rgba(201, 245, 73, 0.05) 0%, transparent 70%);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+
+        .feature-card {
+          position: relative;
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(16, 33, 19, 0.1);
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .feature-card:hover {
+          transform: translateY(-4px);
+          border-color: #C9F549;
+          box-shadow: 0 12px 24px rgba(201, 245, 73, 0.15);
+        }
+
+        .floating-element {
+          animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-12px) rotate(2deg); }
+        }
+      `}
+      </style>
+
+      <section className="hero-grid relative min-h-screen w-full">
+        <SiteHeader sticky smallLogo className="md:px-6 relative z-20" />
+
+        <div className="relative z-10 grid w-full max-w-7xl gap-12 px-4 py-16 mx-auto md:gap-16 md:px-6 md:py-24">
+          <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+            <motion.div
+              className="grid gap-5"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <motion.span
+                className="inline-flex w-fit rounded-full bg-gradient-to-r from-[#C9F549] to-[#a8d63a] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0f1a13] backdrop-blur"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
               >
-                Quero ver ofertas
-                <ArrowRight size={16} />
-              </Link>
-              <Link
-                href="/auth"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#314a2f] bg-white px-4 py-2.5 text-sm font-bold text-[#1b2a20] no-underline"
+                ✦ Zona Norte, Porto Alegre
+              </motion.span>
+
+              <motion.h1
+                className="text-4xl font-black leading-[1.2] text-[#0a0f0c] md:text-7xl"
+                style={{ fontFamily: 'var(--font-poppins)' }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.7 }}
               >
-                Quero cadastrar minha empresa
-              </Link>
-            </div>
-            <p className="m-0 text-xs font-semibold text-[#22331c] md:text-sm">Ofertas locais, resgate fácil e benefícios perto de você.</p>
-          </div>
+                Descontos que <br />
+                <span className="bg-gradient-to-r from-[#C9F549] to-[#a8d63a] bg-clip-text text-transparent">
+                  impactam
+                </span>{" "}
+                realmente
+              </motion.h1>
 
-          <div className="grid gap-3 rounded-[28px] border border-[#c6df67] bg-white/70 p-3 md:p-4">
-            <article className="grid gap-2 rounded-2xl border border-[#dfe5d4] bg-white p-4">
-              {heroHighlights.map((item) => (
-                <div key={item.title} className="flex items-start gap-3 rounded-xl border border-[#e7eddc] bg-[#f8fbf4] px-3 py-3">
-                  <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#C9F549] text-[#102113]">
-                    <item.icon size={16} />
-                  </span>
-                  <div className="grid gap-1">
-                    <p className="m-0 text-sm font-extrabold text-[#102113]">{item.title}</p>
-                    <p className="m-0 text-xs text-[#4a5f51]">{item.text}</p>
-                  </div>
-                </div>
-              ))}
-            </article>
+              <motion.p
+                className="max-w-2xl text-lg leading-relaxed text-[#3a4a42] md:text-xl"
+                style={{ fontFamily: 'var(--font-dm)' }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.7 }}
+              >
+                Conectamos você com as melhores ofertas da Zona Norte. Para quem busca economia real, e para empresas que querem crescer local.
+              </motion.p>
 
-            <article className="rounded-2xl border border-[#dfe5d4] bg-white p-3">
-              <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]">Bairros em destaque</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {northZoneNeighborhoods.slice(0, 5).map((neighborhood) => (
-                  <Link
-                    key={`hero-${neighborhood}`}
-                    href={`/ofertas?bairro=${encodeURIComponent(neighborhood)}`}
-                    className="rounded-full border border-[#d8e3c4] bg-[#f8fbf4] px-3 py-1 text-xs font-bold text-[#2a3f2f] no-underline"
-                  >
-                    {neighborhood}
-                  </Link>
-                ))}
-              </div>
-            </article>
-          </div>
-        </section>
-      </section>
-
-      <div className="mx-auto grid w-full max-w-[1180px] gap-5 px-4 py-6 md:gap-6 md:px-6 md:py-8">
-      <section className="grid gap-4 border border-[#dfe5d4] bg-white p-5 md:p-7">
-        <span className={STYLES.badge}>Apresentação</span>
-        <h2 className={STYLES.heading2}>O que é o ClubeZN?</h2>
-        <p className="m-0 text-sm leading-relaxed text-[#3f5646] md:text-base">
-          O ClubeZN é uma plataforma criada para aproximar moradores da Zona Norte de Porto Alegre de empresas parceiras da região.
-          Aqui, o consumidor encontra ofertas ativas, resgata benefícios com facilidade e descobre oportunidades locais em poucos
-          passos. Para as empresas, é uma forma prática de divulgar ofertas, atrair novos clientes e fortalecer a presença no bairro.
-        </p>
-      </section>
-
-      <section id="vantagens" className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
-        <span className={STYLES.badge}>Benefícios para moradores</span>
-        <h2 className={STYLES.heading2}>Por que usar o ClubeZN?</h2>
-        <div className="grid gap-2 md:grid-cols-2">
-          {userBenefits.map((item) => (
-            <article key={item.title} className={STYLES.cardBg}>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#C9F549] text-[#14220f]">
-                  <BadgeCheck size={15} />
-                </span>
-                <h3 className={STYLES.heading3}>{item.title}</h3>
-              </div>
-              <p className="m-0 text-sm text-[#44584c]">{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="como-funciona" className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
-        <span className={STYLES.badge}>Como funciona</span>
-        <h2 className={STYLES.heading2}>Como funciona?</h2>
-        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-          {howItWorksSteps.map((item, i) => (
-            <article key={item.text} className={STYLES.cardBg}>
-              <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#324639]">Passo {i + 1}</p>
-              <p className="m-0 text-sm font-semibold text-[#1f3328]">{item.text}</p>
-            </article>
-          ))}
-        </div>
-        <p className="m-0 text-sm font-semibold text-[#324639]">Simples para quem usa, prático para quem oferece.</p>
-      </section>
-
-      <section id="empresas" className="grid gap-4 border border-[#d4dfbf] bg-[#f6fbe9] p-5 md:p-7">
-        <span className={STYLES.badgeAlt}>Para empresas parceiras</span>
-        <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
-          <div className="grid gap-2">
-            <h2 className={STYLES.heading2}>Sua empresa mais visível para quem está perto.</h2>
-            <p className="m-0 text-sm text-[#3f5646] md:text-base">
-              O ClubeZN também foi feito para negócios locais que querem atrair mais clientes e divulgar ofertas com agilidade. A empresa
-              parceira pode cadastrar seu perfil, publicar ofertas e validar resgates de forma simples, sem processos complicados.
-            </p>
-            <div className="grid gap-2">
-              {partnerBenefits.map((item) => (
-                <div key={item} className="flex items-center gap-2 rounded-xl border border-[#d8e3c4] bg-white px-3 py-2">
-                  <Handshake size={15} className="shrink-0 text-[#2e4227]" />
-                  <p className="m-0 text-sm font-semibold text-[#1e3228]">{item}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <aside className="grid content-start gap-2 rounded-xl border border-[#d8e3c4] bg-white p-3">
-            <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#2e4227]">Parceiros em destaque</p>
-            {partnerProfiles.length > 0 ? (
-              partnerProfiles.slice(0, 4).map((partner) => (
+              <motion.div
+                className="flex flex-wrap gap-3 pt-2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.7 }}
+              >
                 <Link
-                  key={partner.id}
-                  href={`/parceiros/${partner.id}`}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-[#e7eddc] px-3 py-2 text-sm font-semibold text-[#1e3228] no-underline hover:bg-[#f8fbf4]"
+                  href="/auth"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0a0f0c] px-6 py-3.5 text-sm font-black text-white no-underline transition-all hover:shadow-lg hover:scale-[1.02] active:scale-95"
                 >
-                  <span>{partner.publicName ?? partner.name}</span>
-                  <span className="text-xs text-[#4a5f51]">{partner.neighborhood}</span>
+                  Ver ofertas agora
+                  <ArrowRight size={18} />
                 </Link>
-              ))
-            ) : (
-              <p className="m-0 rounded-lg border border-[#e7eddc] bg-[#f8fbf4] px-3 py-3 text-sm text-[#44584c]">
-                Sua empresa pode ser a próxima em destaque.
+                <Link
+                  href="/auth"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-[#0a0f0c] bg-white px-6 py-3.5 text-sm font-bold text-[#0a0f0c] no-underline transition-all hover:bg-[#f8fbf4] active:scale-95"
+                >
+                  Sou empresa
+                </Link>
+              </motion.div>
+            </motion.div>
+
+            <div className="relative">
+              <motion.div
+                className="floating-element"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4, duration: 0.8 }}
+              >
+                <div className="feature-card rounded-2xl p-6 space-y-4">
+                  {heroHighlights.map((item, idx) => (
+                    <motion.div
+                      key={item.title}
+                      className="group flex items-start gap-3 rounded-xl p-4 hover:bg-[#f8fbf4] transition-colors"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + idx * 0.1, duration: 0.6 }}
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#C9F549] to-[#a8d63a] text-[#0a0f0c] group-hover:scale-110 transition-transform">
+                        <item.icon size={20} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#0a0f0c]" style={{ fontFamily: 'var(--font-poppins)' }}>{item.title}</p>
+                        <p className="text-sm text-[#556b61]" style={{ fontFamily: 'var(--font-dm)' }}>{item.text}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          <motion.div
+            className="grid gap-3 md:grid-cols-5 pt-6 border-t border-[#e7eddc]"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.7 }}
+          >
+            <div className="text-center">
+              <p className="text-2xl font-black text-[#0a0f0c]" style={{ fontFamily: 'var(--font-poppins)' }}>8+</p>
+              <p className="text-xs text-[#556b61] uppercase tracking-wide">Bairros</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-black text-[#0a0f0c]" style={{ fontFamily: 'var(--font-poppins)' }}>100+</p>
+              <p className="text-xs text-[#556b61] uppercase tracking-wide">Parceiros</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-black text-[#0a0f0c]" style={{ fontFamily: 'var(--font-poppins)' }}>1000+</p>
+              <p className="text-xs text-[#556b61] uppercase tracking-wide">Ofertas</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-black text-[#0a0f0c]" style={{ fontFamily: 'var(--font-poppins)' }}>24h</p>
+              <p className="text-xs text-[#556b61] uppercase tracking-wide">Resgate rápido</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-black text-[#0a0f0c]" style={{ fontFamily: 'var(--font-poppins)' }}>0%</p>
+              <p className="text-xs text-[#556b61] uppercase tracking-wide">Taxa para usar</p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="mx-auto grid w-full max-w-[1180px] gap-8 px-4 py-12 md:gap-12 md:px-6 md:py-16">
+      <motion.section
+        className="grid gap-6"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="space-y-4">
+          <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+            ✦ Quem somos
+          </span>
+          <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-5xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+            Uma plataforma <br /> pensada para <span className="text-[#C9F549]">sua região</span>
+          </h2>
+          <p className="max-w-3xl text-lg leading-relaxed text-[#3a4a42] md:text-xl" style={{ fontFamily: 'var(--font-dm)' }}>
+            O ClubeZN nasceu para conectar moradores da Zona Norte com as melhores ofertas locais. Simples, rápido e pensado para quem realmente vive e consome por aqui. Para empresas, é um canal direto com seus clientes de verdade.
+          </p>
+        </div>
+      </motion.section>
+
+      <motion.section
+        id="vantagens"
+        className="grid gap-6"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="space-y-4">
+          <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+            ✦ Benefícios
+          </span>
+          <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-5xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+            Tudo que você precisa em um só lugar
+          </h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {userBenefits.map((item, idx) => (
+            <motion.article
+              key={item.title}
+              className="group rounded-2xl bg-white border border-[#e7eddc] p-6 hover:shadow-lg hover:border-[#C9F549] transition-all cursor-default"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1, duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <div className="flex items-start gap-3 mb-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#C9F549] to-[#a8d63a] text-[#0a0f0c] group-hover:scale-110 transition-transform">
+                  <BadgeCheck size={20} />
+                </div>
+                <h3 className="font-bold text-[#0a0f0c] text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>{item.title}</h3>
+              </div>
+              <p className="text-[#556b61] leading-relaxed" style={{ fontFamily: 'var(--font-dm)' }}>{item.text}</p>
+            </motion.article>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section
+        id="como-funciona"
+        className="grid gap-6"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="space-y-4">
+          <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+            ✦ Como funciona
+          </span>
+          <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-5xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+            4 passos para economizar
+          </h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 relative">
+          {howItWorksSteps.map((item, i) => (
+            <motion.article
+              key={item.text}
+              className="relative rounded-2xl bg-gradient-to-br from-white to-[#f8fbf4] border border-[#e7eddc] p-6 group"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1, duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#C9F549] to-transparent opacity-10 rounded-full -mr-12 -mt-12 group-hover:opacity-20 transition-opacity"></div>
+              <div className="relative z-10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#C9F549] text-[#0a0f0c] font-black mb-4" style={{ fontFamily: 'var(--font-poppins)' }}>
+                  {i + 1}
+                </div>
+                <p className="font-bold text-[#0a0f0c] text-base" style={{ fontFamily: 'var(--font-poppins)' }}>{item.text}</p>
+              </div>
+            </motion.article>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section
+        id="empresas"
+        className="grid gap-6 rounded-2xl bg-gradient-to-br from-[#f8fbf4] to-white border border-[#e7eddc] p-8"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+                ✦ Para empresas
+              </span>
+              <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-4xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+                Cresça vendendo para sua vizinhança
+              </h2>
+              <p className="text-lg text-[#3a4a42] leading-relaxed" style={{ fontFamily: 'var(--font-dm)' }}>
+                Divulgue ofertas com agilidade, atraia clientes reais da região e valide resgates sem complicação. Você é o protagonista.
               </p>
-            )}
+            </div>
+            <div className="grid gap-3">
+              {partnerBenefits.map((item, idx) => (
+                <motion.div
+                  key={item}
+                  className="flex items-center gap-3 rounded-xl bg-white border border-[#e7eddc] px-4 py-3 group hover:border-[#C9F549] transition-all"
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.08 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#C9F549] text-[#0a0f0c]">
+                    <Handshake size={16} />
+                  </div>
+                  <p className="font-semibold text-[#0a0f0c]" style={{ fontFamily: 'var(--font-poppins)' }}>{item}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <motion.aside
+            className="rounded-2xl bg-white border border-[#e7eddc] p-6 space-y-4 sticky top-24 h-fit"
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7 }}
+            viewport={{ once: true }}
+          >
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c] mb-3">★ Parceiros em destaque</p>
+              <div className="space-y-2">
+                {partnerProfiles.length > 0 ? (
+                  partnerProfiles.slice(0, 4).map((partner) => (
+                    <Link
+                      key={partner.id}
+                      href={`/parceiros/${partner.id}`}
+                      className="flex items-center justify-between gap-2 rounded-lg p-3 text-sm font-semibold text-[#0a0f0c] no-underline hover:bg-[#f8fbf4] transition-colors"
+                    >
+                      <span>{partner.publicName ?? partner.name}</span>
+                      <span className="text-xs text-[#556b61] bg-[#f8fbf4] px-2 py-1 rounded">{partner.neighborhood}</span>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="text-sm text-[#556b61] py-3">Sua empresa pode ser a próxima em destaque.</p>
+                )}
+              </div>
+            </div>
             <Link
               href="/auth"
-              className="mt-1 inline-flex items-center justify-center rounded-full bg-[#C9F549] px-4 py-2 text-sm font-black text-[#0f1a13] no-underline"
+              className="block w-full rounded-lg bg-[#C9F549] px-4 py-3 text-center font-black text-[#0a0f0c] no-underline transition-all hover:shadow-lg active:scale-95"
             >
-              Cadastrar minha empresa
+              Cadastrar agora
             </Link>
-          </aside>
+          </motion.aside>
         </div>
-      </section>
+      </motion.section>
 
-      <section className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
-        <span className={STYLES.badge}>Destaque regional</span>
-        <h2 className={STYLES.heading2}>Foco na Zona Norte de Porto Alegre</h2>
-        <p className="m-0 text-sm text-[#3f5646] md:text-base">
-          O ClubeZN nasce com foco na valorização do comércio local e na criação de uma rede de vantagens realmente útil para quem vive,
-          circula e consome na Zona Norte. A proposta é fortalecer conexões entre moradores e empresas parceiras, começando pela região e
-          crescendo com densidade por bairro e categoria.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {northZoneNeighborhoods.map((n) => (
-            <Link key={n} href={`/ofertas?bairro=${encodeURIComponent(n)}`} className={`${STYLES.neighborhoodTag} py-1.5 no-underline`}>
-              {n}
-            </Link>
+      <motion.section
+        className="grid gap-6"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="space-y-4">
+          <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+            ✦ Regional
+          </span>
+          <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-5xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+            Cobrindo toda a <br /> Zona Norte
+          </h2>
+          <p className="max-w-2xl text-lg text-[#3a4a42] leading-relaxed" style={{ fontFamily: 'var(--font-dm)' }}>
+            Do Sarandi até a Vila Ipiranga. Cada bairro com suas ofertas, oportunidades e parceiros locais.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {northZoneNeighborhoods.map((n, idx) => (
+            <motion.div
+              key={n}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.05, duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <Link
+                href={`/ofertas?bairro=${encodeURIComponent(n)}`}
+                className="block text-center rounded-lg border border-[#e7eddc] bg-white px-4 py-3 font-bold text-[#0a0f0c] no-underline hover:border-[#C9F549] hover:bg-[#f8fbf4] transition-all group"
+              >
+                <MapPin size={18} className="mx-auto mb-1 text-[#C9F549]" />
+                <span className="text-sm" style={{ fontFamily: 'var(--font-poppins)' }}>{n}</span>
+              </Link>
+            </motion.div>
           ))}
         </div>
-      </section>
+      </motion.section>
 
-      <section id="ofertas" className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div className="grid gap-1">
-            <span className={STYLES.badge}>Ofertas em destaque</span>
-            <h2 className={STYLES.heading2}>Ofertas em destaque</h2>
-            <p className="m-0 text-sm text-[#44584c] md:text-base">
-              Confira algumas das vantagens que já estão disponíveis na plataforma e descubra novas oportunidades perto de você.
-            </p>
+      <motion.section
+        id="ofertas"
+        className="grid gap-6"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
+          <div className="space-y-4">
+            <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+              ✦ Vitrine
+            </span>
+            <div>
+              <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-5xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+                Ofertas que valem a pena
+              </h2>
+            </div>
           </div>
-          <Link href="/ofertas" className="text-sm font-bold text-[#1d3428] no-underline hover:underline">
-            Ver todas as ofertas
+          <Link
+            href="/ofertas"
+            className="flex items-center gap-2 rounded-lg px-4 py-3 font-bold text-[#0a0f0c] no-underline hover:bg-[#f8fbf4] transition-colors group"
+          >
+            Explorar todas
+            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
 
         {offersLoadingError ? (
-          <p className="m-0 rounded-xl border border-[#f1d0d0] bg-[#fff6f6] px-3 py-3 text-sm text-[#8d2c2c]">{offersLoadingError}</p>
+          <motion.p
+            className="rounded-lg border border-[#f1d0d0] bg-[#fff6f6] px-4 py-3 text-sm text-[#8d2c2c]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {offersLoadingError}
+          </motion.p>
         ) : null}
 
         {loading ? (
-          <p className="m-0 rounded-xl border border-[#e7eddc] bg-[#f8fbf4] px-3 py-3 text-sm text-[#44584c]">Carregando vitrine...</p>
+          <motion.div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-64 rounded-xl bg-[#f8fbf4] animate-pulse"></div>
+            ))}
+          </motion.div>
         ) : null}
 
         {!loading && featuredOffers.length > 0 ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {featuredOffers.map((offer) => (
-              <OfferCard key={offer.id} offer={offer} actionLabel="Resgatar agora" actionHref="/auth" secondaryLabel="Ver detalhes" />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {featuredOffers.map((offer, idx) => (
+              <motion.div
+                key={offer.id}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1, duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <OfferCard offer={offer} actionLabel="Resgatar agora" actionHref="/auth" secondaryLabel="Ver detalhes" />
+              </motion.div>
             ))}
           </div>
         ) : null}
 
         {!loading && !offersLoadingError && featuredOffers.length === 0 ? (
-          <p className="m-0 rounded-xl border border-[#e7eddc] bg-[#f8fbf4] px-3 py-3 text-sm text-[#44584c]">
-            Ainda não há ofertas em destaque. Novas vantagens serão publicadas em breve.
-          </p>
+          <motion.p className="rounded-lg border border-[#e7eddc] bg-[#f8fbf4] px-4 py-4 text-center text-[#556b61]">
+            Novas ofertas em breve! Voltamos em poucos dias.
+          </motion.p>
         ) : null}
-      </section>
+      </motion.section>
 
-      <section className="grid gap-4 border border-[#d4dfbf] bg-[#f6fbe9] p-5 md:p-7">
-        <span className={STYLES.badgeAlt}>Confiança e proposta de valor</span>
-        <h2 className={STYLES.heading2}>Mais praticidade para quem busca. Mais visibilidade para quem vende.</h2>
-        <p className="m-0 text-sm text-[#44584c] md:text-base">
-          O ClubeZN reúne consumidores e empresas da mesma região em uma plataforma simples, direta e funcional. Para quem mora na Zona
-          Norte, fica mais fácil encontrar vantagens locais. Para os parceiros, fica mais fácil transformar oferta em movimento real.
-        </p>
-        <div className="grid gap-2 md:grid-cols-3">
-          <article className="rounded-xl border border-[#d8e3c4] bg-white p-3">
-            <ShieldCheck size={18} className="text-[#263920]" />
-            <h3 className="m-0 mt-2 text-base font-extrabold text-[#102113]">Confiança para usar</h3>
-            <p className="m-0 mt-1 text-sm text-[#44584c]">Fluxo claro para o morador: oferta, código e resgate sem complicação.</p>
-          </article>
-          <article className="rounded-xl border border-[#d8e3c4] bg-white p-3">
-            <Megaphone size={18} className="text-[#263920]" />
-            <h3 className="m-0 mt-2 text-base font-extrabold text-[#102113]">Visibilidade local</h3>
-            <p className="m-0 mt-1 text-sm text-[#44584c]">A empresa aparece para quem realmente compra na região.</p>
-          </article>
-          <article className="rounded-xl border border-[#d8e3c4] bg-white p-3">
-            <Users size={18} className="text-[#263920]" />
-            <h3 className="m-0 mt-2 text-base font-extrabold text-[#102113]">Conexão de comunidade</h3>
-            <p className="m-0 mt-1 text-sm text-[#44584c]">Morador e comércio local ganham juntos com uma relação mais próxima.</p>
-          </article>
+      <motion.section
+        className="grid gap-6"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="space-y-4">
+          <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+            ✦ Confiança
+          </span>
+          <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-5xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+            Simples para quem usa, <br /> real para quem vende
+          </h2>
+          <p className="max-w-3xl text-lg text-[#3a4a42] leading-relaxed" style={{ fontFamily: 'var(--font-dm)' }}>
+            ClubeZN é uma conexão direta entre você e a sua vizinhança. Sem algoritmo misterioso, sem desperdício de oferta, só relacionamento de verdade.
+          </p>
         </div>
-        <ul className="m-0 grid gap-2 pl-0">
-          {trustPoints.map((point) => (
-            <li key={point} className="list-none rounded-lg border border-[#d8e3c4] bg-white px-3 py-2 text-sm font-semibold text-[#1e3228]">
-              {point}
-            </li>
-          ))}
-        </ul>
-      </section>
 
-      <section id="faq" className={`grid gap-4 ${STYLES.cardBorder} p-5 md:p-7`}>
-        <span className={STYLES.badge}>FAQ</span>
-        <h2 className={STYLES.heading2}>Dúvidas frequentes</h2>
-        <div className="grid gap-2">
-          {faqItems.map((item) => (
-            <details key={item.question} className={STYLES.cardBg}>
-              <summary className="flex cursor-pointer items-center gap-2 text-sm font-extrabold text-[#102113]">
-                <CircleHelp size={14} />
-                {item.question}
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { icon: ShieldCheck, title: "Confiança", desc: "Fluxo claro: oferta, código, resgate. Sem surpresa." },
+            { icon: Megaphone, title: "Visibilidade", desc: "Apareça para quem realmente compra perto de você." },
+            { icon: Users, title: "Comunidade", desc: "Morador e comércio ganham juntos. Relação próxima." }
+          ].map((item, idx) => (
+            <motion.article
+              key={item.title}
+              className="rounded-xl bg-white border border-[#e7eddc] p-6 group hover:shadow-lg hover:border-[#C9F549] transition-all"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1, duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-[#C9F549] to-[#a8d63a] text-[#0a0f0c] mb-4 group-hover:scale-110 transition-transform">
+                <item.icon size={24} />
+              </div>
+              <h3 className="font-bold text-[#0a0f0c] mb-2 text-lg" style={{ fontFamily: 'var(--font-poppins)' }}>{item.title}</h3>
+              <p className="text-[#556b61] text-sm leading-relaxed" style={{ fontFamily: 'var(--font-dm)' }}>{item.desc}</p>
+            </motion.article>
+          ))}
+        </div>
+
+        <div className="grid gap-3">
+          {trustPoints.map((point, idx) => (
+            <motion.div
+              key={point}
+              className="rounded-lg bg-white border border-[#e7eddc] px-6 py-4 flex items-start gap-3 group hover:border-[#C9F549] transition-all"
+              initial={{ opacity: 0, x: -10 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ delay: idx * 0.08, duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#C9F549] text-[#0a0f0c] mt-0.5 font-bold group-hover:scale-110 transition-transform" style={{ fontFamily: 'var(--font-poppins)' }}>
+                ✓
+              </div>
+              <p className="font-semibold text-[#0a0f0c]" style={{ fontFamily: 'var(--font-poppins)' }}>{point}</p>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section
+        id="faq"
+        className="grid gap-6"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="space-y-4">
+          <span className="inline-flex w-fit rounded-full bg-[#C9F549] px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+            ✦ FAQ
+          </span>
+          <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-5xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+            Dúvidas? Tem resposta aqui
+          </h2>
+        </div>
+        <div className="grid gap-3 max-w-3xl">
+          {faqItems.map((item, idx) => (
+            <motion.details
+              key={item.question}
+              className="group rounded-lg border border-[#e7eddc] bg-white p-4 cursor-pointer hover:border-[#C9F549] transition-all open:border-[#C9F549] open:bg-[#f8fbf4]"
+              initial={{ opacity: 0, y: 5 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05, duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <summary className="flex cursor-pointer items-center justify-between gap-2 font-bold text-[#0a0f0c] select-none" style={{ fontFamily: 'var(--font-poppins)' }}>
+                <div className="flex items-center gap-3">
+                  <CircleHelp size={18} className="text-[#C9F549] shrink-0" />
+                  <span>{item.question}</span>
+                </div>
+                <div className="text-[#C9F549] group-open:rotate-180 transition-transform">+</div>
               </summary>
-              <p className="m-0 mt-2 text-sm text-[#44584c]">{item.answer}</p>
-            </details>
+              <p className="mt-3 ml-9 text-[#556b61] leading-relaxed text-sm" style={{ fontFamily: 'var(--font-dm)' }}>{item.answer}</p>
+            </motion.details>
           ))}
         </div>
-      </section>
+      </motion.section>
 
-      <section className="grid gap-4 border border-[#d4dfbf] bg-[#C9F549] p-5 md:p-7">
-        <span className="inline-flex w-fit rounded-full border border-[#aecf3f] bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.08em] text-[#13210f]">Comece agora</span>
-        <h2 className={STYLES.heading2}>Comece a aproveitar as vantagens do ClubeZN.</h2>
-        <p className="m-0 text-sm text-[#1f3318] md:text-base">
-          Entre agora para descobrir ofertas locais ou cadastre sua empresa e faça parte da rede de parceiros da Zona Norte.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Link href="/auth" className="rounded-full border border-[#13210f] bg-[#13210f] px-4 py-2 text-sm font-black text-white no-underline">
-            Entrar na plataforma
-          </Link>
-          <Link href="/auth" className="rounded-full border border-[#13210f] bg-white px-4 py-2 text-sm font-black text-[#13210f] no-underline">
-            Cadastrar empresa
-          </Link>
+      <motion.section
+        className="rounded-2xl bg-gradient-to-br from-[#C9F549] to-[#a8d63a] p-8 md:p-12 relative overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true, margin: "-100px" }}
+      >
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(16, 33, 19, 0.1) 0%, transparent 50%)',
+          }}></div>
         </div>
-      </section>
 
-      <footer className="grid gap-4 border border-[#dfe5d4] bg-white p-5 md:p-7">
-        <div className="grid gap-3 md:grid-cols-[1.1fr_0.9fr] md:items-center">
-          <div className="grid gap-2">
+        <div className="relative z-10 grid gap-6 max-w-2xl">
+          <div className="space-y-4">
+            <span className="inline-flex w-fit rounded-full border-2 border-[#0a0f0c] bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">
+              ✦ Comece agora
+            </span>
+            <h2 className="text-3xl font-black leading-tight text-[#0a0f0c] md:text-5xl" style={{ fontFamily: 'var(--font-poppins)' }}>
+              Pronto para descobrir ofertas reais e perto de você?
+            </h2>
+            <p className="text-lg text-[#1f3318]" style={{ fontFamily: 'var(--font-dm)' }}>
+              Acesse agora e comece a economizar, ou publique sua primeira oferta como parceiro.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/auth"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0a0f0c] px-6 py-3 font-black text-white no-underline transition-all hover:shadow-lg hover:scale-[1.02] active:scale-95"
+            >
+              Entrar agora
+              <ArrowRight size={18} />
+            </Link>
+            <Link
+              href="/auth"
+              className="inline-flex items-center justify-center rounded-lg border-2 border-[#0a0f0c] bg-white px-6 py-3 font-black text-[#0a0f0c] no-underline transition-all hover:bg-[#fafaf8] active:scale-95"
+            >
+              Cadastrar empresa
+            </Link>
+          </div>
+        </div>
+      </motion.section>
+
+      <footer className="grid gap-8 border-t border-[#e7eddc] bg-white p-8 md:p-12">
+        <motion.div
+          className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-start"
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          viewport={{ once: true }}
+        >
+          <div className="space-y-3">
             <BrandLogo small />
-            <p className="m-0 text-sm text-[#44584c]">
+            <p className="text-[#3a4a42] leading-relaxed max-w-xl" style={{ fontFamily: 'var(--font-dm)' }}>
               ClubeZN conecta moradores e empresas da Zona Norte com ofertas locais, de forma simples, rápida e confiável.
             </p>
           </div>
-          <div className="grid gap-1 rounded-xl border border-[#e7eddc] bg-[#f8fbf4] p-3">
-            <p className="m-0 text-xs font-black uppercase tracking-[0.08em] text-[#2a3f2f]">Contato</p>
-            <p className="m-0 text-sm font-semibold text-[#1e3228]">contato@clubezn.com</p>
-            <p className="m-0 text-xs text-[#44584c]">Zona Norte, Porto Alegre/RS</p>
+          <div className="rounded-lg border border-[#e7eddc] bg-[#f8fbf4] p-4 space-y-2">
+            <p className="text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">★ Contato</p>
+            <a href="mailto:ecardbrasil@gmail.com" className="block font-semibold text-[#0a0f0c] no-underline hover:text-[#C9F549] transition-colors">
+              ecardbrasil@gmail.com
+            </a>
+            <p className="text-xs text-[#556b61]">Zona Norte, Porto Alegre/RS</p>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#e7eddc] pt-3 text-xs text-[#4a5f51]">
-          <p className="m-0">© {new Date().getFullYear()} ClubeZN</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link href="/ofertas" className="text-[#2a3f2f] no-underline hover:underline">
+        </motion.div>
+
+        <div className="flex flex-col gap-4 border-t border-[#e7eddc] pt-6 md:flex-row md:items-center md:justify-between">
+          <p className="text-xs text-[#556b61]">© {new Date().getFullYear()} ClubeZN. Construído com foco na Zona Norte.</p>
+          <div className="flex flex-wrap items-center gap-6">
+            <Link href="/ofertas" className="text-sm font-semibold text-[#0a0f0c] no-underline hover:text-[#C9F549] transition-colors">
               Ofertas
             </Link>
-            <Link href="/parceiros" className="text-[#2a3f2f] no-underline hover:underline">
+            <Link href="/parceiros" className="text-sm font-semibold text-[#0a0f0c] no-underline hover:text-[#C9F549] transition-colors">
               Parceiros
             </Link>
-            <Link href="/auth" className="text-[#2a3f2f] no-underline hover:underline">
+            <Link href="/como-funciona" className="text-sm font-semibold text-[#0a0f0c] no-underline hover:text-[#C9F549] transition-colors">
+              Como funciona
+            </Link>
+            <Link href="/auth" className="text-sm font-semibold text-[#0a0f0c] no-underline hover:text-[#C9F549] transition-colors">
               Entrar
             </Link>
           </div>

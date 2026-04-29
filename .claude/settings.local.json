@@ -9,7 +9,16 @@
       "Bash(git show *)",
       "Read(//tmp/**)",
       "Bash(npx tsc *)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(npx skills *)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl -s http://localhost:3001)",
+      "Bash(netstat -ano)",
+      "Bash(curl -s \"http://localhost:3000/\" -H \"User-Agent: Mozilla\")",
+      "Bash(start http://localhost:3000)",
+      "Bash(start http://localhost:3001)",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)"
     ]
   }
 }
