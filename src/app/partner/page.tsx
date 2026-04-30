@@ -7,6 +7,7 @@ import { PartnerDashboardSidebar, PartnerSection } from "@/components/partner/da
 import { useToast } from "@/components/ui/toast";
 import { AppData, Company, Offer } from "@/lib/types";
 import { isSupabaseMode } from "@/lib/runtime-config";
+import { DEFAULT_CATEGORIES, parseCategories, serializeCategories } from "@/lib/categories";
 import {
   clearSession,
   createOffer,
@@ -26,11 +27,7 @@ const formatDate = (value?: string) => {
   return new Date(value).toLocaleString("pt-BR");
 };
 
-const getOfferStatusLabel = (offer: Offer) => {
-  if (offer.rejected) return "Rejeitada";
-  if (!offer.approved) return "Pendente";
-  return "Publicada";
-};
+const getOfferStatusLabel = (_offer: Offer) => "Publicada";
 
 const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -41,21 +38,6 @@ const readFileAsDataUrl = (file: File) =>
   });
 
 type RedemptionFilter = "all" | "generated" | "used" | "expired";
-
-const defaultOfferCategories = [
-  "Supermercado",
-  "Farmácia",
-  "Restaurante",
-  "Padaria",
-  "Cafeteria",
-  "Pet",
-  "Beleza",
-  "Saúde",
-  "Educação",
-  "Serviços",
-  "Moda",
-  "Casa e decoração",
-];
 
 const northZoneNeighborhoods = [
   "Sarandi",
@@ -116,6 +98,8 @@ export default function PartnerPage() {
   const [whatsapp, setWhatsapp] = useState<string | null>(null);
   const [logoImage, setLogoImage] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [profileCategories, setProfileCategories] = useState<string[] | null>(null);
+  const [profileCategorySearch, setProfileCategorySearch] = useState("");
   const [supabaseCompany, setSupabaseCompany] = useState<Company | null>(null);
 
   const refresh = async () => {
@@ -242,7 +226,6 @@ export default function PartnerPage() {
     if (!data || !user?.companyId) return undefined;
     return data.companies.find((item) => item.id === user.companyId);
   }, [data, supabaseCompany, user?.companyId]);
-  const companyPendingApproval = company ? !company.approved : false;
 
   const companyOffers = useMemo(() => {
     if (!data || !company?.id) return [];
@@ -252,10 +235,13 @@ export default function PartnerPage() {
   }, [data, company]);
 
   const availableOfferCategories = useMemo(() => {
+    const companyCategories = parseCategories(company?.category);
     const fromCompanyOffers = companyOffers.map((offer) => offer.category).filter(Boolean);
-    const all = Array.from(new Set([...defaultOfferCategories, ...fromCompanyOffers])).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    const all = Array.from(
+      new Set([...DEFAULT_CATEGORIES, ...companyCategories, ...fromCompanyOffers])
+    ).sort((a, b) => a.localeCompare(b, "pt-BR"));
     return all;
-  }, [companyOffers]);
+  }, [company?.category, companyOffers]);
 
   const filteredCategorySuggestions = useMemo(() => {
     const normalizedSearch = categorySearch.trim().toLowerCase();
@@ -291,6 +277,12 @@ export default function PartnerPage() {
     setNeighborhoodAutofilled(true);
   }, [company?.neighborhood, neighborhoodAutofilled]);
 
+  useEffect(() => {
+    if (selectedCategories.length === 0 && company?.category) {
+      setSelectedCategories(parseCategories(company.category));
+    }
+  }, [company?.category, selectedCategories.length]);
+
   const effectivePublicName = publicName ?? (company?.publicName ?? company?.name ?? "");
   const effectiveAddressLine = addressLine ?? (company?.addressLine ?? "");
   const effectiveHasPhysicalAddress = hasPhysicalAddress ?? Boolean((company?.addressLine ?? "").trim());
@@ -301,6 +293,7 @@ export default function PartnerPage() {
   const effectiveWhatsapp = whatsapp ?? (company?.whatsapp ?? "");
   const effectiveLogoImage = logoImage ?? (company?.logoImage ?? "");
   const effectiveCoverImage = coverImage ?? (company?.coverImage ?? "");
+  const effectiveProfileCategories = profileCategories ?? parseCategories(company?.category);
 
   const dashboard = useMemo(() => {
     const todayStart = new Date();
@@ -469,7 +462,7 @@ export default function PartnerPage() {
       {
         id: "notifications",
         title: "Revise seu centro de notificações",
-        description: "Acompanhe aprovações e deixe as notificações em dia.",
+        description: "Mantenha as notificações em dia para não perder atualizações.",
         done: partnerNotifications.length > 0 && unreadNotifications === 0,
         section: "notifications" as PartnerSection,
         actionLabel: "Abrir notificações",
@@ -563,6 +556,7 @@ export default function PartnerPage() {
             whatsapp: effectiveWhatsapp,
             logoImage: effectiveLogoImage || undefined,
             coverImage: effectiveCoverImage || undefined,
+            category: serializeCategories(effectiveProfileCategories),
           },
         }),
       });
@@ -717,8 +711,8 @@ export default function PartnerPage() {
       setCategorySearch("");
       setImages([]);
       setImageFeedback("");
-      setOfferFeedback("Oferta enviada para análise com sucesso.");
-      showToast("Oferta enviada para análise com sucesso.", "success");
+      setOfferFeedback("Oferta criada com sucesso.");
+      showToast("Oferta criada com sucesso.", "success");
       await refresh();
       setSection("overview");
     } finally {
@@ -815,18 +809,10 @@ export default function PartnerPage() {
               <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Empresa Parceira</p>
               <h1 style={{ margin: "2px 0 0", fontSize: 22 }}>{company?.publicName ?? company?.name ?? user.name}</h1>
             </div>
-            <span className={`badge ${companyPendingApproval ? "badge-pending" : "badge-ok"}`}>
-              {companyPendingApproval ? "Pendente" : "Ativa"}
-            </span>
           </div>
           <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
             Seção atual: <strong>{sectionTitle[section]}</strong>
           </p>
-          {companyPendingApproval && (
-            <p style={{ margin: 0, color: "var(--warn)", fontSize: 13, fontWeight: 700 }}>
-              Sua empresa ainda está em análise. As ofertas só podem ser publicadas após aprovação do administrador.
-            </p>
-          )}
           {unreadNotifications > 0 && (
             <p style={{ margin: 0, color: "var(--brand-2)", fontSize: 13, fontWeight: 700 }}>
               Você tem {unreadNotifications} notificação(ões) não lida(s).
@@ -985,6 +971,74 @@ export default function PartnerPage() {
                 />
               </label>
 
+              <div className="grid gap-2">
+                <label className="field">
+                  <span>Categorias (multi seleção)</span>
+                  <input
+                    value={profileCategorySearch}
+                    onChange={(event) => setProfileCategorySearch(event.target.value)}
+                    placeholder="Busque e selecione categorias"
+                  />
+                </label>
+
+                <div className="flex flex-wrap gap-1.5">
+                  {effectiveProfileCategories.map((item) => (
+                    <button
+                      key={`selected-${item}`}
+                      type="button"
+                      className="badge badge-ok"
+                      onClick={() => {
+                        setProfileCategories((current) => (current ?? []).filter((c) => c !== item));
+                      }}
+                      title="Clique para remover"
+                    >
+                      {item} ×
+                    </button>
+                  ))}
+                  {effectiveProfileCategories.length === 0 ? (
+                    <span className="text-xs text-[var(--muted)]">Nenhuma categoria selecionada.</span>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-1 rounded-xl border border-[#dce8de] bg-white p-2">
+                  {DEFAULT_CATEGORIES
+                    .filter((item) => {
+                      if (effectiveProfileCategories.includes(item)) return false;
+                      if (!profileCategorySearch.trim()) return true;
+                      return item.toLowerCase().includes(profileCategorySearch.toLowerCase());
+                    })
+                    .slice(0, 10)
+                    .map((item) => (
+                      <label key={`option-${item}`} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={effectiveProfileCategories.includes(item)}
+                          onChange={() => {
+                            setProfileCategories((current) => {
+                              const base = current ?? [];
+                              return base.includes(item)
+                                ? base.filter((c) => c !== item)
+                                : [...base, item];
+                            });
+                          }}
+                        />
+                        <span>{item}</span>
+                      </label>
+                    ))}
+                  {DEFAULT_CATEGORIES.filter((item) => {
+                    if (effectiveProfileCategories.includes(item)) return false;
+                    if (!profileCategorySearch.trim()) return false;
+                    return item.toLowerCase().includes(profileCategorySearch.toLowerCase());
+                  }).length === 0 && profileCategorySearch.trim() ? (
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Nenhuma categoria encontrada para esta busca.</p>
+                  ) : null}
+                </div>
+
+                <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+                  Selecione as categorias que melhor descrevem sua empresa. Essas categorias serão usadas para pré-preencher seus formulários de ofertas.
+                </p>
+              </div>
+
               <div className="grid gap-2 sm:grid-cols-2">
                 <label className="field">
                   <span>Instagram</span>
@@ -1101,11 +1155,6 @@ export default function PartnerPage() {
           <>
             <section className="card grid gap-2.5">
               <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Cadastrar nova oferta</h2>
-              {companyPendingApproval && (
-                <p style={{ margin: 0, color: "var(--warn)", fontWeight: 700 }}>
-                  A publicação de ofertas fica liberada depois que a empresa for aprovada.
-                </p>
-              )}
               <form onSubmit={createPartnerOffer} className="grid gap-2">
                 <label className="field">
                   <span>Título</span>
@@ -1134,7 +1183,6 @@ export default function PartnerPage() {
                       value={categorySearch}
                       onChange={(event) => setCategorySearch(event.target.value)}
                       placeholder="Busque e selecione categorias"
-                      disabled={companyPendingApproval}
                     />
                   </label>
 
@@ -1162,7 +1210,6 @@ export default function PartnerPage() {
                           type="checkbox"
                           checked={selectedCategories.includes(item)}
                           onChange={() => toggleCategorySelection(item)}
-                          disabled={companyPendingApproval}
                         />
                         <span>{item}</span>
                       </label>
@@ -1177,7 +1224,7 @@ export default function PartnerPage() {
                       type="button"
                       className="btn btn-ghost !w-auto !px-3 !py-1.5"
                       onClick={addCategoryFromSearch}
-                      disabled={!categorySearch.trim() || companyPendingApproval}
+                      disabled={!categorySearch.trim()}
                     >
                       Adicionar categoria nova
                     </button>
@@ -1189,7 +1236,7 @@ export default function PartnerPage() {
 
                 <label className="field">
                   <span>Bairro</span>
-                  <select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} required disabled={companyPendingApproval}>
+                  <select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} required>
                     {availableNeighborhoods.map((item) => (
                       <option key={item} value={item}>
                         {item}
@@ -1200,7 +1247,7 @@ export default function PartnerPage() {
 
                 <label className="field">
                   <span>Fotos da oferta (até 5)</span>
-                  <input accept="image/*" multiple onChange={onSelectImages} type="file" disabled={companyPendingApproval} />
+                  <input accept="image/*" multiple onChange={onSelectImages} type="file" />
                 </label>
 
                 <p style={{ margin: 0, color: "var(--muted)", fontSize: 12 }}>
@@ -1253,8 +1300,8 @@ export default function PartnerPage() {
                   </div>
                 )}
 
-                <button className="btn btn-primary" type="submit" disabled={isPublishingOffer || companyPendingApproval}>
-                  {isPublishingOffer ? "Enviando oferta..." : "Enviar oferta para análise"}
+                <button className="btn btn-primary" type="submit" disabled={isPublishingOffer}>
+                  {isPublishingOffer ? "Criando oferta..." : "Criar oferta"}
                 </button>
               </form>
               {offerFeedback && <p style={{ margin: 0, fontWeight: 700 }}>{offerFeedback}</p>}

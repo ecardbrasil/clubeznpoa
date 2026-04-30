@@ -186,7 +186,6 @@ export default function ConsumerPage() {
   const activeOffers = useMemo(() => {
     if (!data) return [];
     return data.offers
-      .filter((offer) => offer.approved && !offer.rejected)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [data]);
 

@@ -12,16 +12,12 @@ export function AdminDashboardSidebar({
   setSidebarOpen,
   section,
   onSectionChange,
-  pendingCompanies,
-  pendingOffers,
   onLogout,
 }: {
   sidebarOpen: boolean;
   setSidebarOpen: Dispatch<SetStateAction<boolean>>;
   section: AdminSection;
   onSectionChange: (section: AdminSection) => void;
-  pendingCompanies: number;
-  pendingOffers: number;
   onLogout: () => void;
 }) {
   return (
@@ -61,9 +57,6 @@ export function AdminDashboardSidebar({
             />
           </div>
 
-          <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--muted)" }}>
-            Moderação automática: {pendingCompanies + pendingOffers === 0 ? "sem pendências" : "verificar inconsistências"}.
-          </p>
         </div>
 
         <button className="btn btn-ghost" onClick={onLogout}>

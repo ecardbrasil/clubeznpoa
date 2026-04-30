@@ -19,6 +19,7 @@ type PartnerActionPayload =
         whatsapp: string;
         logoImage?: string;
         coverImage?: string;
+        category?: string;
       };
     }
   | {
@@ -433,6 +434,7 @@ export async function POST(request: Request) {
           whatsapp: trimOrNull(payload.whatsapp),
           logo_image: trimOrNull(payload.logoImage),
           cover_image: trimOrNull(payload.coverImage),
+          ...(payload.category !== undefined && { category: payload.category }),
         })
         .eq("id", companyId)
         .eq("owner_user_id", ownerUserId)

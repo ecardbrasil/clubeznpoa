@@ -17,7 +17,6 @@ const steps = {
 export default function HowItWorksPage() {
   return (
     <PublicStaticPage
-      subtitle="Institucional"
       title="Como funciona o ClubeZN"
       description="Entenda o fluxo completo para moradores e empresas parceiras usarem a plataforma."
     >

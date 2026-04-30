@@ -383,7 +383,7 @@ export default function HomePage() {
               <Sparkles size={14} className="shrink-0" />
               <p className="text-xs font-bold text-center" style={{ fontFamily: "var(--font-poppins)" }}>
                 Novidades exclusivas na Zona Norte de Porto Alegre —{" "}
-                <Link href="/auth" className="underline underline-offset-2 hover:no-underline">
+                <Link href="/auth?tab=register" className="underline underline-offset-2 hover:no-underline">
                   Cadastre-se grátis
                 </Link>
               </p>
@@ -510,7 +510,7 @@ export default function HomePage() {
                   <ArrowRight size={16} />
                 </Link>
                 <Link
-                  href="/auth"
+                  href="/auth?tab=register"
                   className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-bold text-white no-underline backdrop-blur transition-all hover:bg-white/20 active:scale-95"
                   style={{ fontFamily: "var(--font-poppins)" }}
                 >
@@ -850,7 +850,7 @@ export default function HomePage() {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/auth"
+                href="/auth?tab=login"
                 className="inline-flex items-center gap-2 rounded-xl bg-[#0a0f0c] px-6 py-3.5 font-black text-white no-underline transition-all hover:shadow-xl active:scale-95"
                 style={{ fontFamily: "var(--font-poppins)" }}
               >
@@ -858,7 +858,7 @@ export default function HomePage() {
                 <ArrowRight size={16} />
               </Link>
               <Link
-                href="/auth"
+                href="/auth?tab=register"
                 className="inline-flex items-center gap-2 rounded-xl border-2 border-[#0a0f0c] bg-white px-6 py-3.5 font-black text-[#0a0f0c] no-underline transition-all hover:bg-[#f0f5e8] active:scale-95"
                 style={{ fontFamily: "var(--font-poppins)" }}
               >

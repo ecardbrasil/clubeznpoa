@@ -42,14 +42,12 @@ const mapLocalPartners = (): PartnerListItem[] => {
   const data = getData();
 
   const offersCountByCompanyId = data.offers
-    .filter((offer) => offer.approved && !offer.rejected)
     .reduce<Record<string, number>>((acc, offer) => {
       acc[offer.companyId] = (acc[offer.companyId] ?? 0) + 1;
       return acc;
     }, {});
 
   return data.companies
-    .filter((company) => company.approved)
     .map((company) => ({
       ...company,
       offersCount: offersCountByCompanyId[company.id] ?? 0,
@@ -164,7 +162,7 @@ export default function PartnersPage() {
 
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
-      <PublicPageHeader subtitle="Empresas parceiras cadastradas" />
+      <PublicPageHeader />
 
       <section className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] md:p-5">
         <div className="grid gap-1">

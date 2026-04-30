@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readApiSessionFromRequest } from "@/lib/server-auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import type { AppData, Company, Offer, Redemption, User } from "@/lib/types";
+import type { AppData, AppNotification, Company, Offer, Redemption, User } from "@/lib/types";
 
 type ConsumerActionPayload =
   | { action: "getData"; userId: string }

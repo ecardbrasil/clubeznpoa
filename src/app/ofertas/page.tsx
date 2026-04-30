@@ -63,7 +63,7 @@ const mapLocalOffers = (): PublicOffer[] => {
   const companiesById = new Map(data.companies.map((company) => [company.id, company]));
 
   return data.offers
-    .filter((offer) => offer.approved && !offer.rejected && companiesById.has(offer.companyId))
+    .filter((offer) => companiesById.has(offer.companyId))
     .map((offer) => {
       const company = companiesById.get(offer.companyId);
       return {

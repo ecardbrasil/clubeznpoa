@@ -48,7 +48,6 @@ const sortByCreatedAtDesc = <T extends { createdAt: string }>(items: T[]) =>
 const sortByCreatedAtAsc = <T extends { createdAt: string }>(items: T[]) =>
   [...items].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-const getOfferStatusLabel = (_offer: Offer) => "Ativa";
 
 const getUserStatusLabel = (item: User) => {
   if (item.blocked) return "Bloqueado";
@@ -296,9 +295,7 @@ export default function AdminPage() {
 
     const last7DaysStart = nowTimestamp - 7 * 24 * 60 * 60 * 1000;
 
-    const pendingCompanies = sortByCreatedAtAsc(data.companies.filter((company) => !company.approved));
-    const pendingOffers = sortByCreatedAtAsc(data.offers.filter((offer) => !offer.approved && !offer.rejected));
-    const approvedCompanies = data.companies.filter((company) => company.approved).length;
+    const approvedCompanies = data.companies.length;
 
     const redemptionsByStatus = {
       generated: data.redemptions.filter((item) => item.status === "generated").length,
@@ -350,7 +347,7 @@ export default function AdminPage() {
       .map((company) => ({
         id: `c-${company.id}`,
         createdAt: company.createdAt,
-        label: company.approved ? "Empresa aprovada" : "Nova empresa pendente",
+        label: "Empresa cadastrada",
         detail: `${company.name} • ${company.category} • ${company.neighborhood}`,
       }));
 
@@ -361,7 +358,7 @@ export default function AdminPage() {
         return {
           id: `o-${offer.id}`,
           createdAt: offer.createdAt,
-          label: `Oferta ${getOfferStatusLabel(offer).toLowerCase()}`,
+          label: "Oferta cadastrada",
           detail: `${offer.title} • ${company?.name ?? "Parceiro"}`,
         };
       });
@@ -371,8 +368,6 @@ export default function AdminPage() {
       .slice(0, 12);
 
     return {
-      pendingCompanies,
-      pendingOffers,
       approvedCompanies,
       redemptionsByStatus,
       usedIn7Days,
@@ -383,7 +378,7 @@ export default function AdminPage() {
         companiesTotal: data.companies.length,
         companiesApproved: approvedCompanies,
         offersTotal: data.offers.length,
-        offersApproved: data.offers.filter((offer) => offer.approved).length,
+        offersApproved: data.offers.length,
         redemptionsGenerated: redemptionsByStatus.generated,
         redemptionsUsed: redemptionsByStatus.used,
       },
@@ -404,8 +399,6 @@ export default function AdminPage() {
             setSidebarOpen(false);
           }
         }}
-        pendingCompanies={dashboard.pendingCompanies.length}
-        pendingOffers={dashboard.pendingOffers.length}
         onLogout={() => {
           clearSession();
           router.push("/auth");
@@ -416,10 +409,10 @@ export default function AdminPage() {
         {section === "dashboard" && (
           <>
             <section className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-              <MetricCard label="Empresas ativas" value={dashboard.approvedCompanies} helper="Empresas publicadas" />
-              <MetricCard label="Empresas pendentes" value={dashboard.pendingCompanies.length} helper="Sem moderação automática" />
-              <MetricCard label="Ofertas pendentes" value={dashboard.pendingOffers.length} helper="Sem moderação automática" />
+              <MetricCard label="Empresas ativas" value={dashboard.approvedCompanies} helper="Empresas cadastradas" />
+              <MetricCard label="Ofertas totais" value={dashboard.funnel.offersTotal} helper="Ofertas cadastradas" />
               <MetricCard label="Resgates usados (7 dias)" value={dashboard.usedIn7Days} helper="Janela móvel semanal" />
+              <MetricCard label="Taxa conversão" value={dashboard.conversionRate} helper="% de resgates usados" />
             </section>
 
             <section className="grid gap-2.5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] xl:items-start">
@@ -468,24 +461,16 @@ export default function AdminPage() {
                     Abrir empresas
                   </button>
                 </div>
-                {dashboard.pendingCompanies.slice(0, 3).map((company) => (
-                  <div key={company.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
-                    <p style={{ margin: 0, fontWeight: 700 }}>{company.name}</p>
+                {dashboard.topOffers.slice(0, 3).map((item) => (
+                  <div key={item.offer?.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
+                    <p style={{ margin: 0, fontWeight: 700 }}>{item.offer?.title}</p>
                     <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                      Criada há {getAgeLabel(company.createdAt)} • {company.category}
+                      {item.total} resgate(s) confirmados
                     </p>
                   </div>
                 ))}
-                {dashboard.pendingOffers.slice(0, 3).map((offer) => (
-                  <div key={offer.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
-                    <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
-                    <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                      Criada há {getAgeLabel(offer.createdAt)}
-                    </p>
-                  </div>
-                ))}
-                {dashboard.pendingCompanies.length === 0 && dashboard.pendingOffers.length === 0 && (
-                  <p style={{ margin: 0 }}>Sem itens pendentes no momento.</p>
+                {dashboard.topOffers.length === 0 && (
+                  <p style={{ margin: 0 }}>Sem dados de resgate ainda.</p>
                 )}
               </article>
             </section>

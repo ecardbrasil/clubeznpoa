@@ -30,7 +30,15 @@
       "Bash(rm -rf .next node_modules/@next/swc-win32-x64-msvc)",
       "Bash(npm install *)",
       "Bash(taskkill /PID 11832 /F)",
-      "PowerShell(Stop-Process -Id 11832 -Force -ErrorAction SilentlyContinue)"
+      "PowerShell(Stop-Process -Id 11832 -Force -ErrorAction SilentlyContinue)",
+      "Bash(taskkill /PID 16948 /F)",
+      "Bash(timeout 2)",
+      "Bash(curl -s http://localhost:3000/auth)",
+      "Bash(git reset *)",
+      "Bash(curl -s -H \"User-Agent: Mozilla/5.0 \\(iPhone; CPU iPhone OS 14_6 like Mac OS X\\)\" http://localhost:3000/admin)",
+      "Bash(curl -s http://localhost:3001/auth)",
+      "Bash(curl -s http://localhost:3000/partner)",
+      "Bash(del *)"
     ]
   }
 }

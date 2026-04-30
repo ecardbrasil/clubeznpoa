@@ -1,12 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
-import { clearSession } from "@/lib/storage";
-import type { User } from "@/lib/types";
 
 type HeaderLink = {
   label: string;
@@ -55,7 +52,6 @@ export function SiteHeader({
   className = "",
   actionsSlot,
 }: SiteHeaderProps) {
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -69,13 +65,6 @@ export function SiteHeader({
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [mobileOpen]);
-
-  function handleLogout() {
-    clearSession();
-    setUser(null);
-    setMobileOpen(false);
-    router.push("/auth");
-  }
 
   const rootClassName = [
     sticky ? "sticky top-0 z-30" : "",
@@ -103,13 +92,13 @@ export function SiteHeader({
         {/* Desktop actions */}
         <div className="hidden items-center gap-2 md:flex">
           <Link
-            href="/auth"
+            href="/auth?tab=login"
             className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-xs font-bold text-[#1b2a20] no-underline"
           >
             Entrar
           </Link>
           <Link
-            href="/auth"
+            href="/auth?tab=register"
             className="rounded-full bg-[#13210f] px-3 py-2 text-xs font-black text-white no-underline"
           >
             Cadastrar
@@ -152,41 +141,20 @@ export function SiteHeader({
           </nav>
 
           <div className="mt-2 grid gap-2 border-t border-[#e7eddc] pt-2">
-            {user ? (
-              <>
-                <Link
-                  href={dashboardHref}
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-center text-xs font-bold text-[#1b2a20] no-underline"
-                >
-                  {dashboardLabel}
-                </Link>
-                <button
-                  type="button"
-                  className="rounded-full bg-[#13210f] px-3 py-2 text-xs font-black text-white"
-                  onClick={handleLogout}
-                >
-                  Sair
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-center text-xs font-bold text-[#1b2a20] no-underline"
-                >
-                  Entrar
-                </Link>
-                <Link
-                  href="/auth"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-full bg-[#13210f] px-3 py-2 text-center text-xs font-black text-white no-underline"
-                >
-                  Cadastrar
-                </Link>
-              </>
-            )}
+            <Link
+              href="/auth?tab=login"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-center text-xs font-bold text-[#1b2a20] no-underline"
+            >
+              Entrar
+            </Link>
+            <Link
+              href="/auth?tab=register"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-full bg-[#13210f] px-3 py-2 text-center text-xs font-black text-white no-underline"
+            >
+              Cadastrar
+            </Link>
           </div>
         </div>
       )}

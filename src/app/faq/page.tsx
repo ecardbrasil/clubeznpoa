@@ -11,7 +11,7 @@ const faqItems = [
   },
   {
     question: "Quem pode participar?",
-    answer: "Moradores da Zona Norte e empresas parceiras aprovadas pela plataforma.",
+    answer: "Moradores da Zona Norte e empresas parceiras cadastradas na plataforma.",
   },
   {
     question: "Posso divulgar minha empresa no ClubeZN?",
@@ -22,7 +22,6 @@ const faqItems = [
 export default function FaqPage() {
   return (
     <PublicStaticPage
-      subtitle="Suporte"
       title="Perguntas frequentes"
       description="Respostas rápidas para dúvidas comuns sobre a plataforma."
     >

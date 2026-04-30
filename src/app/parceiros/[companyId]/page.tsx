@@ -62,7 +62,6 @@ const mapSupabaseCompany = (row: SupabaseCompanyRow): Company => ({
   city: row.city,
   state: row.state,
   ownerUserId: "",
-  approved: row.approved,
   logoImage: row.logo_image ?? undefined,
   coverImage: row.cover_image ?? undefined,
   addressLine: row.address_line ?? undefined,
@@ -95,7 +94,7 @@ export default function PartnerPublicProfilePage() {
           localCompany === null
             ? []
             : data.offers
-                .filter((offer) => offer.companyId === localCompany.id && !offer.rejected)
+                .filter((offer) => offer.companyId === localCompany.id)
                 .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                 .map((offer) => ({
                   id: offer.id,
@@ -230,7 +229,7 @@ export default function PartnerPublicProfilePage() {
   if (!hasCompany || !company) {
     return (
       <main className="mx-auto grid min-h-screen w-full max-w-[1200px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6">
-        <PublicPageHeader subtitle="Perfil público do parceiro" />
+        <PublicPageHeader />
         <section className="card grid gap-2 text-center">
           <h1 className="m-0 text-2xl font-black text-[#0f1a13]">Parceiro não encontrado</h1>
           <p className="m-0 text-sm text-[var(--muted)]">
@@ -243,7 +242,7 @@ export default function PartnerPublicProfilePage() {
 
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
-      <PublicPageHeader subtitle="Perfil público do parceiro" />
+      <PublicPageHeader />
 
       <section className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[var(--shadow-soft)] md:p-4">
         {company.coverImage ? (
