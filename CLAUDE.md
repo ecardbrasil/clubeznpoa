@@ -185,7 +185,7 @@ npm run lint
 
 ## Contato & Suporte
 
-**Email do projeto**: ecardbrasil@gmail.com
+**Email do projeto**: contato@clubezn.com
 
 ---
 

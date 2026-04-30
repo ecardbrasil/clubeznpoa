@@ -889,8 +889,8 @@ export default function LandingPage() {
           </div>
           <div className="rounded-lg border border-[#e7eddc] bg-[#f8fbf4] p-4 space-y-2">
             <p className="text-xs font-black uppercase tracking-[0.12em] text-[#0a0f0c]">★ Contato</p>
-            <a href="mailto:ecardbrasil@gmail.com" className="block font-semibold text-[#0a0f0c] no-underline hover:text-[#C9F549] transition-colors">
-              ecardbrasil@gmail.com
+            <a href="mailto:contato@clubezn.com" className="block font-semibold text-[#0a0f0c] no-underline hover:text-[#C9F549] transition-colors">
+              contato@clubezn.com
             </a>
             <p className="text-xs text-[#556b61]">Zona Norte, Porto Alegre/RS</p>
           </div>

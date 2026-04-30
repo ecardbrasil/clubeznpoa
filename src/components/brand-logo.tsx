@@ -7,13 +7,15 @@ import { useState } from "react";
 interface BrandLogoProps {
   href?: string;
   small?: boolean;
+  scale?: number;
 }
 
-export function BrandLogo({ href = "/", small = false }: BrandLogoProps) {
+export function BrandLogo({ href = "/", small = false, scale = 1 }: BrandLogoProps) {
   const [imgError, setImgError] = useState(false);
   const logoSize = small ? "h-7 w-auto md:h-8" : "h-8 w-auto md:h-10";
   const fallbackIconSize = small ? "h-7 w-7 text-base" : "h-8 w-8 text-lg md:h-10 md:w-10 md:text-xl";
   const fallbackTextSize = small ? "text-2xl" : "text-2xl md:text-3xl";
+  const scaleStyle = scale !== 1 ? { transform: `scale(${scale})`, transformOrigin: "left center" } : undefined;
 
   return (
     <Link href={href} className="inline-flex items-center no-underline" aria-label="ClubeZN">
@@ -25,10 +27,11 @@ export function BrandLogo({ href = "/", small = false }: BrandLogoProps) {
           height={67}
           priority
           className={logoSize}
+          style={scaleStyle}
           onError={() => setImgError(true)}
         />
       ) : (
-        <span className="inline-flex items-center gap-2">
+        <span className="inline-flex items-center gap-2" style={scaleStyle}>
           <span
             className={`inline-flex ${fallbackIconSize} items-center justify-center bg-[#C9F549] font-black leading-none text-[#0A140E]`}
             style={{ borderRadius: 2 }}

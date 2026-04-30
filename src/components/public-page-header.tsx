@@ -6,7 +6,5 @@ type PublicPageHeaderProps = {
 };
 
 export function PublicPageHeader({ smallLogo = false, sticky = false }: PublicPageHeaderProps) {
-  return (
-    <SiteHeader smallLogo={smallLogo} sticky={sticky} className="rounded-2xl border-[var(--line)] md:px-4" />
-  );
+  return <SiteHeader smallLogo={smallLogo} logoScale={1.2} sticky={sticky} className="border-[var(--line)] md:px-4" />;
 }

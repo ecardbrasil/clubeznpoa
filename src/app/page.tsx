@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
+  ChevronLeft,
   ChevronRight,
   Handshake,
   Heart,
@@ -90,6 +91,8 @@ const footerLinks = {
     { label: "Suporte", href: "/suporte" },
   ],
 };
+
+const searchHints = ["Salão de Beleza", "Colégio Particular", "Restaurante"];
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : typeof error === "string" ? error : fallback;
@@ -233,13 +236,56 @@ const mapSupabaseLandingData = async () => {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl bg-white border border-[#e7eddc] overflow-hidden animate-pulse">
-      <div className="h-48 bg-[#e7eddc]" />
-      <div className="p-4 space-y-3">
-        <div className="h-4 bg-[#e7eddc] rounded w-3/4" />
-        <div className="h-3 bg-[#e7eddc] rounded w-1/2" />
-        <div className="h-8 bg-[#e7eddc] rounded-lg w-full mt-2" />
+    <div className="flex h-full min-h-[460px] flex-col gap-3 p-4 animate-pulse">
+      <div className="relative -mx-4 -mt-4 aspect-square overflow-hidden bg-[#e7eddc]">
+        <div className="absolute left-3 top-3 h-5 w-24 rounded-full bg-white/75" />
+        <div className="absolute right-3 top-3 flex gap-1.5 rounded-full bg-black/25 px-2 py-1">
+          <div className="h-3 w-3 rounded-full bg-[#c9f549]" />
+          <div className="h-3 w-3 rounded-full bg-[#c9f549]/70" />
+        </div>
       </div>
+      <div className="h-4 rounded-full bg-[#e7eddc]" />
+      <div className="h-6 w-4/5 rounded-full bg-[#e7eddc]" />
+      <div className="space-y-2">
+        <div className="h-3 rounded-full bg-[#e7eddc]" />
+        <div className="h-3 rounded-full bg-[#e7eddc] w-11/12" />
+        <div className="h-3 rounded-full bg-[#e7eddc] w-4/5" />
+      </div>
+      <div className="mt-auto h-4 w-3/5 rounded-full bg-[#e7eddc]" />
+    </div>
+  );
+}
+
+function AnimatedSearchHint() {
+  const [hintIndex, setHintIndex] = useState(0);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setHintIndex((current) => (current + 1) % searchHints.length);
+    }, 2200);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const activeHint = searchHints[hintIndex];
+
+  return (
+    <div className="pointer-events-none absolute inset-y-0 left-12 flex items-center pr-24 text-sm font-medium">
+      <span className="whitespace-nowrap text-[#44584c]">Pesquisar</span>
+      <span className="relative ml-2 h-5 overflow-hidden whitespace-nowrap text-[#1e3228]">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={activeHint}
+            className="absolute left-0 top-0"
+            initial={{ y: 16, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -16, opacity: 0 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+          >
+            {activeHint}
+          </motion.span>
+        </AnimatePresence>
+      </span>
     </div>
   );
 }
@@ -253,7 +299,13 @@ export default function HomePage() {
   const [partnerProfiles, setPartnerProfiles] = useState<Company[]>([]);
   const [loadError, setLoadError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [canScrollTrendingOffersPrev, setCanScrollTrendingOffersPrev] = useState(false);
+  const [canScrollTrendingOffersNext, setCanScrollTrendingOffersNext] = useState(false);
+  const [canScrollOffersPrev, setCanScrollOffersPrev] = useState(false);
+  const [canScrollOffersNext, setCanScrollOffersNext] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const trendingOffersTrackRef = useRef<HTMLDivElement>(null);
+  const featuredOffersTrackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -276,6 +328,62 @@ export default function HomePage() {
     return () => { cancelled = true; };
   }, []);
 
+  useEffect(() => {
+    const track = trendingOffersTrackRef.current;
+    if (!track) return;
+
+    const updateScrollState = () => {
+      const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+      setCanScrollTrendingOffersPrev(track.scrollLeft > 4);
+      setCanScrollTrendingOffersNext(track.scrollLeft < maxScrollLeft - 4);
+    };
+
+    updateScrollState();
+    track.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      track.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [trendingOffers.length]);
+
+  useEffect(() => {
+    const track = featuredOffersTrackRef.current;
+    if (!track) return;
+
+    const updateScrollState = () => {
+      const maxScrollLeft = Math.max(0, track.scrollWidth - track.clientWidth);
+      setCanScrollOffersPrev(track.scrollLeft > 4);
+      setCanScrollOffersNext(track.scrollLeft < maxScrollLeft - 4);
+    };
+
+    updateScrollState();
+    track.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      track.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [featuredOffers.length]);
+
+  const scrollTrendingOffers = (direction: -1 | 1) => {
+    const track = trendingOffersTrackRef.current;
+    if (!track) return;
+
+    const distance = Math.max(track.clientWidth * 0.82, 280);
+    track.scrollBy({ left: direction * distance, behavior: "smooth" });
+  };
+
+  const scrollFeaturedOffers = (direction: -1 | 1) => {
+    const track = featuredOffersTrackRef.current;
+    if (!track) return;
+
+    const distance = Math.max(track.clientWidth * 0.82, 280);
+    track.scrollBy({ left: direction * distance, behavior: "smooth" });
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const q = searchQuery.trim();
@@ -286,9 +394,6 @@ export default function HomePage() {
   return (
     <main className="min-h-screen w-full overflow-x-hidden" style={{ background: "var(--bg)" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap');
-        :root { --font-poppins: 'Poppins', sans-serif; --font-dm: 'DM Sans', sans-serif; }
-
         .czn-search-wrap { position: relative; }
         .czn-search-wrap:focus-within .czn-search-icon { color: #1e3228; }
 
@@ -317,9 +422,57 @@ export default function HomePage() {
           border-radius: 50%; pointer-events: none;
         }
 
-        .czn-offer-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-        @media (min-width: 640px) { .czn-offer-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1024px) { .czn-offer-grid { grid-template-columns: repeat(4, 1fr); } }
+        .czn-offer-carousel {
+          position: relative;
+        }
+        .czn-offer-carousel-track {
+          display: flex;
+          gap: 16px;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          scroll-padding-inline: 16px;
+          padding: 2px 2px 10px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .czn-offer-carousel-track::-webkit-scrollbar {
+          display: none;
+        }
+        .czn-offer-slide {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: stretch;
+          width: min(82vw, 320px);
+          scroll-snap-align: start;
+        }
+        @media (min-width: 768px) {
+          .czn-offer-slide {
+            width: 340px;
+          }
+        }
+        .czn-carousel-button {
+          width: 44px;
+          height: 44px;
+          border-radius: 9999px;
+          border: 1px solid #dfe5d4;
+          background: #fff;
+          color: #1e3228;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 18px rgba(17, 35, 24, 0.08);
+          transition: all 0.2s ease;
+          cursor: pointer;
+        }
+        .czn-carousel-button:hover:not(:disabled) {
+          border-color: #C9F549;
+          background: #f3f6f1;
+        }
+        .czn-carousel-button:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
 
         .czn-partner-card {
           background: #fff; border: 1.5px solid #dfe5d4; border-radius: 16px;
@@ -408,15 +561,18 @@ export default function HomePage() {
           <form onSubmit={handleSearch} className="czn-search-wrap">
             <div className="flex items-center gap-2 rounded-xl border-2 border-[#dfe5d4] bg-[#f3f6f1] px-4 py-3 focus-within:border-[#1e3228] transition-colors">
               <Search size={18} className="czn-search-icon text-[#44584c] shrink-0 transition-colors" />
-              <input
-                ref={searchRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar ofertas, parceiros, bairros..."
-                className="flex-1 bg-transparent text-sm font-medium text-[#18231c] placeholder:text-[#44584c] outline-none"
-                style={{ fontFamily: "var(--font-dm)" }}
-              />
+              <div className="relative flex-1 min-w-0">
+                {!searchQuery && <AnimatedSearchHint />}
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Pesquisar"
+                  className="w-full min-w-0 bg-transparent text-sm font-medium text-[#18231c] outline-none placeholder:text-transparent"
+                  style={{ fontFamily: "var(--font-dm)" }}
+                />
+              </div>
               {searchQuery && (
                 <button
                   type="button"
@@ -428,10 +584,11 @@ export default function HomePage() {
               )}
               <button
                 type="submit"
-                className="shrink-0 rounded-lg bg-[#1e3228] px-4 py-1.5 text-xs font-bold text-white transition-all hover:bg-[#13210f] active:scale-95"
+                className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#1e3228] text-white transition-all hover:bg-[#13210f] active:scale-95"
                 style={{ fontFamily: "var(--font-poppins)" }}
+                aria-label="Buscar"
               >
-                Buscar
+                <Search size={18} />
               </button>
             </div>
           </form>
@@ -452,111 +609,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Hero Banner */}
-      <section className="czn-hero-banner">
-        <div className="max-w-7xl mx-auto px-4 py-14 md:px-6 md:py-20 relative z-10">
-          <div className="grid gap-8 md:grid-cols-2 md:items-center">
-            <motion.div
-              className="space-y-5"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-            >
-              <motion.span
-                className="inline-flex items-center gap-2 rounded-full border border-[#C9F549]/40 bg-[#C9F549]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#C9F549]"
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.15, duration: 0.5 }}
-              >
-                <MapPin size={12} />
-                Zona Norte, Porto Alegre
-              </motion.span>
-
-              <h1
-                className="text-4xl font-black leading-[1.15] text-white md:text-6xl"
-                style={{ fontFamily: "var(--font-poppins)" }}
-              >
-                Descontos que{" "}
-                <span
-                  className="relative"
-                  style={{
-                    background: "linear-gradient(90deg, #C9F549 0%, #a8d63a 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}
-                >
-                  impactam
-                </span>
-                .<br />
-                Na sua região.
-              </h1>
-
-              <p
-                className="text-lg leading-relaxed text-[#9db8a8] max-w-xl"
-                style={{ fontFamily: "var(--font-dm)" }}
-              >
-                Parceiros locais da Zona Norte com ofertas reais. Simples de resgatar, perto de
-                você.
-              </p>
-
-              <div className="flex flex-wrap gap-3 pt-1">
-                <Link
-                  href="/ofertas"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#C9F549] px-6 py-3.5 text-sm font-black text-[#0a0f0c] no-underline transition-all hover:bg-[#d4f75e] hover:shadow-lg hover:shadow-[#C9F549]/25 active:scale-95"
-                  style={{ fontFamily: "var(--font-poppins)" }}
-                >
-                  Ver ofertas
-                  <ArrowRight size={16} />
-                </Link>
-                <Link
-                  href="/auth?tab=register"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-bold text-white no-underline backdrop-blur transition-all hover:bg-white/20 active:scale-95"
-                  style={{ fontFamily: "var(--font-poppins)" }}
-                >
-                  Cadastrar grátis
-                </Link>
-              </div>
-            </motion.div>
-
-            {/* Stats grid */}
-            <motion.div
-              className="grid grid-cols-2 gap-4"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.7 }}
-            >
-              {[
-                { value: "8+", label: "Bairros cobertos", icon: MapPin },
-                { value: "100+", label: "Parceiros ativos", icon: Store },
-                { value: "1000+", label: "Ofertas disponíveis", icon: Tag },
-                { value: "0%", label: "Taxa para consumidor", icon: Wallet },
-              ].map((stat, i) => (
-                <motion.div
-                  key={stat.label}
-                  className="rounded-2xl border border-white/10 bg-white/8 p-5 backdrop-blur-sm"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + i * 0.08, duration: 0.5 }}
-                  style={{ background: "rgba(255,255,255,0.06)" }}
-                >
-                  <stat.icon size={20} className="mb-2" style={{ color: "#C9F549" }} />
-                  <p
-                    className="text-3xl font-black text-white"
-                    style={{ fontFamily: "var(--font-poppins)" }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-[#9db8a8] mt-0.5" style={{ fontFamily: "var(--font-dm)" }}>
-                    {stat.label}
-                  </p>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* Main content */}
       <div className="max-w-7xl mx-auto px-4 py-10 md:px-6 space-y-14">
 
@@ -567,14 +619,34 @@ export default function HomePage() {
               <span className="czn-section-label">✦ Em destaque</span>
               <h2 className="czn-section-title">Ofertas da semana</h2>
             </div>
-            <Link
-              href="/ofertas"
-              className="flex items-center gap-1.5 rounded-xl border border-[#dfe5d4] bg-white px-4 py-2.5 text-sm font-bold text-[#1e3228] no-underline transition-all hover:border-[#C9F549] hover:bg-[#f3f6f1]"
-              style={{ fontFamily: "var(--font-poppins)" }}
-            >
-              Ver tudo
-              <ChevronRight size={16} />
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="czn-carousel-button"
+                onClick={() => scrollTrendingOffers(-1)}
+                disabled={!canScrollTrendingOffersPrev}
+                aria-label="Ver ofertas anteriores"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                className="czn-carousel-button"
+                onClick={() => scrollTrendingOffers(1)}
+                disabled={!canScrollTrendingOffersNext}
+                aria-label="Ver próximas ofertas"
+              >
+                <ChevronRight size={18} />
+              </button>
+              <Link
+                href="/ofertas"
+                className="flex items-center gap-1.5 rounded-xl border border-[#dfe5d4] bg-white px-4 py-2.5 text-sm font-bold text-[#1e3228] no-underline transition-all hover:border-[#C9F549] hover:bg-[#f3f6f1]"
+                style={{ fontFamily: "var(--font-poppins)" }}
+              >
+                Ver todas
+                <ChevronRight size={16} />
+              </Link>
+            </div>
           </div>
 
           {loadError && (
@@ -584,14 +656,19 @@ export default function HomePage() {
           )}
 
           {loading ? (
-            <div className="czn-offer-grid">
-              {[...Array(8)].map((_, i) => <SkeletonCard key={i} />)}
+            <div ref={trendingOffersTrackRef} className="czn-offer-carousel-track">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="czn-offer-slide">
+                  <SkeletonCard />
+                </div>
+              ))}
             </div>
           ) : trendingOffers.length > 0 ? (
-            <div className="czn-offer-grid">
+            <div ref={trendingOffersTrackRef} className="czn-offer-carousel-track">
               {trendingOffers.map((offer, idx) => (
                 <motion.div
                   key={offer.id}
+                  className="czn-offer-slide"
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05, duration: 0.5 }}
@@ -602,6 +679,7 @@ export default function HomePage() {
                     actionLabel="Resgatar"
                     actionHref="/auth"
                     secondaryLabel="Ver detalhes"
+                    variant="landing-carousel"
                   />
                 </motion.div>
               ))}
@@ -611,6 +689,115 @@ export default function HomePage() {
               Novas ofertas em breve!
             </p>
           ) : null}
+        </section>
+
+        {/* Hero Banner */}
+        <section className="czn-hero-banner rounded-2xl">
+          <div className="max-w-7xl mx-auto px-4 py-14 md:px-6 md:py-20 relative z-10">
+            <div className="grid gap-8 md:grid-cols-2 md:items-center">
+              <motion.div
+                className="space-y-5"
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7 }}
+                viewport={{ once: true }}
+              >
+                <motion.span
+                  className="inline-flex items-center gap-2 rounded-full border border-[#C9F549]/40 bg-[#C9F549]/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-[#C9F549]"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.15, duration: 0.5 }}
+                  viewport={{ once: true }}
+                >
+                  <MapPin size={12} />
+                  Zona Norte, Porto Alegre
+                </motion.span>
+
+                <h1
+                  className="text-4xl font-black leading-[1.15] text-white md:text-6xl"
+                  style={{ fontFamily: "var(--font-poppins)" }}
+                >
+                  Descontos que{" "}
+                  <span
+                    className="relative"
+                    style={{
+                      background: "linear-gradient(90deg, #C9F549 0%, #a8d63a 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    impactam
+                  </span>
+                  .<br />
+                  Na sua região.
+                </h1>
+
+                <p
+                  className="text-lg leading-relaxed text-[#9db8a8] max-w-xl"
+                  style={{ fontFamily: "var(--font-dm)" }}
+                >
+                  Parceiros locais da Zona Norte com ofertas reais. Simples de resgatar, perto de
+                  você.
+                </p>
+
+                <div className="flex flex-wrap gap-3 pt-1">
+                  <Link
+                    href="/ofertas"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#C9F549] px-6 py-3.5 text-sm font-black text-[#0a0f0c] no-underline transition-all hover:bg-[#d4f75e] hover:shadow-lg hover:shadow-[#C9F549]/25 active:scale-95"
+                    style={{ fontFamily: "var(--font-poppins)" }}
+                  >
+                    Ver ofertas
+                    <ArrowRight size={16} />
+                  </Link>
+                  <Link
+                    href="/auth?tab=register"
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-bold text-white no-underline backdrop-blur transition-all hover:bg-white/20 active:scale-95"
+                    style={{ fontFamily: "var(--font-poppins)" }}
+                  >
+                    Cadastrar grátis
+                  </Link>
+                </div>
+              </motion.div>
+
+              {/* Stats grid */}
+              <motion.div
+                className="grid grid-cols-2 gap-4"
+                initial={{ opacity: 0, x: 24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.7 }}
+                viewport={{ once: true }}
+              >
+                {[
+                  { value: "8+", label: "Bairros cobertos", icon: MapPin },
+                  { value: "100+", label: "Parceiros ativos", icon: Store },
+                  { value: "1000+", label: "Ofertas disponíveis", icon: Tag },
+                  { value: "0%", label: "Taxa para consumidor", icon: Wallet },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    className="rounded-2xl border border-white/10 bg-white/8 p-5 backdrop-blur-sm"
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + i * 0.08, duration: 0.5 }}
+                    viewport={{ once: true }}
+                    style={{ background: "rgba(255,255,255,0.06)" }}
+                  >
+                    <stat.icon size={20} className="mb-2" style={{ color: "#C9F549" }} />
+                    <p
+                      className="text-3xl font-black text-white"
+                      style={{ fontFamily: "var(--font-poppins)" }}
+                    >
+                      {stat.value}
+                    </p>
+                    <p className="text-xs text-[#9db8a8] mt-0.5" style={{ fontFamily: "var(--font-dm)" }}>
+                      {stat.label}
+                    </p>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </div>
         </section>
 
         {/* Promo Category Tiles */}
@@ -736,19 +923,40 @@ export default function HomePage() {
                 <span className="czn-section-label">✦ Mais ofertas</span>
                 <h2 className="czn-section-title">Não perca essas oportunidades</h2>
               </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="czn-carousel-button"
+                  onClick={() => scrollFeaturedOffers(-1)}
+                  disabled={!canScrollOffersPrev}
+                  aria-label="Ver ofertas anteriores"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="czn-carousel-button"
+                  onClick={() => scrollFeaturedOffers(1)}
+                  disabled={!canScrollOffersNext}
+                  aria-label="Ver próximas ofertas"
+                >
+                  <ChevronRight size={18} />
+                </button>
               <Link
                 href="/ofertas"
                 className="flex items-center gap-1.5 rounded-xl border border-[#dfe5d4] bg-white px-4 py-2.5 text-sm font-bold text-[#1e3228] no-underline transition-all hover:border-[#C9F549] hover:bg-[#f3f6f1]"
                 style={{ fontFamily: "var(--font-poppins)" }}
               >
-                Ver tudo
+                Ver todas
                 <ChevronRight size={16} />
               </Link>
+              </div>
             </div>
-            <div className="czn-offer-grid">
+            <div ref={featuredOffersTrackRef} className="czn-offer-carousel-track">
               {featuredOffers.map((offer, idx) => (
                 <motion.div
                   key={offer.id}
+                  className="czn-offer-slide"
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05, duration: 0.5 }}
@@ -759,6 +967,7 @@ export default function HomePage() {
                     actionLabel="Resgatar"
                     actionHref="/auth"
                     secondaryLabel="Ver detalhes"
+                    variant="landing-carousel"
                   />
                 </motion.div>
               ))}
@@ -892,7 +1101,7 @@ export default function HomePage() {
                   <Heart size={16} />
                 </a>
                 <a
-                  href="mailto:ecardbrasil@gmail.com"
+                  href="mailto:contato@clubezn.com"
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-all hover:border-[#C9F549] hover:text-[#C9F549]"
                   style={{ background: "rgba(255,255,255,0.06)" }}
                   aria-label="Email ClubeZN"
@@ -949,8 +1158,8 @@ export default function HomePage() {
                 Contato
               </p>
               <div className="space-y-2 text-sm" style={{ fontFamily: "var(--font-dm)" }}>
-                <a href="mailto:ecardbrasil@gmail.com" className="block">
-                  ecardbrasil@gmail.com
+                <a href="mailto:contato@clubezn.com" className="block">
+                  contato@clubezn.com
                 </a>
                 <div className="flex items-center gap-1.5 text-[#9db8a8]">
                   <MapPin size={13} style={{ color: "#C9F549" }} />

@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { Star } from "lucide-react";
 import type { Offer } from "@/lib/types";
 
 export type OfferCardData = Pick<
@@ -27,6 +29,7 @@ type OfferCardProps = {
   onAction?: () => void;
   secondaryLabel?: string;
   secondaryHref?: string;
+  variant?: "default" | "landing-carousel";
 };
 
 type PartnerSocial = {
@@ -94,6 +97,7 @@ export function OfferCard({
   onAction,
   secondaryLabel,
   secondaryHref,
+  variant = "default",
 }: OfferCardProps) {
   const [open, setOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -102,8 +106,10 @@ export function OfferCard({
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [distanceLoading, setDistanceLoading] = useState(false);
 
+  const isLandingCarousel = variant === "landing-carousel";
   const imageCount = offer.images.length;
   const currentImage = imageCount > 0 ? offer.images[activeImageIndex % imageCount] : "";
+  const galleryStars = isLandingCarousel && imageCount > 0 ? Array.from({ length: Math.min(imageCount, 3) }) : [];
 
   const isClickable = Boolean(actionHref || onAction || secondaryHref);
 
@@ -302,7 +308,7 @@ export function OfferCard({
   return (
     <>
       <article
-        className={`card !grid !gap-3 !rounded-2xl ${isClickable ? "cursor-pointer" : ""}`}
+        className={`card ${isLandingCarousel ? "flex flex-col gap-3" : "!grid !gap-3 !rounded-2xl"} ${isClickable ? "cursor-pointer" : ""}`}
         onClick={() => setOpen(true)}
         role={isClickable ? "button" : undefined}
         tabIndex={isClickable ? 0 : -1}
@@ -316,74 +322,162 @@ export function OfferCard({
             setOpen(true);
           }
         }}
+        style={
+          isLandingCarousel
+            ? ({
+                background: "transparent",
+                border: "none",
+                borderRadius: 0,
+                boxShadow: "none",
+                padding: 16,
+                minHeight: 460,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+              } satisfies CSSProperties)
+            : undefined
+        }
       >
-        {currentImage ? (
-          <div style={{ position: "relative" }}>
+        <div
+          style={
+            isLandingCarousel
+              ? ({
+                  position: "relative",
+                  width: "calc(100% + 32px)",
+                  margin: "-16px -16px 0",
+                  aspectRatio: "1 / 1",
+                  overflow: "hidden",
+                  background: "#dfe5d4",
+                } satisfies CSSProperties)
+              : ({ position: "relative" } satisfies CSSProperties)
+          }
+        >
+          {currentImage ? (
             <Image
               alt={`Capa da oferta ${offer.title}`}
-              height={120}
+              fill={isLandingCarousel}
+              height={isLandingCarousel ? undefined : 120}
               src={currentImage}
               unoptimized
-              width={320}
-              style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 }}
+              width={isLandingCarousel ? undefined : 320}
+              sizes={isLandingCarousel ? "(max-width: 768px) 82vw, 320px" : undefined}
+              style={
+                isLandingCarousel
+                  ? ({ objectFit: "cover", objectPosition: "center" } satisfies CSSProperties)
+                  : ({ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 } satisfies CSSProperties)
+              }
             />
-            {offer.isHot ? (
-              <span
-                className="badge"
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  left: 8,
-                  background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)",
-                  color: "#0f1a13",
-                  fontFamily: "var(--font-poppins), sans-serif",
-                }}
-              >
-                🔥 Quente agora
-              </span>
-            ) : null}
-            {hasGallery && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 6,
-                  right: 8,
-                  background: "rgba(0,0,0,0.55)",
-                  color: "white",
-                  borderRadius: 999,
-                  padding: "2px 8px",
-                  fontSize: 11,
-                  fontWeight: 700,
-                }}
-              >
-                {imageCount} fotos
-              </div>
-            )}
-          </div>
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              height: 120,
-              borderRadius: 10,
-              border: "1px solid var(--line)",
-              display: "grid",
-              placeItems: "center",
-              color: "var(--muted)",
-              fontWeight: 700,
-              fontSize: 12,
-            }}
-          >
-            Sem foto
-          </div>
-        )}
+          ) : (
+            <div
+              style={
+                isLandingCarousel
+                  ? ({
+                      position: "absolute",
+                      inset: 0,
+                      display: "grid",
+                      placeItems: "center",
+                      color: "var(--muted)",
+                      fontWeight: 700,
+                      fontSize: 12,
+                      background: "linear-gradient(135deg, rgba(255,255,255,0.55), rgba(223,229,212,0.85))",
+                    } satisfies CSSProperties)
+                  : ({
+                      width: "100%",
+                      height: 120,
+                      borderRadius: 10,
+                      border: "1px solid var(--line)",
+                      display: "grid",
+                      placeItems: "center",
+                      color: "var(--muted)",
+                      fontWeight: 700,
+                      fontSize: 12,
+                    } satisfies CSSProperties)
+              }
+            >
+              Sem foto
+            </div>
+          )}
+          {offer.isHot ? (
+            <span
+              className="badge"
+              style={{
+                position: "absolute",
+                top: 8,
+                left: 8,
+                background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)",
+                color: "#0f1a13",
+                fontFamily: "var(--font-poppins), sans-serif",
+              }}
+            >
+              🔥 Quente agora
+            </span>
+          ) : null}
+          {isLandingCarousel && galleryStars.length > 0 ? (
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 3,
+                borderRadius: 999,
+                padding: "5px 8px",
+                background: "rgba(10, 15, 12, 0.55)",
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              {galleryStars.map((_, index) => (
+                <Star
+                  key={index}
+                  size={11}
+                  fill="#C9F549"
+                  color="#C9F549"
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         <div className="flex items-center justify-between gap-2 text-xs text-[var(--muted)]">
           <span className="badge badge-accent">{offer.discountLabel}</span>
           <span style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.neighborhood}</span>
         </div>
-        <h4 className="m-0 text-lg leading-tight text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700 }}>{offer.title}</h4>
-        <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.description}</p>
+        <h4
+          className="m-0 text-lg leading-tight text-[#0f1a13]"
+          style={
+            isLandingCarousel
+              ? ({
+                  fontFamily: "var(--font-poppins), sans-serif",
+                  fontWeight: 700,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                } satisfies CSSProperties)
+              : ({ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700 } satisfies CSSProperties)
+          }
+        >
+          {offer.title}
+        </h4>
+        <p
+          className="m-0 text-sm text-[var(--muted)]"
+          style={
+            isLandingCarousel
+              ? ({
+                  fontFamily: "var(--font-dm), sans-serif",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  minHeight: 54,
+                } satisfies CSSProperties)
+              : ({ fontFamily: "var(--font-dm), sans-serif" } satisfies CSSProperties)
+          }
+        >
+          {offer.description}
+        </p>
         <div className="grid gap-1.5">
           <div className="flex items-center gap-2">
             {offer.partnerLogoImage ? (
@@ -399,14 +493,14 @@ export function OfferCard({
             <Link
               href={partnerProfileHref}
               onClick={(event) => event.stopPropagation()}
-              className="m-0 text-xs font-semibold uppercase tracking-wide text-[var(--muted)] hover:text-[var(--brand)] hover:underline"
+              className="m-0 min-w-0 truncate text-xs font-semibold uppercase tracking-wide text-[var(--muted)] hover:text-[var(--brand)] hover:underline"
               style={{ fontFamily: "var(--font-dm), sans-serif" }}
             >
               {subtitle}
             </Link>
           </div>
           {offer.partnerAddressLine ? (
-            <p className="m-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.partnerAddressLine}</p>
+            <p className="m-0 truncate text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.partnerAddressLine}</p>
           ) : null}
         </div>
       </article>

@@ -13,6 +13,7 @@ type HeaderLink = {
 type SiteHeaderProps = {
   subtitle?: string;
   smallLogo?: boolean;
+  logoScale?: number;
   sticky?: boolean;
   links?: HeaderLink[];
   className?: string;
@@ -47,6 +48,7 @@ function NavLink({ href, children, onClick }: { href: string; children: ReactNod
 export function SiteHeader({
   subtitle,
   smallLogo = true,
+  logoScale = 1.2,
   sticky = false,
   links = publicLinks,
   className = "",
@@ -68,7 +70,7 @@ export function SiteHeader({
 
   const rootClassName = [
     sticky ? "sticky top-0 z-30" : "",
-    "rounded-full border border-[#d6e88c] bg-white/95 px-4 py-3 shadow-[var(--shadow-soft)] backdrop-blur md:px-6",
+    "border border-[#d6e88c] bg-white/95 px-4 py-3 backdrop-blur md:px-6",
     className,
   ]
     .join(" ")
@@ -78,7 +80,7 @@ export function SiteHeader({
   return (
     <header className={rootClassName}>
       <div className="flex items-center justify-between gap-3">
-        <BrandLogo small={smallLogo} />
+        <BrandLogo small={smallLogo} scale={logoScale} />
 
         {/* Desktop nav */}
         <nav aria-label="Navegação principal" className="hidden items-center gap-5 md:flex">
@@ -93,13 +95,13 @@ export function SiteHeader({
         <div className="hidden items-center gap-2 md:flex">
           <Link
             href="/auth?tab=login"
-            className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-xs font-bold text-[#1b2a20] no-underline"
+            className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-4 py-2.5 text-sm font-bold text-[#1b2a20] no-underline"
           >
             Entrar
           </Link>
           <Link
             href="/auth?tab=register"
-            className="rounded-full bg-[#13210f] px-3 py-2 text-xs font-black text-white no-underline"
+            className="rounded-full bg-[var(--brand-accent)] px-4 py-2.5 text-sm font-black text-[#0f1a13] no-underline"
           >
             Cadastrar
           </Link>
@@ -126,7 +128,7 @@ export function SiteHeader({
       {mobileOpen && (
         <div
           ref={mobileMenuRef}
-          className="mt-3 grid gap-1 rounded-2xl border border-[#d6e88c] bg-white p-3 md:hidden"
+          className="mt-3 grid gap-1 border border-[#d6e88c] bg-white p-3 md:hidden"
         >
           <nav aria-label="Navegação mobile" className="grid gap-1">
             {links.map((item) => (
@@ -144,14 +146,14 @@ export function SiteHeader({
             <Link
               href="/auth?tab=login"
               onClick={() => setMobileOpen(false)}
-              className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-center text-xs font-bold text-[#1b2a20] no-underline"
+              className="min-h-12 rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-4 py-3 text-center text-sm font-bold text-[#1b2a20] no-underline"
             >
               Entrar
             </Link>
             <Link
               href="/auth?tab=register"
               onClick={() => setMobileOpen(false)}
-              className="rounded-full bg-[#13210f] px-3 py-2 text-center text-xs font-black text-white no-underline"
+              className="min-h-12 rounded-full bg-[var(--brand-accent)] px-4 py-3 text-center text-sm font-black text-[#0f1a13] no-underline"
             >
               Cadastrar
             </Link>
