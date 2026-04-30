@@ -28,7 +28,9 @@
       "Bash(curl -s http://localhost:3000/termos-de-uso)",
       "Bash(npm --version)",
       "Bash(rm -rf .next node_modules/@next/swc-win32-x64-msvc)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(taskkill /PID 11832 /F)",
+      "PowerShell(Stop-Process -Id 11832 -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }

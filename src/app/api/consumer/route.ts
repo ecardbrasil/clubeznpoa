@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readApiSessionFromRequest } from "@/lib/server-auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import type { AppData, AppNotification, Company, Offer, Redemption, User } from "@/lib/types";
+import type { AppData, Company, Offer, Redemption, User } from "@/lib/types";
 
 type ConsumerActionPayload =
   | { action: "getData"; userId: string }
@@ -38,8 +38,6 @@ type OfferRow = {
   category: string;
   neighborhood: string;
   images: string[] | null;
-  approved: boolean;
-  rejected: boolean;
   created_at: string;
 };
 
@@ -52,7 +50,6 @@ type CompanyRow = {
   city: string;
   state: string;
   owner_user_id: string;
-  approved: boolean;
   logo_image: string | null;
   cover_image: string | null;
   address_line: string | null;
@@ -80,7 +77,7 @@ type NotificationRow = {
   user_id: string;
   company_id: string | null;
   offer_id: string | null;
-  type: "company_approved" | "offer_approved" | "offer_rejected";
+  type: "info";
   title: string;
   message: string;
   read: boolean;
@@ -117,8 +114,6 @@ const mapOfferRow = (row: OfferRow): Offer => ({
   category: row.category,
   neighborhood: row.neighborhood,
   images: Array.isArray(row.images) ? row.images : [],
-  approved: row.approved,
-  rejected: row.rejected,
   createdAt: row.created_at,
 });
 
@@ -131,7 +126,6 @@ const mapCompanyRow = (row: CompanyRow): Company => ({
   city: row.city,
   state: row.state,
   ownerUserId: row.owner_user_id,
-  approved: row.approved,
   logoImage: row.logo_image ?? undefined,
   coverImage: row.cover_image ?? undefined,
   addressLine: row.address_line ?? undefined,
@@ -193,16 +187,13 @@ const getDashboardData = async (userId: string): Promise<{ data?: AppData; error
       .maybeSingle<UserRow>(),
     supabase
       .from("offers")
-      .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, created_at")
-      .eq("approved", true)
-      .eq("rejected", false)
+      .select("id, company_id, title, description, discount_label, category, neighborhood, images, created_at")
       .order("created_at", { ascending: false }),
     supabase
       .from("companies")
       .select(
-        "id, name, public_name, category, neighborhood, city, state, owner_user_id, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
-      )
-      .eq("approved", true),
+        "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
+      ),
     supabase.from("redemptions").select("id, user_id, offer_id, code, status, created_at, expires_at, used_at").eq("user_id", userId),
     supabase.from("notifications").select("id, user_id, company_id, offer_id, type, title, message, read, created_at").eq("user_id", userId),
   ]);
@@ -273,11 +264,11 @@ export async function POST(request: Request) {
 
       const { data: offer, error: offerError } = await supabase
         .from("offers")
-        .select("id, company_id, approved, rejected")
+        .select("id, company_id")
         .eq("id", offerId)
         .maybeSingle();
 
-      if (offerError || !offer || offer.rejected || !offer.approved) {
+      if (offerError || !offer) {
         return NextResponse.json({ error: "Oferta indisponível para resgate." }, { status: 400 });
       }
 
@@ -285,7 +276,6 @@ export async function POST(request: Request) {
         .from("companies")
         .select("id")
         .eq("id", offer.company_id)
-        .eq("approved", true)
         .maybeSingle();
 
       if (companyError || !company) {

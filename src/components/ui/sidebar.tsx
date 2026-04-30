@@ -128,25 +128,38 @@ export const MobileSidebar = ({
       </div>
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ x: "-100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "-100%", opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="fixed inset-0 z-[100] flex h-full w-full flex-col bg-white p-4"
-          >
-            <div className="mb-3 flex justify-end">
-              <button
-                type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)]"
-                onClick={() => setOpen(false)}
-                aria-label="Fechar menu lateral"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            {children}
-          </motion.div>
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[99] bg-black/40 md:hidden"
+              onClick={() => setOpen(false)}
+              aria-hidden="true"
+            />
+            {/* Drawer panel — max 280px, not full width */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="fixed inset-y-0 left-0 z-[100] flex h-full w-[280px] max-w-[85vw] flex-col bg-white p-4 shadow-xl md:hidden"
+            >
+              <div className="mb-3 flex justify-end">
+                <button
+                  type="button"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)]"
+                  onClick={() => setOpen(false)}
+                  aria-label="Fechar menu lateral"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              {children}
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>

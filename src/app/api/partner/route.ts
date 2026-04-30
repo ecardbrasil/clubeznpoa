@@ -58,8 +58,6 @@ type OfferRow = {
   category: string;
   neighborhood: string;
   images: string[] | null;
-  approved: boolean;
-  rejected: boolean;
   created_at: string;
 };
 
@@ -79,7 +77,7 @@ type NotificationRow = {
   user_id: string;
   company_id: string | null;
   offer_id: string | null;
-  type: "company_approved" | "offer_approved" | "offer_rejected";
+  type: "info";
   title: string;
   message: string;
   read: boolean;
@@ -90,7 +88,6 @@ type CompanyIdentityRow = {
   id: string;
   owner_user_id: string;
   name: string;
-  approved: boolean;
 };
 
 type StatusResponse = {
@@ -122,8 +119,6 @@ const mapOfferRow = (row: OfferRow): Offer => ({
   category: row.category,
   neighborhood: row.neighborhood,
   images: Array.isArray(row.images) ? row.images : [],
-  approved: row.approved,
-  rejected: row.rejected,
   createdAt: row.created_at,
 });
 
@@ -157,7 +152,7 @@ const loadOwnedCompany = async (
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from("companies")
-    .select("id, owner_user_id, name, approved")
+    .select("id, owner_user_id, name")
     .eq("id", companyId)
     .eq("owner_user_id", ownerUserId)
     .maybeSingle<CompanyIdentityRow>();
@@ -182,7 +177,7 @@ const getDashboardData = async (companyId: string, ownerUserId: string): Promise
 
   const { data: offersData, error: offersError } = await supabase
     .from("offers")
-    .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, created_at")
+    .select("id, company_id, title, description, discount_label, category, neighborhood, images, created_at")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
   if (offersError) return { error: "Falha ao carregar ofertas da empresa." };
@@ -203,7 +198,7 @@ const getDashboardData = async (companyId: string, ownerUserId: string): Promise
     supabase
       .from("companies")
       .select(
-        "id, name, public_name, category, neighborhood, city, state, owner_user_id, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
+        "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
       )
       .eq("id", companyId)
       .eq("owner_user_id", ownerUserId)
@@ -320,7 +315,6 @@ type CompanyRow = {
   city: string;
   state: string;
   owner_user_id: string;
-  approved: boolean;
   logo_image: string | null;
   cover_image: string | null;
   address_line: string | null;
@@ -341,7 +335,6 @@ const mapCompanyRow = (row: CompanyRow): Company => ({
   city: row.city,
   state: row.state,
   ownerUserId: row.owner_user_id,
-  approved: row.approved,
   logoImage: row.logo_image ?? undefined,
   coverImage: row.cover_image ?? undefined,
   addressLine: row.address_line ?? undefined,
@@ -392,7 +385,7 @@ export async function POST(request: Request) {
       const { data, error } = await supabase
         .from("companies")
         .select(
-          "id, name, public_name, category, neighborhood, city, state, owner_user_id, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
+          "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
         )
         .eq("id", companyId)
         .eq("owner_user_id", ownerUserId)
@@ -444,7 +437,7 @@ export async function POST(request: Request) {
         .eq("id", companyId)
         .eq("owner_user_id", ownerUserId)
         .select(
-          "id, name, public_name, category, neighborhood, city, state, owner_user_id, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
+          "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
         )
         .single<CompanyRow>();
 
@@ -460,9 +453,6 @@ export async function POST(request: Request) {
       if (!owned.company) {
         return owned.response;
       }
-      if (!owned.company.approved) {
-        return NextResponse.json({ error: "Sua empresa ainda está pendente de aprovação. Aguarde para publicar ofertas." }, { status: 403 });
-      }
 
       const payload = body.payload;
       const now = nowIso();
@@ -475,15 +465,13 @@ export async function POST(request: Request) {
         category: payload.category.trim(),
         neighborhood: payload.neighborhood.trim(),
         images: payload.images.slice(0, 5),
-        approved: false,
-        rejected: false,
         created_at: now,
       };
 
       const { data, error } = await supabase
         .from("offers")
         .insert(insertPayload)
-        .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, created_at")
+        .select("id, company_id, title, description, discount_label, category, neighborhood, images, created_at")
         .single<OfferRow>();
 
       if (error || !data) {

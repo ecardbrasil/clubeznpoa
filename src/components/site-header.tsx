@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
-import { clearSession, getCurrentUser, routeByRole } from "@/lib/storage";
+import { clearSession } from "@/lib/storage";
 import type { User } from "@/lib/types";
 
 type HeaderLink = {
@@ -29,11 +29,6 @@ const publicLinks: HeaderLink[] = [
   { label: "Para empresas", href: "/#empresas" },
 ];
 
-const dashboardLabelByRole: Record<User["role"], string> = {
-  consumer: "Painel do Consumidor",
-  partner: "Painel do Parceiro",
-  admin: "Painel Admin",
-};
 
 function NavLink({ href, children, onClick }: { href: string; children: ReactNode; onClick?: () => void }) {
   const isAnchor = href.startsWith("#") || href.startsWith("/#");
@@ -61,13 +56,8 @@ export function SiteHeader({
   actionsSlot,
 }: SiteHeaderProps) {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setUser(getCurrentUser());
-  }, []);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -95,8 +85,6 @@ export function SiteHeader({
     .join(" ")
     .trim();
 
-  const dashboardHref = user ? routeByRole(user.role) : "/auth";
-  const dashboardLabel = user ? dashboardLabelByRole[user.role] : "";
 
   return (
     <header className={rootClassName}>
@@ -114,38 +102,18 @@ export function SiteHeader({
 
         {/* Desktop actions */}
         <div className="hidden items-center gap-2 md:flex">
-          {user ? (
-            <>
-              <Link
-                href={dashboardHref}
-                className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-xs font-bold text-[#1b2a20] no-underline"
-              >
-                {dashboardLabel}
-              </Link>
-              <button
-                type="button"
-                className="rounded-full bg-[#13210f] px-3 py-2 text-xs font-black text-white"
-                onClick={handleLogout}
-              >
-                Sair
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/auth"
-                className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-xs font-bold text-[#1b2a20] no-underline"
-              >
-                Entrar
-              </Link>
-              <Link
-                href="/auth"
-                className="rounded-full bg-[#13210f] px-3 py-2 text-xs font-black text-white no-underline"
-              >
-                Cadastrar
-              </Link>
-            </>
-          )}
+          <Link
+            href="/auth"
+            className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-3 py-2 text-xs font-bold text-[#1b2a20] no-underline"
+          >
+            Entrar
+          </Link>
+          <Link
+            href="/auth"
+            className="rounded-full bg-[#13210f] px-3 py-2 text-xs font-black text-white no-underline"
+          >
+            Cadastrar
+          </Link>
           {actionsSlot}
         </div>
 

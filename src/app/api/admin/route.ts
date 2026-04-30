@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { readApiSessionFromRequest } from "@/lib/server-auth";
-import type { AppData, AppNotification, Company, Offer, Redemption, User } from "@/lib/types";
+import type { AppData, Company, Offer, Redemption, User } from "@/lib/types";
 
 type AdminActionPayload =
   | { action: "getDashboardData" }
-  | { action: "approveCompany"; companyId: string }
-  | { action: "approveOffer"; offerId: string }
-  | { action: "rejectOffer"; offerId: string }
   | { action: "deleteOffer"; offerId: string }
   | { action: "blockUser"; userId: string }
   | { action: "unblockUser"; userId: string }
@@ -35,7 +32,6 @@ type CompanyRow = {
   city: string;
   state: string;
   owner_user_id: string;
-  approved: boolean;
   logo_image: string | null;
   cover_image: string | null;
   address_line: string | null;
@@ -56,8 +52,6 @@ type OfferRow = {
   category: string;
   neighborhood: string;
   images: string[] | null;
-  approved: boolean;
-  rejected: boolean;
   created_at: string;
 };
 
@@ -77,7 +71,7 @@ type NotificationRow = {
   user_id: string;
   company_id: string | null;
   offer_id: string | null;
-  type: "company_approved" | "offer_approved" | "offer_rejected";
+  type: "info";
   title: string;
   message: string;
   read: boolean;
@@ -85,20 +79,6 @@ type NotificationRow = {
 };
 
 const nowIso = () => new Date().toISOString();
-
-const createNotification = (
-  input: Omit<AppNotification, "id" | "createdAt" | "read">,
-): Omit<NotificationRow, "read" | "created_at"> & { read: boolean; created_at: string } => ({
-  id: `n_${crypto.randomUUID()}`,
-  user_id: input.userId,
-  company_id: input.companyId ?? null,
-  offer_id: input.offerId ?? null,
-  type: input.type,
-  title: input.title,
-  message: input.message,
-  read: false,
-  created_at: nowIso(),
-});
 
 const mapUserRow = (row: UserRow): User => ({
   id: row.id,
@@ -121,7 +101,6 @@ const mapCompanyRow = (row: CompanyRow): Company => ({
   city: row.city,
   state: row.state,
   ownerUserId: row.owner_user_id,
-  approved: row.approved,
   logoImage: row.logo_image ?? undefined,
   coverImage: row.cover_image ?? undefined,
   addressLine: row.address_line ?? undefined,
@@ -142,8 +121,6 @@ const mapOfferRow = (row: OfferRow): Offer => ({
   category: row.category,
   neighborhood: row.neighborhood,
   images: Array.isArray(row.images) ? row.images : [],
-  approved: row.approved,
-  rejected: row.rejected,
   createdAt: row.created_at,
 });
 
@@ -186,11 +163,11 @@ const getDashboardData = async (): Promise<{ data?: AppData; error?: string }> =
     supabase
       .from("companies")
       .select(
-        "id, name, public_name, category, neighborhood, city, state, owner_user_id, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
+        "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
       ),
     supabase
       .from("offers")
-      .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, created_at"),
+      .select("id, company_id, title, description, discount_label, category, neighborhood, images, created_at"),
     supabase.from("redemptions").select("id, user_id, offer_id, code, status, created_at, expires_at, used_at"),
     supabase.from("notifications").select("id, user_id, company_id, offer_id, type, title, message, read, created_at"),
   ]);
@@ -208,102 +185,6 @@ const getDashboardData = async (): Promise<{ data?: AppData; error?: string }> =
       notifications: ((notificationsRes.data ?? []) as NotificationRow[]).map(mapNotificationRow),
     },
   };
-};
-
-const loadOfferContext = async (offerId: string): Promise<{ offer?: OfferRow; company?: CompanyRow; error?: string }> => {
-  const supabase = getSupabaseServerClient();
-  const { data: offer, error: offerError } = await supabase
-    .from("offers")
-    .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, created_at")
-    .eq("id", offerId)
-    .maybeSingle<OfferRow>();
-
-  if (offerError || !offer) {
-    return { error: "Oferta não encontrada." };
-  }
-
-  const { data: company, error: companyError } = await supabase
-    .from("companies")
-    .select(
-      "id, name, public_name, category, neighborhood, city, state, owner_user_id, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
-    )
-    .eq("id", offer.company_id)
-    .maybeSingle<CompanyRow>();
-
-  if (companyError || !company) {
-    return { error: "Empresa da oferta não encontrada." };
-  }
-
-  return { offer, company };
-};
-
-const approveCompany = async (companyId: string): Promise<{ error?: string }> => {
-  const supabase = getSupabaseServerClient();
-  const { data: company, error: companyError } = await supabase
-    .from("companies")
-    .select(
-      "id, name, public_name, category, neighborhood, city, state, owner_user_id, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
-    )
-    .eq("id", companyId)
-    .maybeSingle<CompanyRow>();
-
-  if (companyError || !company) return { error: "Empresa não encontrada." };
-
-  const { error: updateError } = await supabase.from("companies").update({ approved: true }).eq("id", companyId);
-  if (updateError) return { error: "Falha ao aprovar empresa." };
-
-  const notification = createNotification({
-    userId: company.owner_user_id,
-    companyId: company.id,
-    type: "company_approved",
-    title: "Empresa aprovada",
-    message: `Sua empresa ${company.public_name ?? company.name} foi aprovada e já pode publicar ofertas.`,
-  });
-
-  await supabase.from("notifications").insert(notification);
-  return {};
-};
-
-const approveOffer = async (offerId: string): Promise<{ error?: string }> => {
-  const supabase = getSupabaseServerClient();
-  const context = await loadOfferContext(offerId);
-  if (!context.offer || !context.company) return { error: context.error || "Oferta não encontrada." };
-
-  const { error: updateError } = await supabase.from("offers").update({ approved: true, rejected: false }).eq("id", offerId);
-  if (updateError) return { error: "Falha ao aprovar oferta." };
-
-  const notification = createNotification({
-    userId: context.company.owner_user_id,
-    companyId: context.company.id,
-    offerId: context.offer.id,
-    type: "offer_approved",
-    title: "Oferta aprovada",
-    message: `A oferta "${context.offer.title}" foi aprovada pelo administrador.`,
-  });
-
-  await supabase.from("notifications").insert(notification);
-  return {};
-};
-
-const rejectOffer = async (offerId: string): Promise<{ error?: string }> => {
-  const supabase = getSupabaseServerClient();
-  const context = await loadOfferContext(offerId);
-  if (!context.offer || !context.company) return { error: context.error || "Oferta não encontrada." };
-
-  const { error: updateError } = await supabase.from("offers").update({ approved: false, rejected: true }).eq("id", offerId);
-  if (updateError) return { error: "Falha ao rejeitar oferta." };
-
-  const notification = createNotification({
-    userId: context.company.owner_user_id,
-    companyId: context.company.id,
-    offerId: context.offer.id,
-    type: "offer_rejected",
-    title: "Oferta rejeitada",
-    message: `A oferta "${context.offer.title}" foi rejeitada. Revise os dados e envie novamente.`,
-  });
-
-  await supabase.from("notifications").insert(notification);
-  return {};
 };
 
 const deleteOffer = async (offerId: string): Promise<{ error?: string }> => {
@@ -394,30 +275,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: output.error || "Falha ao carregar painel admin." }, { status: 500 });
       }
       return NextResponse.json({ data: output.data });
-    }
-
-    if (body.action === "approveCompany") {
-      const output = await approveCompany(body.companyId);
-      if (output.error) {
-        return NextResponse.json({ error: output.error }, { status: 500 });
-      }
-      return NextResponse.json({ ok: true });
-    }
-
-    if (body.action === "approveOffer") {
-      const output = await approveOffer(body.offerId);
-      if (output.error) {
-        return NextResponse.json({ error: output.error }, { status: 500 });
-      }
-      return NextResponse.json({ ok: true });
-    }
-
-    if (body.action === "rejectOffer") {
-      const output = await rejectOffer(body.offerId);
-      if (output.error) {
-        return NextResponse.json({ error: output.error }, { status: 500 });
-      }
-      return NextResponse.json({ ok: true });
     }
 
     if (body.action === "deleteOffer") {

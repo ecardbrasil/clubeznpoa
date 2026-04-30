@@ -7,8 +7,6 @@ import { useToast } from "@/components/ui/toast";
 import { isSupabaseMode } from "@/lib/runtime-config";
 import { AppData, Company, Offer, Redemption, User, UserRole } from "@/lib/types";
 import {
-  approveCompany as approveLocalCompany,
-  approveOffer as approveLocalOffer,
   blockUser as blockLocalUser,
   clearSession,
   deleteUser as deleteLocalUser,
@@ -16,7 +14,6 @@ import {
   getAuthHeaders,
   getCurrentUser,
   getData,
-  rejectOffer as rejectLocalOffer,
   routeByRole,
   syncRedemptionExpirations,
   unblockUser as unblockLocalUser,
@@ -51,11 +48,7 @@ const sortByCreatedAtDesc = <T extends { createdAt: string }>(items: T[]) =>
 const sortByCreatedAtAsc = <T extends { createdAt: string }>(items: T[]) =>
   [...items].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-const getOfferStatusLabel = (offer: Offer) => {
-  if (offer.rejected) return "Rejeitada";
-  if (!offer.approved) return "Pendente";
-  return "Ativa";
-};
+const getOfferStatusLabel = (_offer: Offer) => "Ativa";
 
 const getUserStatusLabel = (item: User) => {
   if (item.blocked) return "Bloqueado";
@@ -196,21 +189,14 @@ export default function AdminPage() {
     setData(payload.data);
   };
 
-  const handleOfferAction = async (action: "approveOffer" | "rejectOffer" | "deleteOffer", offer: Offer) => {
-    const actionLabel =
-      action === "approveOffer" ? "aprovar" : action === "rejectOffer" ? "rejeitar" : "excluir";
-
-    if (action === "deleteOffer") {
-      const confirmed = window.confirm(`Excluir a oferta "${offer.title}"? Esta ação remove a oferta do sistema.`);
-      if (!confirmed) return;
-    }
+  const handleOfferAction = async (action: "deleteOffer", offer: Offer) => {
+    const confirmed = window.confirm(`Excluir a oferta "${offer.title}"? Esta ação remove a oferta do sistema.`);
+    if (!confirmed) return;
 
     setActingOfferId(offer.id);
     try {
       if (!isSupabaseMode) {
-        if (action === "approveOffer") approveLocalOffer(offer.id);
-        if (action === "rejectOffer") rejectLocalOffer(offer.id);
-        if (action === "deleteOffer") deleteLocalOffer(offer.id);
+        deleteLocalOffer(offer.id);
         reloadLocalData();
       } else {
         const response = await fetch("/api/admin", {
@@ -219,56 +205,21 @@ export default function AdminPage() {
             "Content-Type": "application/json",
             ...getAuthHeaders(),
           },
-          body: JSON.stringify({
-            action,
-            offerId: offer.id,
-          }),
-        });
-
-        const payload = (await response.json().catch(() => null)) as { data?: AppData; ok?: boolean; error?: string } | null;
-        if (!response.ok || payload?.error) {
-          throw new Error(payload?.error || `Falha ao ${actionLabel} oferta.`);
-        }
-        await loadRemoteDashboard();
-      }
-
-      showToast(`Oferta ${action === "approveOffer" ? "aprovada" : action === "rejectOffer" ? "rejeitada" : "excluída"} com sucesso.`, "success");
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : `Falha ao ${actionLabel} oferta.`, "error");
-    } finally {
-      setActingOfferId(null);
-    }
-  };
-
-  const handleCompanyApprove = async (company: Company) => {
-    try {
-      if (!isSupabaseMode) {
-        approveLocalCompany(company.id);
-        reloadLocalData();
-      } else {
-        const response = await fetch("/api/admin", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders(),
-          },
-          body: JSON.stringify({
-            action: "approveCompany",
-            companyId: company.id,
-          }),
+          body: JSON.stringify({ action, offerId: offer.id }),
         });
 
         const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
         if (!response.ok || payload?.error) {
-          throw new Error(payload?.error || "Falha ao aprovar empresa.");
+          throw new Error(payload?.error || "Falha ao excluir oferta.");
         }
-
         await loadRemoteDashboard();
       }
 
-      showToast("Empresa aprovada com sucesso.", "success");
+      showToast("Oferta excluída com sucesso.", "success");
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "Falha ao aprovar empresa.", "error");
+      showToast(error instanceof Error ? error.message : "Falha ao excluir oferta.", "error");
+    } finally {
+      setActingOfferId(null);
     }
   };
 
@@ -554,7 +505,7 @@ export default function AdminPage() {
         )}
 
         {section === "companies" && (
-          <CompaniesList companies={sortByCreatedAtDesc(data.companies)} onApprove={handleCompanyApprove} />
+          <CompaniesList companies={sortByCreatedAtDesc(data.companies)} />
         )}
 
         {section === "users" && (
@@ -613,13 +564,7 @@ function StatusLine({ label, value }: { label: string; value: number }) {
   );
 }
 
-function CompaniesList({
-  companies,
-  onApprove,
-}: {
-  companies: Company[];
-  onApprove: (company: Company) => Promise<void>;
-}) {
+function CompaniesList({ companies }: { companies: Company[] }) {
   return (
     <section className="card grid gap-2">
       <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Empresas cadastradas</h2>
@@ -630,15 +575,8 @@ function CompaniesList({
             {company.category} • {company.neighborhood} • {company.city}/{company.state}
           </p>
           <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
-            Criada em {formatDate(company.createdAt)} • {company.approved ? "Ativa" : "Inativa"}
+            Criada em {formatDate(company.createdAt)}
           </p>
-          {!company.approved && (
-            <div className="flex flex-wrap gap-2">
-              <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onApprove(company)}>
-                Aprovar empresa
-              </button>
-            </div>
-          )}
         </article>
       ))}
       {companies.length === 0 && <p style={{ margin: 0 }}>Nenhuma empresa cadastrada.</p>}
@@ -730,7 +668,7 @@ function OffersList({
   offers: Offer[];
   companies: Company[];
   actingOfferId: string | null;
-  onAction: (action: "approveOffer" | "rejectOffer" | "deleteOffer", offer: Offer) => Promise<void>;
+  onAction: (action: "deleteOffer", offer: Offer) => Promise<void>;
 }) {
   const companyById = new Map(companies.map((company) => [company.id, company]));
   return (
@@ -747,19 +685,9 @@ function OffersList({
             </p>
             <p style={{ margin: 0, fontSize: 13 }}>{offer.description}</p>
             <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
-              Criada em {formatDate(offer.createdAt)} • {getOfferStatusLabel(offer)}
+              Criada em {formatDate(offer.createdAt)}
             </p>
             <div className="flex flex-wrap gap-2">
-              {!offer.approved && (
-                <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("approveOffer", offer)} disabled={busy}>
-                  Aprovar
-                </button>
-              )}
-              {!offer.rejected && (
-                <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("rejectOffer", offer)} disabled={busy}>
-                  Rejeitar
-                </button>
-              )}
               <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("deleteOffer", offer)} disabled={busy}>
                 Excluir
               </button>

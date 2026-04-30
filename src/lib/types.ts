@@ -21,7 +21,6 @@ export interface Company {
   city: string;
   state: string;
   ownerUserId: string;
-  approved: boolean;
   logoImage?: string;
   coverImage?: string;
   addressLine?: string;
@@ -42,8 +41,6 @@ export interface Offer {
   category: string;
   neighborhood: string;
   images: string[];
-  approved: boolean;
-  rejected?: boolean;
   createdAt: string;
 }
 
@@ -66,7 +63,7 @@ export interface Session {
   token?: string;
 }
 
-export type NotificationType = "company_approved" | "offer_approved" | "offer_rejected";
+export type NotificationType = "info";
 
 export interface AppNotification {
   id: string;
