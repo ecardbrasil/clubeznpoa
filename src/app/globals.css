@@ -114,8 +114,8 @@ textarea:focus-visible,
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 5px 12px;
+  font-size: 14px;
   font-weight: 700;
   font-family: var(--font-poppins), sans-serif;
   letter-spacing: 0.02em;

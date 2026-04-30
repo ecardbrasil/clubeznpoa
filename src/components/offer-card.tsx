@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Star } from "lucide-react";
 import type { Offer } from "@/lib/types";
 
 export type OfferCardData = Pick<
@@ -109,7 +108,6 @@ export function OfferCard({
   const isLandingCarousel = variant === "landing-carousel";
   const imageCount = offer.images.length;
   const currentImage = imageCount > 0 ? offer.images[activeImageIndex % imageCount] : "";
-  const galleryStars = isLandingCarousel && imageCount > 0 ? Array.from({ length: Math.min(imageCount, 3) }) : [];
 
   const isClickable = Boolean(actionHref || onAction || secondaryHref);
 
@@ -347,26 +345,103 @@ export function OfferCard({
                   margin: "-16px -16px 0",
                   aspectRatio: "1 / 1",
                   overflow: "hidden",
+                  borderRadius: 16,
                   background: "#dfe5d4",
                 } satisfies CSSProperties)
-              : ({ position: "relative" } satisfies CSSProperties)
+              : ({ position: "relative", overflow: "hidden", borderRadius: 10 } satisfies CSSProperties)
           }
         >
           {currentImage ? (
-            <Image
-              alt={`Capa da oferta ${offer.title}`}
-              fill={isLandingCarousel}
-              height={isLandingCarousel ? undefined : 120}
-              src={currentImage}
-              unoptimized
-              width={isLandingCarousel ? undefined : 320}
-              sizes={isLandingCarousel ? "(max-width: 768px) 82vw, 320px" : undefined}
-              style={
-                isLandingCarousel
-                  ? ({ objectFit: "cover", objectPosition: "center" } satisfies CSSProperties)
-                  : ({ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 } satisfies CSSProperties)
-              }
-            />
+            <>
+              <Image
+                alt={`Capa da oferta ${offer.title}`}
+                fill={isLandingCarousel}
+                height={isLandingCarousel ? undefined : 120}
+                src={currentImage}
+                unoptimized
+                width={isLandingCarousel ? undefined : 320}
+                sizes={isLandingCarousel ? "(max-width: 768px) 82vw, 320px" : undefined}
+                style={
+                  isLandingCarousel
+                    ? ({ objectFit: "cover", objectPosition: "center", borderRadius: 16 } satisfies CSSProperties)
+                    : ({ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 } satisfies CSSProperties)
+                }
+              />
+              {hasGallery ? (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Foto anterior"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      goPrev();
+                    }}
+                    onMouseDown={(event) => event.preventDefault()}
+                    style={{
+                      position: "absolute",
+                      left: 8,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: 34,
+                      height: 34,
+                      borderRadius: 999,
+                      border: "1px solid rgba(255,255,255,0.35)",
+                      background: "rgba(0,0,0,0.55)",
+                      color: "white",
+                      display: "grid",
+                      placeItems: "center",
+                      zIndex: 2,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {"<"}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Próxima foto"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      goNext();
+                    }}
+                    onMouseDown={(event) => event.preventDefault()}
+                    style={{
+                      position: "absolute",
+                      right: 8,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: 34,
+                      height: 34,
+                      borderRadius: 999,
+                      border: "1px solid rgba(255,255,255,0.35)",
+                      background: "rgba(0,0,0,0.55)",
+                      color: "white",
+                      display: "grid",
+                      placeItems: "center",
+                      zIndex: 2,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {">"}
+                  </button>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 8,
+                      right: 8,
+                      background: "rgba(0,0,0,0.55)",
+                      color: "white",
+                      borderRadius: 999,
+                      padding: "2px 8px",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      zIndex: 2,
+                    }}
+                  >
+                    {activeImageIndex + 1}/{imageCount}
+                  </div>
+                </>
+              ) : null}
+            </>
           ) : (
             <div
               style={
@@ -393,56 +468,43 @@ export function OfferCard({
                       fontSize: 12,
                     } satisfies CSSProperties)
               }
-            >
+              >
               Sem foto
             </div>
           )}
-          {offer.isHot ? (
-            <span
-              className="badge"
-              style={{
-                position: "absolute",
-                top: 8,
-                left: 8,
-                background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)",
-                color: "#0f1a13",
-                fontFamily: "var(--font-poppins), sans-serif",
-              }}
-            >
-              🔥 Quente agora
-            </span>
-          ) : null}
-          {isLandingCarousel && galleryStars.length > 0 ? (
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 3,
-                borderRadius: 999,
-                padding: "5px 8px",
-                background: "rgba(10, 15, 12, 0.55)",
-                backdropFilter: "blur(10px)",
-              }}
-            >
-              {galleryStars.map((_, index) => (
-                <Star
-                  key={index}
-                  size={11}
-                  fill="#C9F549"
-                  color="#C9F549"
-                />
-              ))}
-            </div>
-          ) : null}
+          <div
+            style={{
+              position: "absolute",
+              top: 8,
+              left: 8,
+              display: "grid",
+              gap: 6,
+              zIndex: 1,
+            }}
+          >
+            <span className="badge badge-accent">{offer.discountLabel}</span>
+            {offer.isHot ? (
+              <span
+                className="badge"
+                style={{
+                  background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)",
+                  color: "#0f1a13",
+                  fontFamily: "var(--font-poppins), sans-serif",
+                }}
+              >
+                🔥 Quente agora
+              </span>
+            ) : null}
+          </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 text-xs text-[var(--muted)]">
-          <span className="badge badge-accent">{offer.discountLabel}</span>
-          <span style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.neighborhood}</span>
+        <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+          <span className="min-w-0 truncate font-semibold text-[var(--brand)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+            {offer.companyName}
+          </span>
+          <span className="shrink-0" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+            {offer.neighborhood}
+          </span>
         </div>
         <h4
           className="m-0 text-lg leading-tight text-[#0f1a13]"
@@ -478,31 +540,6 @@ export function OfferCard({
         >
           {offer.description}
         </p>
-        <div className="grid gap-1.5">
-          <div className="flex items-center gap-2">
-            {offer.partnerLogoImage ? (
-              <Image
-                alt={`Logo de ${offer.companyName}`}
-                height={28}
-                src={offer.partnerLogoImage}
-                unoptimized
-                width={28}
-                style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)" }}
-              />
-            ) : null}
-            <Link
-              href={partnerProfileHref}
-              onClick={(event) => event.stopPropagation()}
-              className="m-0 min-w-0 truncate text-xs font-semibold uppercase tracking-wide text-[var(--muted)] hover:text-[var(--brand)] hover:underline"
-              style={{ fontFamily: "var(--font-dm), sans-serif" }}
-            >
-              {subtitle}
-            </Link>
-          </div>
-          {offer.partnerAddressLine ? (
-            <p className="m-0 truncate text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>{offer.partnerAddressLine}</p>
-          ) : null}
-        </div>
       </article>
 
       {open && (
@@ -548,7 +585,10 @@ export function OfferCard({
                       <>
                         <button
                           className="btn"
-                          onClick={goPrev}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            goPrev();
+                          }}
                           style={{
                             position: "absolute",
                             left: 8,
@@ -567,7 +607,10 @@ export function OfferCard({
                         </button>
                         <button
                           className="btn"
-                          onClick={goNext}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            goNext();
+                          }}
                           style={{
                             position: "absolute",
                             right: 8,
@@ -641,7 +684,7 @@ export function OfferCard({
                 </span>
                 <p style={{ margin: 0, lineHeight: 1.6, fontFamily: "var(--font-dm), sans-serif", color: "var(--muted)" }}>{offer.description}</p>
                 <div className="offer-modal-metadata">
-                  <span>Bairro: {offer.neighborhood}</span>
+                  <span>{offer.neighborhood}</span>
                   <span>Categoria: {offer.category}</span>
                   <span>Empresa: {offer.companyName}</span>
                   <span>Fotos: {imageCount}</span>
@@ -685,9 +728,8 @@ export function OfferCard({
                         style={{ width: 36, height: 36, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)" }}
                       />
                     ) : null}
-                    <p style={{ margin: 0, fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13" }}>{offer.companyName}</p>
                   </div>
-                  {offer.partnerAddressLine ? <p style={{ margin: 0, fontSize: 13 }}>{offer.partnerAddressLine}</p> : null}
+                  {offer.neighborhood ? <p style={{ margin: 0, fontSize: 13 }}>{offer.neighborhood}</p> : null}
                   {socialLinks.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {socialLinks.map((item) => (
