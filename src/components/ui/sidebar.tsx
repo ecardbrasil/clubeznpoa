@@ -66,7 +66,7 @@ export const SidebarBody = ({ children, ...props }: SidebarBodyProps) => {
   return (
     <>
       <DesktopSidebar {...props}>{children}</DesktopSidebar>
-      <MobileSidebar {...(props as React.ComponentProps<"div">)}>{children}</MobileSidebar>
+      <MobileSidebar>{children}</MobileSidebar>
     </>
   );
 };
@@ -139,25 +139,27 @@ export const MobileSidebar = ({
               onClick={() => setOpen(false)}
               aria-hidden="true"
             />
-            {/* Drawer panel — max 280px, not full width */}
+            {/* Drawer panel — flush left, no margin */}
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="fixed inset-y-0 left-0 z-[100] flex h-full w-[280px] max-w-[85vw] flex-col bg-white p-4 shadow-xl md:hidden"
+              className="fixed inset-y-0 left-0 z-[100] flex h-full w-[70vw] max-w-sm flex-col border-r border-[var(--line)] bg-white shadow-xl md:hidden"
             >
-              <div className="mb-3 flex justify-end">
+              <div className="flex justify-end border-b border-[var(--line)] px-3 py-2">
                 <button
                   type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)]"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)] transition hover:bg-[#f8fbf4]"
                   onClick={() => setOpen(false)}
                   aria-label="Fechar menu lateral"
                 >
                   <X size={18} />
                 </button>
               </div>
-              {children}
+              <div className="flex-1 overflow-y-auto px-3 py-3">
+                {children}
+              </div>
             </motion.div>
           </>
         )}
