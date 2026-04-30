@@ -193,6 +193,58 @@ textarea:focus-visible,
   box-shadow: 0 12px 24px rgba(171, 212, 61, 0.32);
 }
 
+.btn-coupon {
+  position: relative;
+  border: 1px solid #c9b25d;
+  background:
+    radial-gradient(circle at 18px 50%, transparent 0 8px, #f8e8a9 8px 100%) left center / 18px 100% no-repeat,
+    radial-gradient(circle at calc(100% - 18px) 50%, transparent 0 8px, #f8e8a9 8px 100%) right center / 18px 100% no-repeat,
+    linear-gradient(135deg, #f6de7d 0%, #efd15f 100%);
+  color: #5b4300;
+  box-shadow:
+    0 10px 22px rgba(160, 126, 20, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 14px;
+  min-height: 52px;
+  padding-inline: 22px;
+}
+
+.btn-coupon::before,
+.btn-coupon::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid rgba(160, 126, 20, 0.22);
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 2px rgba(255, 248, 218, 0.9);
+}
+
+.btn-coupon::before {
+  left: -7px;
+}
+
+.btn-coupon::after {
+  right: -7px;
+}
+
+.btn-coupon:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #b89634;
+  box-shadow:
+    0 14px 28px rgba(160, 126, 20, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.btn-coupon:active {
+  transform: translateY(0) scale(0.98);
+}
+
 .btn-dark {
   background: #0a0f0c;
   color: #ffffff;

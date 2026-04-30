@@ -134,11 +134,11 @@ export function OfferCard({
   };
 
   const modalAction = actionHref ? (
-    <Link href={actionHref} className="btn btn-primary !w-full text-center">
+    <Link href={actionHref} className="btn btn-coupon !w-full text-center">
       {actionLabel}
     </Link>
   ) : (
-    <button className="btn btn-primary" type="button" onClick={primaryAction}>
+    <button className="btn btn-coupon" type="button" onClick={primaryAction}>
       {actionLabel}
     </button>
   );
@@ -669,6 +669,7 @@ export function OfferCard({
                     🔥 Oferta em alta
                   </span>
                 ) : null}
+                {modalAction}
                 {offer.partnerCoverImage ? (
                   <Image
                     alt={`Capa de ${offer.companyName}`}
@@ -761,7 +762,6 @@ export function OfferCard({
                     {secondaryLabel}
                   </button>
                 ) : null}
-                {modalAction}
               </div>
             </div>
           </article>
