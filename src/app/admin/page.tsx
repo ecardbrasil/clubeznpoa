@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminDashboardSidebar, AdminSection } from "@/components/admin/dashboard-sidebar";
 import { useToast } from "@/components/ui/toast";
@@ -68,12 +68,13 @@ export default function AdminPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const [section, setSection] = useState<AdminSection>("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
+  const sidebarMounted = useRef(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEffect(() => {
     const stored = window.localStorage.getItem("clubezn_admin_sidebar_open_v1");
-    if (stored === null) return true;
-    return stored === "1";
-  });
+    sidebarMounted.current = true;
+    if (stored !== null) setSidebarOpen(stored === "1");
+  }, []);
   const [nowTimestamp, setNowTimestamp] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
   const [actingOfferId, setActingOfferId] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!sidebarMounted.current) return;
     window.localStorage.setItem("clubezn_admin_sidebar_open_v1", sidebarOpen ? "1" : "0");
   }, [sidebarOpen]);
 
@@ -441,7 +442,7 @@ export default function AdminPage() {
   if (!user || loadingData || !data || !dashboard) return <main className="clubezn-shell">Carregando...</main>;
 
   return (
-    <main className="clubezn-shell grid gap-4 lg:grid-cols-[250px_minmax(0,1fr)] lg:items-start">
+    <main className="clubezn-shell grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
       <AdminDashboardSidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { PartnerDashboardSidebar, PartnerSection } from "@/components/partner/dashboard-sidebar";
@@ -75,12 +75,13 @@ const northZoneNeighborhoods = [
 export default function PartnerPage() {
   const router = useRouter();
   const { showToast } = useToast();
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
+  const sidebarMounted = useRef(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEffect(() => {
     const stored = window.localStorage.getItem("clubezn_partner_sidebar_open_v1");
-    if (stored === null) return true;
-    return stored === "1";
-  });
+    sidebarMounted.current = true;
+    if (stored !== null) setSidebarOpen(stored === "1");
+  }, []);
   const [section, setSection] = useState<PartnerSection>("overview");
   const [code, setCode] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -170,7 +171,7 @@ export default function PartnerPage() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!sidebarMounted.current) return;
     window.localStorage.setItem("clubezn_partner_sidebar_open_v1", sidebarOpen ? "1" : "0");
   }, [sidebarOpen]);
 

@@ -25,7 +25,10 @@
       "Bash(rm -rf .next)",
       "Bash(curl -s http://localhost:3001/lgpd)",
       "PowerShell(Get-Process node)",
-      "Bash(curl -s http://localhost:3000/termos-de-uso)"
+      "Bash(curl -s http://localhost:3000/termos-de-uso)",
+      "Bash(npm --version)",
+      "Bash(rm -rf .next node_modules/@next/swc-win32-x64-msvc)",
+      "Bash(npm install *)"
     ]
   }
 }

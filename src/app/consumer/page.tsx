@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ConsumerDashboardSidebar, ConsumerSection } from "@/components/consumer/dashboard-sidebar";
@@ -70,12 +70,13 @@ export default function ConsumerPage() {
   const router = useRouter();
   const { showToast } = useToast();
 
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
+  const sidebarMounted = useRef(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEffect(() => {
     const stored = window.localStorage.getItem("clubezn_consumer_sidebar_open_v1");
-    if (stored === null) return true;
-    return stored === "1";
-  });
+    sidebarMounted.current = true;
+    if (stored !== null) setSidebarOpen(stored === "1");
+  }, []);
   const [section, setSection] = useState<ConsumerSection>("overview");
   const [historyFilter, setHistoryFilter] = useState<RedemptionFilter>("all");
   const [loadingData, setLoadingData] = useState(true);
@@ -91,7 +92,7 @@ export default function ConsumerPage() {
   const [neighborhood, setNeighborhood] = useState("");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!sidebarMounted.current) return;
     window.localStorage.setItem("clubezn_consumer_sidebar_open_v1", sidebarOpen ? "1" : "0");
   }, [sidebarOpen]);
 
