@@ -3,7 +3,6 @@ import { PublicStaticPage } from "@/components/public-static-page";
 export default function PrivacyPage() {
   return (
     <PublicStaticPage
-      subtitle="Legal"
       title="Política de privacidade"
       description="Como coletamos, utilizamos e protegemos seus dados pessoais."
     >

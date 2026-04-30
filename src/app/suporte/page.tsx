@@ -3,7 +3,6 @@ import { PublicStaticPage } from "@/components/public-static-page";
 export default function SupportPage() {
   return (
     <PublicStaticPage
-      subtitle="Links úteis"
       title="Fale com o suporte"
       description="Nosso time está disponível para ajudar moradores e empresas parceiras."
     >

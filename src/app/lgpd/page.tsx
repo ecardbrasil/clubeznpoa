@@ -3,7 +3,6 @@ import { PublicStaticPage } from "@/components/public-static-page";
 export default function LgpdPage() {
   return (
     <PublicStaticPage
-      subtitle="Legal"
       title="LGPD"
       description="Diretrizes de proteção de dados pessoais em conformidade com a legislação brasileira."
     >
