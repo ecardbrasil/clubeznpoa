@@ -80,7 +80,7 @@ const footerLinks = {
   ofertas: [
     { label: "Todas as ofertas", href: "/ofertas" },
     { label: "Parceiros", href: "/parceiros" },
-    { label: "Como funciona", href: "/como-funciona" },
+    { label: "Como funciona", href: "/sobre" },
     { label: "FAQ", href: "/faq" },
   ],
   institucional: [

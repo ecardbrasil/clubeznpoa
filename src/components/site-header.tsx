@@ -22,7 +22,7 @@ type SiteHeaderProps = {
 
 const publicLinks: HeaderLink[] = [
   { label: "Início", href: "/" },
-  { label: "Como funciona", href: "/#como-funciona" },
+  { label: "Como funciona", href: "/sobre" },
   { label: "Ofertas", href: "/ofertas" },
   { label: "Para empresas", href: "/#empresas" },
 ];
