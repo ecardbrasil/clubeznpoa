@@ -467,6 +467,8 @@ export async function POST(request: Request) {
         category: payload.category.trim(),
         neighborhood: payload.neighborhood.trim(),
         images: payload.images.slice(0, 5),
+        approved: true,
+        rejected: false,
         created_at: now,
       };
 
