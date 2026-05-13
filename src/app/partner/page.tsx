@@ -922,214 +922,221 @@ export default function PartnerPage() {
         )}
 
         {section === "profile" && (
-          <section className="card grid gap-2.5">
-            <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Perfil público da empresa</h2>
-            <form onSubmit={saveProfile} className="grid gap-2">
-              <label className="field">
-                  <span>Nome público</span>
-                <input
-                  value={effectivePublicName}
-                  onChange={(event) => setPublicName(event.target.value)}
-                  placeholder="Nome que aparecerá para os clientes"
-                  required
+          <section className="grid gap-2.5">
+            {/* Header de rede social: capa + foto de perfil */}
+            <div
+              style={{
+                position: "relative",
+                borderRadius: 14,
+                overflow: "hidden",
+                background: effectiveCoverImage
+                  ? "transparent"
+                  : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                minHeight: 200,
+              }}
+            >
+              {/* Capa */}
+              {effectiveCoverImage ? (
+                <Image
+                  src={effectiveCoverImage}
+                  alt="Capa da empresa"
+                  width={1200}
+                  height={300}
+                  unoptimized
+                  style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }}
                 />
-              </label>
+              ) : (
+                <div style={{ width: "100%", height: 200, background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }} />
+              )}
 
-              <label className="field">
-                <span>Endereço</span>
-                <input
-                  value={effectiveAddressLine}
-                  onChange={(event) => setAddressLine(event.target.value)}
-                  placeholder="Rua, número, bairro, cidade"
-                  disabled={!effectiveHasPhysicalAddress}
-                />
-              </label>
-              <label className="field">
-                <span>Endereço físico</span>
-                <select
-                  value={effectiveHasPhysicalAddress ? "yes" : "no"}
-                  onChange={(event) => {
-                    const hasAddress = event.target.value === "yes";
-                    setHasPhysicalAddress(hasAddress);
-                    if (!hasAddress) {
-                      setAddressLine("");
-                    }
-                  }}
-                >
-                  <option value="yes">Tenho endereço físico</option>
-                  <option value="no">Não tenho endereço físico</option>
-                </select>
-              </label>
+              {/* Avatar */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: -44,
+                  left: 24,
+                  width: 96,
+                  height: 96,
+                  borderRadius: "50%",
+                  border: "4px solid #fff",
+                  overflow: "hidden",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+                  background: effectiveLogoImage ? "transparent" : "#e0e0e0",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {effectiveLogoImage ? (
+                  <Image
+                    src={effectiveLogoImage}
+                    alt="Logo"
+                    width={96}
+                    height={96}
+                    unoptimized
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="#aaa">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                  </svg>
+                )}
+              </div>
+            </div>
 
-              <label className="field">
-                <span>Descrição</span>
-                <textarea
-                  value={effectiveBio}
-                  onChange={(event) => setBio(event.target.value)}
-                  rows={3}
-                  placeholder="Como a empresa quer se apresentar no público"
-                />
-              </label>
+            {/* Nome */}
+            <div style={{ paddingLeft: 132, marginTop: 4 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>
+                {effectivePublicName || "Sua empresa"}
+              </h2>
+              <p style={{ margin: "2px 0 0", fontSize: 13, color: "var(--muted)" }}>Perfil público da empresa</p>
+            </div>
 
-              <div className="grid gap-2">
+            {/* Formulário */}
+            <div className="card grid gap-2.5" style={{ marginTop: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f1a13" }}>Editar perfil público</h3>
+              <form onSubmit={saveProfile} className="grid gap-2">
                 <label className="field">
-                  <span>Categorias (multi seleção)</span>
+                  <span>Nome público</span>
                   <input
-                    value={profileCategorySearch}
-                    onChange={(event) => setProfileCategorySearch(event.target.value)}
-                    placeholder="Busque e selecione categorias"
+                    value={effectivePublicName}
+                    onChange={(event) => setPublicName(event.target.value)}
+                    placeholder="Nome que aparecerá para os clientes"
+                    required
                   />
                 </label>
 
-                <div className="flex flex-wrap gap-1.5">
-                  {effectiveProfileCategories.map((item) => (
-                    <button
-                      key={`selected-${item}`}
-                      type="button"
-                      className="badge badge-ok"
-                      onClick={() => {
-                        setProfileCategories((current) => (current ?? []).filter((c) => c !== item));
-                      }}
-                      title="Clique para remover"
-                    >
-                      {item} ×
-                    </button>
-                  ))}
-                  {effectiveProfileCategories.length === 0 ? (
-                    <span className="text-xs text-[var(--muted)]">Nenhuma categoria selecionada.</span>
-                  ) : null}
-                </div>
+                <label className="field">
+                  <span>Endereço físico</span>
+                  <select
+                    value={effectiveHasPhysicalAddress ? "yes" : "no"}
+                    onChange={(event) => {
+                      const hasAddress = event.target.value === "yes";
+                      setHasPhysicalAddress(hasAddress);
+                      if (!hasAddress) setAddressLine("");
+                    }}
+                  >
+                    <option value="yes">Tenho endereço físico</option>
+                    <option value="no">Não tenho endereço físico</option>
+                  </select>
+                </label>
 
-                <div className="grid gap-1 rounded-xl border border-[#dce8de] bg-white p-2">
-                  {DEFAULT_CATEGORIES
-                    .filter((item) => {
+                {effectiveHasPhysicalAddress && (
+                  <label className="field">
+                    <span>Endereço</span>
+                    <input value={effectiveAddressLine} onChange={(event) => setAddressLine(event.target.value)} placeholder="Rua, número, bairro, cidade" />
+                  </label>
+                )}
+
+                <label className="field">
+                  <span>Descrição</span>
+                  <textarea value={effectiveBio} onChange={(event) => setBio(event.target.value)} rows={3} placeholder="Como a empresa quer se apresentar no público" />
+                </label>
+
+                <div className="grid gap-2">
+                  <label className="field">
+                    <span>Categorias (multi seleção)</span>
+                    <input value={profileCategorySearch} onChange={(event) => setProfileCategorySearch(event.target.value)} placeholder="Busque e selecione categorias" />
+                  </label>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {effectiveProfileCategories.map((item) => (
+                      <button key={`selected-${item}`} type="button" className="badge badge-ok" onClick={() => setProfileCategories((current) => (current ?? []).filter((c) => c !== item))} title="Clique para remover">
+                        {item} ×
+                      </button>
+                    ))}
+                    {effectiveProfileCategories.length === 0 ? <span className="text-xs text-[var(--muted)]">Nenhuma categoria selecionada.</span> : null}
+                  </div>
+
+                  <div className="grid gap-1 rounded-xl border border-[#dce8de] bg-white p-2">
+                    {DEFAULT_CATEGORIES.filter((item) => {
                       if (effectiveProfileCategories.includes(item)) return false;
                       if (!profileCategorySearch.trim()) return true;
                       return item.toLowerCase().includes(profileCategorySearch.toLowerCase());
-                    })
-                    .slice(0, 10)
-                    .map((item) => (
+                    }).slice(0, 10).map((item) => (
                       <label key={`option-${item}`} className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={effectiveProfileCategories.includes(item)}
-                          onChange={() => {
-                            setProfileCategories((current) => {
-                              const base = current ?? [];
-                              return base.includes(item)
-                                ? base.filter((c) => c !== item)
-                                : [...base, item];
-                            });
-                          }}
-                        />
+                        <input type="checkbox" checked={effectiveProfileCategories.includes(item)} onChange={() => setProfileCategories((current) => { const base = current ?? []; return base.includes(item) ? base.filter((c) => c !== item) : [...base, item]; })} />
                         <span>{item}</span>
                       </label>
                     ))}
-                  {DEFAULT_CATEGORIES.filter((item) => {
-                    if (effectiveProfileCategories.includes(item)) return false;
-                    if (!profileCategorySearch.trim()) return false;
-                    return item.toLowerCase().includes(profileCategorySearch.toLowerCase());
-                  }).length === 0 && profileCategorySearch.trim() ? (
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Nenhuma categoria encontrada para esta busca.</p>
-                  ) : null}
+                    {DEFAULT_CATEGORIES.filter((item) => {
+                      if (effectiveProfileCategories.includes(item)) return false;
+                      if (!profileCategorySearch.trim()) return false;
+                      return item.toLowerCase().includes(profileCategorySearch.toLowerCase());
+                    }).length === 0 && profileCategorySearch.trim() ? (
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Nenhuma categoria encontrada para esta busca.</p>
+                    ) : null}
+                  </div>
+
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+                    Selecione as categorias que melhor descrevem sua empresa. Essas categorias serão usadas para pré-preencher seus formulários de ofertas.
+                  </p>
                 </div>
 
-                <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
-                  Selecione as categorias que melhor descrevem sua empresa. Essas categorias serão usadas para pré-preencher seus formulários de ofertas.
-                </p>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                <label className="field">
-                  <span>Instagram</span>
-                  <input
-                    value={effectiveInstagram}
-                    onChange={(event) => setInstagram(event.target.value)}
-                    placeholder="@suaempresa"
-                  />
-                </label>
-                <label className="field">
-                  <span>Facebook</span>
-                  <input
-                    value={effectiveFacebook}
-                    onChange={(event) => setFacebook(event.target.value)}
-                    placeholder="facebook.com/suaempresa"
-                  />
-                </label>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                <label className="field">
-                  <span>Site</span>
-                  <input value={effectiveWebsite} onChange={(event) => setWebsite(event.target.value)} placeholder="https://..." />
-                </label>
-                <label className="field">
-                  <span>WhatsApp</span>
-                  <input value={effectiveWhatsapp} onChange={(event) => setWhatsapp(event.target.value)} placeholder="51999990000" />
-                </label>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                <label className="field">
-                  <span>Logomarca</span>
-                  <input type="file" accept="image/*" onChange={(event) => onSelectProfileImage(event, "logo")} />
-                </label>
-                <label className="field">
-                  <span>Foto de capa</span>
-                  <input type="file" accept="image/*" onChange={(event) => onSelectProfileImage(event, "cover")} />
-                </label>
-              </div>
-
-              {(effectiveLogoImage || effectiveCoverImage) && (
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="card grid gap-1.5 p-2">
-                    <strong style={{ fontSize: 13 }}>Logomarca</strong>
-                    {effectiveLogoImage ? (
-                      <>
-                        <Image
-                          src={effectiveLogoImage}
-                          alt="Pré-visualização da logomarca"
-                          width={240}
-                          height={120}
-                          unoptimized
-                          style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 }}
-                        />
-                        <button type="button" className="btn btn-ghost !py-1.5 !px-2" onClick={() => setLogoImage("")}>
-                          Remover logomarca
-                        </button>
-                      </>
-                    ) : (
-                      <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Sem logomarca definida.</p>
-                    )}
-                  </div>
-                  <div className="card grid gap-1.5 p-2">
-                    <strong style={{ fontSize: 13 }}>Capa</strong>
-                    {effectiveCoverImage ? (
-                      <>
-                        <Image
-                          src={effectiveCoverImage}
-                          alt="Pré-visualização da capa"
-                          width={320}
-                          height={120}
-                          unoptimized
-                          style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 }}
-                        />
-                        <button type="button" className="btn btn-ghost !py-1.5 !px-2" onClick={() => setCoverImage("")}>
-                          Remover capa
-                        </button>
-                      </>
-                    ) : (
-                      <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Sem capa definida.</p>
-                    )}
-                  </div>
+                  <label className="field">
+                    <span>Instagram</span>
+                    <input value={effectiveInstagram} onChange={(event) => setInstagram(event.target.value)} placeholder="@suaempresa" />
+                  </label>
+                  <label className="field">
+                    <span>Facebook</span>
+                    <input value={effectiveFacebook} onChange={(event) => setFacebook(event.target.value)} placeholder="facebook.com/suaempresa" />
+                  </label>
                 </div>
-              )}
 
-              <button className="btn btn-primary" type="submit">
-                Salvar perfil público
-              </button>
-            </form>
-            {profileFeedback && <p style={{ margin: 0, fontWeight: 700 }}>{profileFeedback}</p>}
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <label className="field">
+                    <span>Site</span>
+                    <input value={effectiveWebsite} onChange={(event) => setWebsite(event.target.value)} placeholder="https://..." />
+                  </label>
+                  <label className="field">
+                    <span>WhatsApp</span>
+                    <input value={effectiveWhatsapp} onChange={(event) => setWhatsapp(event.target.value)} placeholder="51999990000" />
+                  </label>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <label className="field">
+                    <span>Logomarca (foto de perfil)</span>
+                    <input type="file" accept="image/*" onChange={(event) => onSelectProfileImage(event, "logo")} />
+                  </label>
+                  <label className="field">
+                    <span>Foto de capa</span>
+                    <input type="file" accept="image/*" onChange={(event) => onSelectProfileImage(event, "cover")} />
+                  </label>
+                </div>
+
+                {(effectiveLogoImage || effectiveCoverImage) && (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="card grid gap-1.5 p-2">
+                      <strong style={{ fontSize: 13 }}>Logomarca</strong>
+                      {effectiveLogoImage ? (
+                        <>
+                          <Image src={effectiveLogoImage} alt="Pré-visualização da logomarca" width={240} height={120} unoptimized style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 }} />
+                          <button type="button" className="btn btn-ghost !py-1.5 !px-2" onClick={() => setLogoImage("")}>Remover logomarca</button>
+                        </>
+                      ) : (
+                        <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Sem logomarca definida.</p>
+                      )}
+                    </div>
+                    <div className="card grid gap-1.5 p-2">
+                      <strong style={{ fontSize: 13 }}>Capa</strong>
+                      {effectiveCoverImage ? (
+                        <>
+                          <Image src={effectiveCoverImage} alt="Pré-visualização da capa" width={320} height={120} unoptimized style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 }} />
+                          <button type="button" className="btn btn-ghost !py-1.5 !px-2" onClick={() => setCoverImage("")}>Remover capa</button>
+                        </>
+                      ) : (
+                        <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Sem capa definida.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <button className="btn btn-primary" type="submit">Salvar perfil público</button>
+              </form>
+              {profileFeedback && <p style={{ margin: 0, fontWeight: 700 }}>{profileFeedback}</p>}
+            </div>
           </section>
         )}
 
@@ -1168,64 +1175,36 @@ export default function PartnerPage() {
 
                 <label className="field">
                   <span>Chamada do desconto</span>
-                  <input
-                    value={discountLabel}
-                    onChange={(event) => setDiscountLabel(event.target.value)}
-                    placeholder="Ex.: 20% OFF"
-                    required
-                  />
+                  <input value={discountLabel} onChange={(event) => setDiscountLabel(event.target.value)} placeholder="Ex.: 20% OFF" required />
                 </label>
 
                 <div className="grid gap-2">
                   <label className="field">
                     <span>Categoria (multi seleção com busca)</span>
-                    <input
-                      value={categorySearch}
-                      onChange={(event) => setCategorySearch(event.target.value)}
-                      placeholder="Busque e selecione categorias"
-                    />
+                    <input value={categorySearch} onChange={(event) => setCategorySearch(event.target.value)} placeholder="Busque e selecione categorias" />
                   </label>
 
                   <div className="flex flex-wrap gap-1.5">
                     {selectedCategories.map((item) => (
-                      <button
-                        key={`selected-${item}`}
-                        type="button"
-                        className="badge badge-ok"
-                        onClick={() => toggleCategorySelection(item)}
-                        title="Clique para remover"
-                      >
+                      <button key={`selected-${item}`} type="button" className="badge badge-ok" onClick={() => toggleCategorySelection(item)} title="Clique para remover">
                         {item} ×
                       </button>
                     ))}
-                    {selectedCategories.length === 0 ? (
-                      <span className="text-xs text-[var(--muted)]">Nenhuma categoria selecionada.</span>
-                    ) : null}
+                    {selectedCategories.length === 0 ? <span className="text-xs text-[var(--muted)]">Nenhuma categoria selecionada.</span> : null}
                   </div>
 
                   <div className="grid gap-1 rounded-xl border border-[#dce8de] bg-white p-2">
                     {filteredCategorySuggestions.slice(0, 10).map((item) => (
                       <label key={`option-${item}`} className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(item)}
-                          onChange={() => toggleCategorySelection(item)}
-                        />
+                        <input type="checkbox" checked={selectedCategories.includes(item)} onChange={() => toggleCategorySelection(item)} />
                         <span>{item}</span>
                       </label>
                     ))}
-                    {filteredCategorySuggestions.length === 0 ? (
-                      <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Nenhuma categoria encontrada para esta busca.</p>
-                    ) : null}
+                    {filteredCategorySuggestions.length === 0 ? <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Nenhuma categoria encontrada para esta busca.</p> : null}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      className="btn btn-ghost !w-auto !px-3 !py-1.5"
-                      onClick={addCategoryFromSearch}
-                      disabled={!categorySearch.trim()}
-                    >
+                    <button type="button" className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={addCategoryFromSearch} disabled={!categorySearch.trim()}>
                       Adicionar categoria nova
                     </button>
                     <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
@@ -1238,9 +1217,7 @@ export default function PartnerPage() {
                   <span>Bairro</span>
                   <select value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} required>
                     {availableNeighborhoods.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
+                      <option key={item} value={item}>{item}</option>
                     ))}
                   </select>
                 </label>
@@ -1262,31 +1239,13 @@ export default function PartnerPage() {
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {images.map((imageSrc, index) => (
                         <article key={imageSrc.slice(0, 40) + index} className="card grid gap-1.5 p-2">
-                          <Image
-                            alt={`Foto ${index + 1} da oferta`}
-                            height={90}
-                            src={imageSrc}
-                            unoptimized
-                            width={180}
-                            style={{ width: "100%", height: 90, objectFit: "cover", borderRadius: 8 }}
-                          />
-                          <p
-                            style={{
-                              margin: 0,
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: index === 0 ? "var(--brand-2)" : "var(--muted)",
-                            }}
-                          >
+                          <Image alt={`Foto ${index + 1} da oferta`} height={90} src={imageSrc} unoptimized width={180} style={{ width: "100%", height: 90, objectFit: "cover", borderRadius: 8 }} />
+                          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: index === 0 ? "var(--brand-2)" : "var(--muted)" }}>
                             {index === 0 ? "Foto de capa" : `Foto ${index + 1}`}
                           </p>
                           <div className="grid gap-1">
                             {index > 0 && (
-                              <button
-                                className="btn btn-ghost !py-1.5 !px-2"
-                                onClick={() => setCoverImageFromOffer(index)}
-                                type="button"
-                              >
+                              <button className="btn btn-ghost !py-1.5 !px-2" onClick={() => setCoverImageFromOffer(index)} type="button">
                                 Definir como capa
                               </button>
                             )}
@@ -1312,14 +1271,7 @@ export default function PartnerPage() {
               {companyOffers.map((offer) => (
                 <div key={offer.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
                   {offer.images[0] && (
-                    <Image
-                      alt={`Capa da oferta ${offer.title}`}
-                      height={96}
-                      src={offer.images[0]}
-                      unoptimized
-                      width={320}
-                      style={{ width: "100%", height: 96, objectFit: "cover", borderRadius: 10, marginBottom: 8 }}
-                    />
+                    <Image alt={`Capa da oferta ${offer.title}`} height={96} src={offer.images[0]} unoptimized width={320} style={{ width: "100%", height: 96, objectFit: "cover", borderRadius: 10, marginBottom: 8 }} />
                   )}
                   <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
                   <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
@@ -1347,14 +1299,8 @@ export default function PartnerPage() {
                     if (isSupabaseMode) {
                       await fetch("/api/partner", {
                         method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          ...getAuthHeaders(),
-                        },
-                        body: JSON.stringify({
-                          action: "markAllNotificationsAsRead",
-                          companyId: company?.id ?? user.companyId,
-                        }),
+                        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+                        body: JSON.stringify({ action: "markAllNotificationsAsRead", companyId: company?.id ?? user.companyId }),
                       });
                     } else {
                       markAllNotificationsAsRead(user.id);
@@ -1387,15 +1333,8 @@ export default function PartnerPage() {
                       if (isSupabaseMode) {
                         await fetch("/api/partner", {
                           method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                            ...getAuthHeaders(),
-                          },
-                          body: JSON.stringify({
-                            action: "markNotificationAsRead",
-                            companyId: company?.id ?? user.companyId,
-                            notificationId: notification.id,
-                          }),
+                          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+                          body: JSON.stringify({ action: "markNotificationAsRead", companyId: company?.id ?? user.companyId, notificationId: notification.id }),
                         });
                       } else {
                         markNotificationAsRead(notification.id, user.id);

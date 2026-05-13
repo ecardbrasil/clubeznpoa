@@ -286,6 +286,11 @@ textarea:focus-visible,
   font-family: var(--font-dm), sans-serif;
 }
 
+/* Footer global (mesmo estilo da home) */
+.czn-footer { background: #1e3228; color: #c8d8c4; }
+.czn-footer a { color: #c8d8c4; text-decoration: none; transition: color 0.2s; }
+.czn-footer a:hover { color: #C9F549; }
+
 /* Badge de ícone (estilo da home) */
 .icon-badge {
   display: inline-flex;
