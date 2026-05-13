@@ -1,24 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
 import { PublicPageHeader } from "@/components/public-page-header";
+import { PartnerProfileCard } from "@/components/partner/profile-card";
 import { isSupabaseMode } from "@/lib/runtime-config";
 import { getData, initStorage } from "@/lib/storage";
 import { getSupabaseBrowserClient, hasSupabaseEnv } from "@/lib/supabase/client";
 import { Company } from "@/lib/types";
 import { getHotOfferIds } from "@/lib/utils";
-
-const ensureHttp = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-  return `https://${trimmed}`;
-};
-
-const normalizePhone = (value: string) => value.replace(/\D/g, "");
 
 type SupabaseCompanyRow = {
   id: string;
@@ -244,104 +235,7 @@ export default function PartnerPublicProfilePage() {
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <PublicPageHeader />
 
-      <section className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[var(--shadow-soft)] md:p-4">
-        {company.coverImage ? (
-          <Image
-            src={company.coverImage}
-            alt={`Capa de ${company.publicName ?? company.name}`}
-            width={1200}
-            height={240}
-            unoptimized
-            style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 14 }}
-          />
-        ) : null}
-        <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)] md:items-center">
-          <div>
-            {company.logoImage ? (
-              <Image
-                src={company.logoImage}
-                alt={`Logo de ${company.publicName ?? company.name}`}
-                width={84}
-                height={84}
-                unoptimized
-                style={{ width: 84, height: 84, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)" }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 84,
-                  height: 84,
-                  borderRadius: 999,
-                  background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)",
-                  display: "grid",
-                  placeItems: "center",
-                  fontWeight: 800,
-                  color: "#0f1a13",
-                  fontSize: 28,
-                  fontFamily: "var(--font-poppins), sans-serif",
-                }}
-              >
-                {(company.publicName ?? company.name).trim()[0]?.toUpperCase() ?? "P"}
-              </div>
-            )}
-          </div>
-          <div className="grid gap-1.5">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex h-1 w-5 rounded-full" style={{ background: "linear-gradient(90deg, #c9f549 0%, #a8d63a 100%)" }} aria-hidden="true" />
-              <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Perfil do parceiro</p>
-            </div>
-            <h1 className="m-0 text-3xl leading-tight text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800 }}>{company.publicName ?? company.name}</h1>
-            <p className="m-0 text-sm text-[var(--muted)]">
-              {company.category} • {company.neighborhood} • {company.city}/{company.state}
-            </p>
-            <p className="m-0 text-sm text-[var(--muted)]">
-              {company.addressLine || `${company.neighborhood}, ${company.city}/${company.state}`}
-            </p>
-            {company.bio ? <p className="m-0 text-sm text-[#314634]">{company.bio}</p> : null}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {company.instagram ? (
-            <a
-              href={`https://instagram.com/${company.instagram.replace(/^@/, "").trim()}`}
-              target="_blank"
-              rel="noreferrer"
-              className="badge badge-ok"
-              style={{ textDecoration: "none" }}
-            >
-              Instagram: {company.instagram}
-            </a>
-          ) : null}
-          {company.facebook ? (
-            <a
-              href={company.facebook.includes("facebook.com") ? ensureHttp(company.facebook) : `https://facebook.com/${company.facebook}`}
-              target="_blank"
-              rel="noreferrer"
-              className="badge badge-ok"
-              style={{ textDecoration: "none" }}
-            >
-              Facebook
-            </a>
-          ) : null}
-          {company.website ? (
-            <a href={ensureHttp(company.website)} target="_blank" rel="noreferrer" className="badge badge-ok" style={{ textDecoration: "none" }}>
-              Site
-            </a>
-          ) : null}
-          {company.whatsapp ? (
-            <a
-              href={`https://wa.me/${normalizePhone(company.whatsapp)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="badge badge-ok"
-              style={{ textDecoration: "none" }}
-            >
-              WhatsApp
-            </a>
-          ) : null}
-        </div>
-      </section>
+      <PartnerProfileCard company={company} />
 
       <section className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
