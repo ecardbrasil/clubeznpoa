@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
+import { getCurrentUser, clearSession } from "@/lib/storage";
+import type { User } from "@/lib/types";
 
 type HeaderLink = {
   label: string;
@@ -55,7 +57,18 @@ export function SiteHeader({
   actionsSlot,
 }: SiteHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setUser(getCurrentUser());
+  }, []);
+
+  function handleSignOut() {
+    clearSession();
+    setUser(null);
+    window.location.href = "/auth";
+  }
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -93,18 +106,38 @@ export function SiteHeader({
 
         {/* Desktop actions */}
         <div className="hidden items-center gap-2 md:flex">
-          <Link
-            href="/auth?tab=login"
-            className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-4 py-2.5 text-sm font-bold text-[#1b2a20] no-underline"
-          >
-            Entrar
-          </Link>
-          <Link
-            href="/auth?tab=register"
-            className="rounded-full bg-[var(--brand-accent)] px-4 py-2.5 text-sm font-black text-[#0f1a13] no-underline"
-          >
-            Cadastrar
-          </Link>
+          {user ? (
+            <>
+              <Link
+                href={user.role === "admin" ? "/admin" : user.role === "partner" ? "/partner" : "/consumer"}
+                className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-4 py-2.5 text-sm font-bold text-[#1b2a20] no-underline"
+              >
+                {user.role === "admin" ? "Admin" : user.role === "partner" ? "Painel" : user.name?.split(" ")[0] ?? "Minha conta"}
+              </Link>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="rounded-full bg-[var(--brand-accent)] px-4 py-2.5 text-sm font-black text-[#0f1a13]"
+              >
+                Sair
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/auth?tab=login"
+                className="rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-4 py-2.5 text-sm font-bold text-[#1b2a20] no-underline"
+              >
+                Entrar
+              </Link>
+              <Link
+                href="/auth?tab=register"
+                className="rounded-full bg-[var(--brand-accent)] px-4 py-2.5 text-sm font-black text-[#0f1a13] no-underline"
+              >
+                Cadastrar
+              </Link>
+            </>
+          )}
           {actionsSlot}
         </div>
 
@@ -143,20 +176,41 @@ export function SiteHeader({
           </nav>
 
           <div className="mt-2 grid gap-2 border-t border-[#e7eddc] pt-2">
-            <Link
-              href="/auth?tab=login"
-              onClick={() => setMobileOpen(false)}
-              className="min-h-12 rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-4 py-3 text-center text-sm font-bold text-[#1b2a20] no-underline"
-            >
-              Entrar
-            </Link>
-            <Link
-              href="/auth?tab=register"
-              onClick={() => setMobileOpen(false)}
-              className="min-h-12 rounded-full bg-[var(--brand-accent)] px-4 py-3 text-center text-sm font-black text-[#0f1a13] no-underline"
-            >
-              Cadastrar
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href={user.role === "admin" ? "/admin" : user.role === "partner" ? "/partner" : "/consumer"}
+                  onClick={() => setMobileOpen(false)}
+                  className="min-h-12 rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-4 py-3 text-center text-sm font-bold text-[#1b2a20] no-underline"
+                >
+                  {user.role === "admin" ? "Admin" : user.role === "partner" ? "Painel" : user.name?.split(" ")[0] ?? "Minha conta"}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => { setMobileOpen(false); handleSignOut(); }}
+                  className="min-h-12 rounded-full bg-[var(--brand-accent)] px-4 py-3 text-center text-sm font-black text-[#0f1a13]"
+                >
+                  Sair
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth?tab=login"
+                  onClick={() => setMobileOpen(false)}
+                  className="min-h-12 rounded-full border border-[#d9d9d9] bg-[#f8faf7] px-4 py-3 text-center text-sm font-bold text-[#1b2a20] no-underline"
+                >
+                  Entrar
+                </Link>
+                <Link
+                  href="/auth?tab=register"
+                  onClick={() => setMobileOpen(false)}
+                  className="min-h-12 rounded-full bg-[var(--brand-accent)] px-4 py-3 text-center text-sm font-black text-[#0f1a13] no-underline"
+                >
+                  Cadastrar
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

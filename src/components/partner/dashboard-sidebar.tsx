@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Bell, History, LayoutDashboard, PlusCircle, ShieldCheck, Ticket, UserCog, Users } from "lucide-react";
+import { Bell, History, LayoutDashboard, List, ShieldCheck, Ticket, UserCog, Users } from "lucide-react";
 import { Dispatch, SetStateAction } from "react";
 import { BrandLogo } from "@/components/brand-logo";
 import { Sidebar, SidebarBody, SidebarItemButton } from "@/components/ui/sidebar";
@@ -85,8 +85,8 @@ export function PartnerDashboardSidebar({
             />
             <SidebarItemButton
               active={section === "offer"}
-              label="Nova oferta"
-              icon={<PlusCircle size={16} />}
+              label="Ofertas"
+              icon={<List size={16} />}
               onClick={() => onSectionChange("offer")}
             />
             <SidebarItemButton

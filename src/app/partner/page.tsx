@@ -7,6 +7,7 @@ import { PartnerOverview } from "@/components/partner/partner-overview";
 import { PartnerProfileEditor } from "@/components/partner/partner-profile-editor";
 import { PartnerCodeValidator } from "@/components/partner/partner-code-validator";
 import { PartnerOfferCreator } from "@/components/partner/partner-offer-creator";
+import { PartnerOffersPage } from "@/components/partner/partner-offers-page";
 import { PartnerRedemptionsList } from "@/components/partner/partner-redemptions-list";
 import { PartnerCustomersList } from "@/components/partner/partner-customers-list";
 import { PartnerNotifications } from "@/components/partner/partner-notifications";
@@ -716,37 +717,15 @@ export default function PartnerPage() {
       />
     ),
     offer: (
-      <>
-        <PartnerOfferCreator
-          companyId={company?.id ?? ""}
-          availableNeighborhoods={availableNeighborhoods}
-          availableOfferCategories={availableOfferCategories}
-          defaultCategories={DEFAULT_CATEGORIES}
-          isPublishing={isPublishingOffer}
-          onSubmit={handleCreateOffer}
-        />
-        <section className="card grid gap-2">
-          <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>
-            Ofertas da empresa
-          </h2>
-          {companyOffers.map((offer) => (
-            <div key={offer.id} className="border-t pt-2" style={{ borderColor: "var(--line)" }}>
-              {offer.images[0] && (
-                <img
-                  alt={`Capa da oferta ${offer.title}`}
-                  src={offer.images[0]}
-                  style={{ width: "100%", height: 96, objectFit: "cover", borderRadius: 10, marginBottom: 8 }}
-                />
-              )}
-              <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
-              <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
-                {offer.discountLabel} • {offer.images.length} foto(s) • {getOfferStatusLabel(offer)}
-              </p>
-            </div>
-          ))}
-          {companyOffers.length === 0 && <p style={{ margin: 0 }}>Nenhuma oferta cadastrada.</p>}
-        </section>
-      </>
+      <PartnerOffersPage
+        companyId={company?.id ?? ""}
+        companyOffers={companyOffers}
+        availableNeighborhoods={availableNeighborhoods}
+        availableOfferCategories={availableOfferCategories}
+        defaultCategories={DEFAULT_CATEGORIES}
+        isPublishing={isPublishingOffer}
+        onSubmit={handleCreateOffer}
+      />
     ),
     redemptions: (
       <PartnerRedemptionsList

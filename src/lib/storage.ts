@@ -72,7 +72,7 @@ export function routeByRole(role: UserRole): string {
       return "/partner";
     case "consumer":
     default:
-      return "/consumer";
+      return "/ofertas";
   }
 }
 
@@ -119,9 +119,8 @@ export async function signUpWithProvider(
   }
 }
 
-export async function resetPasswordWithProvider(
+export async function requestPasswordResetWithProvider(
   identifier: string,
-  newPassword: string,
 ): Promise<{ ok?: boolean; otp?: string; error?: string }> {
   try {
     const res = await fetch("/api/auth", {
@@ -130,24 +129,26 @@ export async function resetPasswordWithProvider(
       body: JSON.stringify({ action: "requestPasswordReset", identifier }),
     });
     const data = (await res.json()) as { ok?: boolean; otp?: string; error?: string };
+    if (!res.ok) return { error: data.error ?? "Não foi possível enviar o código." };
+    return { ok: true, otp: data.otp };
+  } catch {
+    return { error: "Falha de conexão. Tente novamente." };
+  }
+}
+
+export async function confirmPasswordResetWithProvider(
+  identifier: string,
+  otp: string,
+  newPassword: string,
+): Promise<{ ok?: boolean; error?: string }> {
+  try {
+    const res = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "confirmPasswordReset", identifier, otp, newPassword }),
+    });
+    const data = (await res.json()) as { ok?: boolean; error?: string };
     if (!res.ok) return { error: data.error ?? "Não foi possível redefinir a senha." };
-
-    if (data.otp) {
-      const confirmRes = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "confirmPasswordReset",
-          identifier,
-          otp: data.otp,
-          newPassword,
-        }),
-      });
-      const confirmData = (await confirmRes.json()) as { ok?: boolean; error?: string };
-      if (!confirmRes.ok) return { error: confirmData.error ?? "Não foi possível redefinir a senha." };
-      return { ok: true };
-    }
-
     return { ok: true };
   } catch {
     return { error: "Falha de conexão. Tente novamente." };

@@ -8,7 +8,8 @@ import { useToast } from "@/components/ui/toast";
 import { DEFAULT_CATEGORIES, serializeCategories } from "@/lib/categories";
 import {
   initStorage,
-  resetPasswordWithProvider,
+  requestPasswordResetWithProvider,
+  confirmPasswordResetWithProvider,
   routeByRole,
   signInWithProvider,
   signUpWithProvider,
@@ -365,7 +366,10 @@ function AuthPageInner() {
   const [showRecoverPassword, setShowRecoverPassword] = useState(false);
   const [showRecoverConfirmPassword, setShowRecoverConfirmPassword] = useState(false);
   const [recoverOpen, setRecoverOpen] = useState(false);
+  const [recoverStep, setRecoverStep] = useState<"request" | "confirm">("request");
   const [recoverIdentifier, setRecoverIdentifier] = useState("");
+  const [recoverOtp, setRecoverOtp] = useState("");
+  const [recoverOtpFromServer, setRecoverOtpFromServer] = useState<string | undefined>(undefined);
   const [recoverNewPassword, setRecoverNewPassword] = useState("");
   const [recoverConfirmPassword, setRecoverConfirmPassword] = useState("");
 
@@ -449,7 +453,7 @@ function AuthPageInner() {
     }
   };
 
-  const handleRecoverPassword = async (e: FormEvent) => {
+  const handleRequestPasswordReset = async (e: FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
 
@@ -465,6 +469,42 @@ function AuthPageInner() {
 
     if (recoverIdentifierInvalid) {
       const message = "Informe um e-mail válido ou celular com DDD.";
+      setError(message);
+      showToast(message, "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const normalizedIdentifier = recoverIdentifierLooksLikeEmail
+        ? recoverIdentifierTrimmed.toLowerCase()
+        : recoverIdentifierDigits;
+      const response = await requestPasswordResetWithProvider(normalizedIdentifier);
+      if (response.error) {
+        setError(response.error);
+        showToast(response.error, "error");
+        return;
+      }
+
+      setRecoverOtpFromServer(response.otp);
+      setRecoverStep("confirm");
+      const message = "Código enviado. Verifique seu e-mail ou celular.";
+      setInfo(message);
+      showToast(message, "success");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmPasswordReset = async (e: FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    setError("");
+    setInfo("");
+
+    if (!recoverOtp.trim()) {
+      const message = "Informe o código recebido.";
       setError(message);
       showToast(message, "error");
       return;
@@ -489,7 +529,8 @@ function AuthPageInner() {
       const normalizedIdentifier = recoverIdentifierLooksLikeEmail
         ? recoverIdentifierTrimmed.toLowerCase()
         : recoverIdentifierDigits;
-      const response = await resetPasswordWithProvider(normalizedIdentifier, recoverNewPassword);
+      const otpToUse = recoverOtpFromServer ?? recoverOtp.trim();
+      const response = await confirmPasswordResetWithProvider(normalizedIdentifier, otpToUse, recoverNewPassword);
       if (response.error) {
         setError(response.error);
         showToast(response.error, "error");
@@ -497,6 +538,10 @@ function AuthPageInner() {
       }
 
       setRecoverOpen(false);
+      setRecoverStep("request");
+      setRecoverIdentifier("");
+      setRecoverOtp("");
+      setRecoverOtpFromServer(undefined);
       setRecoverNewPassword("");
       setRecoverConfirmPassword("");
       setPassword("");
@@ -710,7 +755,17 @@ function AuthPageInner() {
                 className="text-center text-sm font-bold text-[var(--brand)] underline underline-offset-2"
                 style={{ fontFamily: "var(--font-dm), sans-serif" }}
                 onClick={() => {
-                  setRecoverOpen((current) => !current);
+                  setRecoverOpen((current) => {
+                    if (current) {
+                      setRecoverStep("request");
+                      setRecoverIdentifier("");
+                      setRecoverOtp("");
+                      setRecoverOtpFromServer(undefined);
+                      setRecoverNewPassword("");
+                      setRecoverConfirmPassword("");
+                    }
+                    return !current;
+                  });
                   setError("");
                   setInfo("");
                 }}
@@ -718,9 +773,10 @@ function AuthPageInner() {
                 {recoverOpen ? "Fechar recuperação de senha" : "Esqueci minha senha"}
               </button>
 
-              {recoverOpen && (
-                <form onSubmit={handleRecoverPassword} className="grid gap-3 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3" noValidate>
-                  <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Redefinir senha</p>
+              {recoverOpen && recoverStep === "request" && (
+                <form onSubmit={handleRequestPasswordReset} className="grid gap-3 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3" noValidate>
+                  <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Recuperar senha</p>
+                  <p className="m-0 text-xs text-[var(--muted)]">Informe seu e-mail ou celular cadastrado e enviaremos um código de verificação.</p>
 
                   <label className="field" htmlFor="recover-identifier">
                     <span>E-mail ou celular</span>
@@ -737,6 +793,48 @@ function AuthPageInner() {
                     <p id="recover-identifier-error" className="m-0 -mt-2 text-xs font-bold" style={{ color: "var(--warn)" }} role="alert">
                       Digite um e-mail válido ou celular com DDD.
                     </p>
+                  )}
+
+                  <button className="btn btn-primary" type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <span className="inline-flex items-center gap-2">
+                        <Loader2 size={16} className="animate-spin" />
+                        Enviando código...
+                      </span>
+                    ) : (
+                      "Enviar código"
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {recoverOpen && recoverStep === "confirm" && (
+                <form onSubmit={handleConfirmPasswordReset} className="grid gap-3 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3" noValidate>
+                  <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Redefinir senha</p>
+                  <p className="m-0 text-xs text-[var(--muted)]">
+                    {recoverOtpFromServer
+                      ? `Código enviado para ${recoverIdentifier}. Use o código abaixo para continuar.`
+                      : `Digite o código enviado para ${recoverIdentifier}.`}
+                  </p>
+
+                  {recoverOtpFromServer ? (
+                    <div className="rounded-lg border border-[#c9f549] bg-[#f0fbdf] px-3 py-2 text-center">
+                      <p className="m-0 text-xs text-[var(--muted)] mb-1">Código de verificação</p>
+                      <p className="m-0 text-2xl font-bold tracking-widest text-[#0f1a13]">{recoverOtpFromServer}</p>
+                      <p className="m-0 text-xs text-[var(--muted)] mt-1">(Em produção este código será enviado por e-mail/SMS)</p>
+                    </div>
+                  ) : (
+                    <label className="field" htmlFor="recover-otp">
+                      <span>Código de verificação</span>
+                      <input
+                        id="recover-otp"
+                        value={recoverOtp}
+                        onChange={(e) => setRecoverOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="000000"
+                        inputMode="numeric"
+                        maxLength={6}
+                      />
+                    </label>
                   )}
 
                   <label className="field" htmlFor="recover-new-password">
@@ -800,6 +898,22 @@ function AuthPageInner() {
                     ) : (
                       "Redefinir senha"
                     )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="text-center text-xs text-[var(--muted)] underline underline-offset-2"
+                    onClick={() => {
+                      setRecoverStep("request");
+                      setRecoverOtp("");
+                      setRecoverOtpFromServer(undefined);
+                      setRecoverNewPassword("");
+                      setRecoverConfirmPassword("");
+                      setError("");
+                      setInfo("");
+                    }}
+                  >
+                    Usar outro e-mail ou celular
                   </button>
                 </form>
               )}

@@ -12,9 +12,10 @@ export interface MetricCardProps {
   icon?: LucideIcon;
   trendChange?: string;
   trendType?: TrendType;
+  onClick?: () => void;
 }
 
-export function MetricCard({ label, value, helper, icon: Icon, trendChange, trendType }: MetricCardProps) {
+export function MetricCard({ label, value, helper, icon: Icon, trendChange, trendType, onClick }: MetricCardProps) {
   const TrendIcon = trendType === "up" ? ArrowUp : trendType === "down" ? ArrowDown : Minus;
   const trendColor =
     trendType === "up"
@@ -25,9 +26,10 @@ export function MetricCard({ label, value, helper, icon: Icon, trendChange, tren
 
   return (
     <motion.article
-      className="card grid gap-1 cursor-default"
+      className={`card grid gap-1 ${onClick ? "cursor-pointer" : "cursor-default"}`}
       whileHover={{ y: -4, boxShadow: "0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05)" }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      onClick={onClick}
     >
       <div className="flex items-center justify-between">
         <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>{label}</p>

@@ -178,6 +178,7 @@ export function PartnerOverview({
           value={dashboard.offersTotal}
           helper="Cadastradas pela empresa"
           icon={LayoutDashboard}
+          onClick={() => onSectionChange("offer")}
         />
         <MetricCard
           label="Resgates hoje"
