@@ -38,7 +38,19 @@
       "Bash(curl -s -H \"User-Agent: Mozilla/5.0 \\(iPhone; CPU iPhone OS 14_6 like Mac OS X\\)\" http://localhost:3000/admin)",
       "Bash(curl -s http://localhost:3001/auth)",
       "Bash(curl -s http://localhost:3000/partner)",
-      "Bash(del *)"
+      "Bash(del *)",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__list_tables",
+      "mcp__claude_ai_Supabase__search_docs",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(python3 -c ' *)",
+      "mcp__claude_ai_Supabase__list_edge_functions",
+      "mcp__claude_ai_Supabase__get_project_url",
+      "mcp__claude_ai_Supabase__apply_migration",
+      "mcp__claude_ai_Supabase__deploy_edge_function",
+      "Read(//Users/gustavocardoso/.supabase/**)",
+      "Read(//Users/gustavocardoso/**)",
+      "Bash(openssl rand *)"
     ]
   }
 }

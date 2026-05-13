@@ -369,7 +369,6 @@ function AuthPageInner() {
   const [recoverStep, setRecoverStep] = useState<"request" | "confirm">("request");
   const [recoverIdentifier, setRecoverIdentifier] = useState("");
   const [recoverOtp, setRecoverOtp] = useState("");
-  const [recoverOtpFromServer, setRecoverOtpFromServer] = useState<string | undefined>(undefined);
   const [recoverNewPassword, setRecoverNewPassword] = useState("");
   const [recoverConfirmPassword, setRecoverConfirmPassword] = useState("");
 
@@ -486,9 +485,8 @@ function AuthPageInner() {
         return;
       }
 
-      setRecoverOtpFromServer(response.otp);
       setRecoverStep("confirm");
-      const message = "Código enviado. Verifique seu e-mail ou celular.";
+      const message = "Código enviado. Verifique seu e-mail.";
       setInfo(message);
       showToast(message, "success");
     } finally {
@@ -529,8 +527,7 @@ function AuthPageInner() {
       const normalizedIdentifier = recoverIdentifierLooksLikeEmail
         ? recoverIdentifierTrimmed.toLowerCase()
         : recoverIdentifierDigits;
-      const otpToUse = recoverOtpFromServer ?? recoverOtp.trim();
-      const response = await confirmPasswordResetWithProvider(normalizedIdentifier, otpToUse, recoverNewPassword);
+      const response = await confirmPasswordResetWithProvider(normalizedIdentifier, recoverOtp.trim(), recoverNewPassword);
       if (response.error) {
         setError(response.error);
         showToast(response.error, "error");
@@ -541,7 +538,6 @@ function AuthPageInner() {
       setRecoverStep("request");
       setRecoverIdentifier("");
       setRecoverOtp("");
-      setRecoverOtpFromServer(undefined);
       setRecoverNewPassword("");
       setRecoverConfirmPassword("");
       setPassword("");
@@ -760,7 +756,6 @@ function AuthPageInner() {
                       setRecoverStep("request");
                       setRecoverIdentifier("");
                       setRecoverOtp("");
-                      setRecoverOtpFromServer(undefined);
                       setRecoverNewPassword("");
                       setRecoverConfirmPassword("");
                     }
@@ -812,30 +807,21 @@ function AuthPageInner() {
                 <form onSubmit={handleConfirmPasswordReset} className="grid gap-3 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-3" noValidate>
                   <p className="m-0 text-sm font-bold text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Redefinir senha</p>
                   <p className="m-0 text-xs text-[var(--muted)]">
-                    {recoverOtpFromServer
-                      ? `Código enviado para ${recoverIdentifier}. Use o código abaixo para continuar.`
-                      : `Digite o código enviado para ${recoverIdentifier}.`}
+                    Digite o código de 6 dígitos enviado para <strong>{recoverIdentifier}</strong>.
                   </p>
 
-                  {recoverOtpFromServer ? (
-                    <div className="rounded-lg border border-[#c9f549] bg-[#f0fbdf] px-3 py-2 text-center">
-                      <p className="m-0 text-xs text-[var(--muted)] mb-1">Código de verificação</p>
-                      <p className="m-0 text-2xl font-bold tracking-widest text-[#0f1a13]">{recoverOtpFromServer}</p>
-                      <p className="m-0 text-xs text-[var(--muted)] mt-1">(Em produção este código será enviado por e-mail/SMS)</p>
-                    </div>
-                  ) : (
-                    <label className="field" htmlFor="recover-otp">
-                      <span>Código de verificação</span>
-                      <input
-                        id="recover-otp"
-                        value={recoverOtp}
-                        onChange={(e) => setRecoverOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        placeholder="000000"
-                        inputMode="numeric"
-                        maxLength={6}
-                      />
-                    </label>
-                  )}
+                  <label className="field" htmlFor="recover-otp">
+                    <span>Código de verificação</span>
+                    <input
+                      id="recover-otp"
+                      value={recoverOtp}
+                      onChange={(e) => setRecoverOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="000000"
+                      inputMode="numeric"
+                      maxLength={6}
+                      autoComplete="one-time-code"
+                    />
+                  </label>
 
                   <label className="field" htmlFor="recover-new-password">
                     <span>Nova senha</span>
@@ -906,7 +892,6 @@ function AuthPageInner() {
                     onClick={() => {
                       setRecoverStep("request");
                       setRecoverOtp("");
-                      setRecoverOtpFromServer(undefined);
                       setRecoverNewPassword("");
                       setRecoverConfirmPassword("");
                       setError("");

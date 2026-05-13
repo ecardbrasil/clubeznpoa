@@ -121,16 +121,16 @@ export async function signUpWithProvider(
 
 export async function requestPasswordResetWithProvider(
   identifier: string,
-): Promise<{ ok?: boolean; otp?: string; error?: string }> {
+): Promise<{ ok?: boolean; error?: string }> {
   try {
     const res = await fetch("/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "requestPasswordReset", identifier }),
     });
-    const data = (await res.json()) as { ok?: boolean; otp?: string; error?: string };
+    const data = (await res.json()) as { ok?: boolean; error?: string };
     if (!res.ok) return { error: data.error ?? "Não foi possível enviar o código." };
-    return { ok: true, otp: data.otp };
+    return { ok: true };
   } catch {
     return { error: "Falha de conexão. Tente novamente." };
   }

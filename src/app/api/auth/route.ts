@@ -114,14 +114,20 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Informe e-mail ou celular." }, { status: 400 });
       }
 
-      const baseQuery = supabase.from("users").select("id").limit(1);
-      const lookupQuery = identifier.includes("@")
+      const isEmail = identifier.includes("@");
+      const baseQuery = supabase.from("users").select("id, name, email").limit(1);
+      const lookupQuery = isEmail
         ? baseQuery.eq("email", identifier.toLowerCase())
         : baseQuery.eq("phone", identifier);
 
-      const { data } = await lookupQuery.maybeSingle<{ id: string }>();
+      const { data } = await lookupQuery.maybeSingle<{ id: string; name: string; email: string | null }>();
       // Always return success to avoid user enumeration
       if (!data) {
+        return NextResponse.json({ ok: true });
+      }
+
+      // Rejeita se o identificador for celular e não houver email cadastrado
+      if (!isEmail && !data.email) {
         return NextResponse.json({ ok: true });
       }
 
@@ -141,8 +147,25 @@ export async function POST(request: Request) {
         created_at: new Date().toISOString(),
       });
 
-      // TODO: deliver rawOtp via email/SMS to the user instead of returning it here
-      return NextResponse.json({ ok: true, otp: rawOtp });
+      // Enviar OTP por email via Edge Function
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const internalSecret = process.env.SEND_RESET_EMAIL_SECRET!;
+      const emailTo = isEmail ? identifier.toLowerCase() : data.email!;
+
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/send-reset-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": internalSecret,
+          },
+          body: JSON.stringify({ to: emailTo, otp: rawOtp, name: data.name }),
+        });
+      } catch {
+        // Falha silenciosa no envio: não revela o OTP ao cliente
+      }
+
+      return NextResponse.json({ ok: true });
     }
 
     if (body.action === "confirmPasswordReset") {
