@@ -793,32 +793,6 @@ export default function PartnerPage() {
       />
 
       <div className="grid gap-4">
-        <section className="card grid gap-2">
-          {effectiveCoverImage && (
-            <Image
-              src={effectiveCoverImage}
-              alt="Capa da empresa"
-              width={1200}
-              height={280}
-              unoptimized
-              style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 12 }}
-            />
-          )}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Empresa Parceira</p>
-              <h1 style={{ margin: "2px 0 0", fontSize: 22 }}>{company?.publicName ?? company?.name ?? user.name}</h1>
-            </div>
-          </div>
-          <p style={{ margin: 0, color: "var(--muted)", fontSize: 13 }}>
-            Seção atual: <strong>{sectionTitle[section]}</strong>
-          </p>
-          {unreadNotifications > 0 && (
-            <p style={{ margin: 0, color: "var(--brand-2)", fontSize: 13, fontWeight: 700 }}>
-              Você tem {unreadNotifications} notificação(ões) não lida(s).
-            </p>
-          )}
-        </section>
 
         {section === "overview" && (
           <>
