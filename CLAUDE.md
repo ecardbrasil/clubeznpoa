@@ -177,9 +177,51 @@ npm run lint
 - Image optimization com Next.js Image component
 - Lazy loading de componentes pesados com `dynamic()`
 
-## Commits & PR
+## Git Workflow
 
-- Mensagens em português ou inglês (be consistent)
+### Push para o GitHub
+
+O repositório local pode corromper se os objetos git forem perdidos. **NUNCA renomeie a pasta e clone do zero.** Siga este fluxo sempre:
+
+```bash
+# 1. Verificar status
+git status
+
+# 2. Adicionar arquivos
+git add -A
+
+# 3. Commitar
+git commit -m "tipo: descrição clara do que foi feito"
+
+# 4. Se o repositório local estiver corrompido (erro "bad object HEAD"):
+# 4a. Buscar referências do remoto
+git fetch origin main
+
+# 4b. Recriar branch a partir do remoto (sem perder alterações locais)
+git checkout -b temp-branch
+git branch -D main
+git checkout -b main origin/main
+
+# 4c. Aplicar as alterações locais por cima
+git checkout temp-branch -- .
+git add -A
+git commit -m "tipo: descrição"
+
+# 4d. Fazer push
+git push origin main
+
+# Deletar branch temporária
+git branch -D temp-branch
+```
+
+### Tipos de commit
+- `feat:` — nova funcionalidade
+- `fix:` — correção de bug
+- `refactor:` — refatoração sem mudança de comportamento
+- `style:` — formatação, estilos
+- `chore:` — tarefas de manutenção
+
+- Mensagens em português (preferencialmente)
 - Descrever o "why" além do "what"
 - Referência a issues/tickets quando aplicável
 
