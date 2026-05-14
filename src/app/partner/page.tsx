@@ -459,7 +459,8 @@ export default function PartnerPage() {
 
   const onboardingCompleted = onboardingSteps.filter((step) => step.done).length;
 
-  const handleValidate = async () => {
+  const handleValidate = async (codeValue?: string) => {
+    const codeToValidate = codeValue ?? code;
     setFeedback("");
     if (!company) {
       setFeedback("Empresa não encontrada.");
@@ -472,7 +473,7 @@ export default function PartnerPage() {
       const response = await fetch("/api/partner", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ action: "validateCode", companyId: company.id, code }),
+        body: JSON.stringify({ action: "validateCode", companyId: company.id, code: codeToValidate }),
       });
       const payload = (await response.json()) as { message?: string };
       const message = payload.message ?? "Falha ao validar código.";
@@ -484,7 +485,7 @@ export default function PartnerPage() {
       return;
     }
 
-    const result = validateCode(code, company.id);
+    const result = validateCode(codeToValidate, company.id);
     setFeedback(result.message);
     showToast(result.message, result.ok ? "success" : "error");
     setCode("");
@@ -711,8 +712,7 @@ export default function PartnerPage() {
       <PartnerCodeValidator
         companyId={company?.id ?? user?.companyId ?? ""}
         validate={async (codeValue) => {
-          setCode(codeValue);
-          await handleValidate();
+          await handleValidate(codeValue);
         }}
       />
     ),
