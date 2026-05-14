@@ -222,13 +222,9 @@ git branch -D temp-branch
 - `chore:` — tarefas de manutenção
 
 - Mensagens em português (preferencialmente)
-- Descrever o "why" além do "what"
 - Referência a issues/tickets quando aplicável
 
 ## Contato & Suporte
 
 **Email do projeto**: contato@clubezn.com
 
----
-
-**Última atualização**: 2026-04-29

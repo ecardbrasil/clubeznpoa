@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Building2, ChevronDown, Eye, EyeOff, Loader2, UserRound, X, Search } from "lucide-react";
 import { PublicPageHeader } from "@/components/public-page-header";
 import { useToast } from "@/components/ui/toast";
-import { DEFAULT_CATEGORIES, serializeCategories } from "@/lib/categories";
+import { CATEGORY_GROUPS, DEFAULT_CATEGORIES, serializeCategories } from "@/lib/categories";
 import {
   initStorage,
   requestPasswordResetWithProvider,
@@ -76,10 +76,24 @@ function CategoryMultiSelect({
   const ref = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const filtered = DEFAULT_CATEGORIES.filter((cat) =>
-    !value.includes(cat) &&
-    normalizeText(cat).includes(normalizeText(search))
-  );
+  const isSearching = search.trim().length > 0;
+
+  const filteredGroups = isSearching
+    ? CATEGORY_GROUPS.map((g) => ({
+        ...g,
+        items: g.items.filter(
+          (cat) =>
+            !value.includes(cat) &&
+            (normalizeText(cat).includes(normalizeText(search)) ||
+              normalizeText(g.group).includes(normalizeText(search))),
+        ),
+      })).filter((g) => g.items.length > 0)
+    : CATEGORY_GROUPS.map((g) => ({
+        ...g,
+        items: g.items.filter((cat) => !value.includes(cat)),
+      })).filter((g) => g.items.length > 0);
+
+  const totalFiltered = filteredGroups.reduce((acc, g) => acc + g.items.length, 0);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -142,19 +156,28 @@ function CategoryMultiSelect({
               </button>
             )}
           </div>
-          <ul role="listbox" className="max-h-48 overflow-y-auto py-1">
-            {filtered.length === 0 && (
+          <ul role="listbox" className="max-h-56 overflow-y-auto py-1">
+            {totalFiltered === 0 && (
               <li className="px-3 py-2 text-xs text-[var(--muted)]">Nenhuma categoria encontrada</li>
             )}
-            {filtered.map((cat) => (
-              <li
-                key={cat}
-                role="option"
-                aria-selected={value.includes(cat)}
-                onClick={() => onToggle(cat)}
-                className="cursor-pointer px-3 py-2 text-sm transition-colors hover:bg-[#f8fbf4]"
-              >
-                {cat}
+            {filteredGroups.map((g) => (
+              <li key={g.group}>
+                <div className="sticky top-0 bg-[#f4f9f0] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  {g.group}
+                </div>
+                <ul>
+                  {g.items.map((cat) => (
+                    <li
+                      key={cat}
+                      role="option"
+                      aria-selected={value.includes(cat)}
+                      onClick={() => onToggle(cat)}
+                      className="cursor-pointer px-4 py-2 text-sm transition-colors hover:bg-[#f8fbf4]"
+                    >
+                      {cat}
+                    </li>
+                  ))}
+                </ul>
               </li>
             ))}
           </ul>

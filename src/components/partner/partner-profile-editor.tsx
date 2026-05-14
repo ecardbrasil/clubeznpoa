@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import Image from "next/image";
 import { UserCog } from "lucide-react";
-import { DEFAULT_CATEGORIES, parseCategories, serializeCategories } from "@/lib/categories";
+import { CATEGORY_GROUPS, parseCategories, serializeCategories } from "@/lib/categories";
 
 export function PartnerProfileEditor({
   effectivePublicName,
@@ -98,11 +98,18 @@ export function PartnerProfileEditor({
     }
   };
 
-  const filteredCategories = DEFAULT_CATEGORIES.filter((item) => {
-    if (categories.includes(item)) return false;
-    if (!categorySearch.trim()) return true;
-    return item.toLowerCase().includes(categorySearch.toLowerCase());
-  }).slice(0, 10);
+  const isSearching = categorySearch.trim().length > 0;
+  const filteredGroups = CATEGORY_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((item) => {
+      if (categories.includes(item)) return false;
+      if (!isSearching) return true;
+      return (
+        item.toLowerCase().includes(categorySearch.toLowerCase()) ||
+        g.group.toLowerCase().includes(categorySearch.toLowerCase())
+      );
+    }),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <section className="grid gap-2.5">
@@ -250,29 +257,36 @@ export function PartnerProfileEditor({
               )}
             </div>
 
-            {categorySearch.trim() && (
-              <div className="grid gap-1 rounded-xl border border-[#dce8de] bg-white p-2">
-                {filteredCategories.map((item) => (
-                  <label key={`option-${item}`} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={categories.includes(item)}
-                      onChange={() =>
-                        setCategories((c) =>
-                          c.includes(item) ? c.filter((x) => x !== item) : [...c, item],
-                        )
-                      }
-                    />
-                    <span>{item}</span>
-                  </label>
-                ))}
-                {filteredCategories.length === 0 && (
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
+            <div className="rounded-xl border border-[#dce8de] bg-white overflow-hidden">
+              <div className="max-h-56 overflow-y-auto">
+                {filteredGroups.length === 0 && (
+                  <p style={{ margin: 0, padding: "8px 12px", fontSize: 12, color: "var(--muted)" }}>
                     Nenhuma categoria encontrada.
                   </p>
                 )}
+                {filteredGroups.map((g) => (
+                  <div key={g.group}>
+                    <div className="sticky top-0 bg-[#f4f9f0] px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                      {g.group}
+                    </div>
+                    {g.items.map((item) => (
+                      <label key={`option-${item}`} className="flex items-center gap-2 px-4 py-2 text-sm cursor-pointer hover:bg-[#f8fbf4]">
+                        <input
+                          type="checkbox"
+                          checked={categories.includes(item)}
+                          onChange={() =>
+                            setCategories((c) =>
+                              c.includes(item) ? c.filter((x) => x !== item) : [...c, item],
+                            )
+                          }
+                        />
+                        <span>{item}</span>
+                      </label>
+                    ))}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
