@@ -308,6 +308,31 @@ function OffersPageContent() {
     }
   };
 
+  const activeFilters = useMemo(() => {
+    const chips: { key: string; label: string; clear: () => void }[] = [];
+    if (query.trim()) chips.push({ key: "query", label: `"${query.trim()}"`, clear: () => setQuery("") });
+    const effectiveCategory = selectedCategory !== "all" ? selectedCategory : selectedCategoryFromUrl;
+    if (effectiveCategory !== "all") chips.push({ key: "category", label: effectiveCategory, clear: () => setSelectedCategory("all") });
+    const effectiveNeighborhood = selectedNeighborhood !== "all" ? selectedNeighborhood : selectedNeighborhoodFromUrl;
+    if (effectiveNeighborhood !== "all") chips.push({ key: "neighborhood", label: effectiveNeighborhood, clear: () => setSelectedNeighborhood("all") });
+    if (selectedPartner !== "all") chips.push({ key: "partner", label: selectedPartner, clear: () => setSelectedPartner("all") });
+    if (sortBy !== "recentes") chips.push({ key: "sort", label: sortBy === "desconto" ? "Maior desconto" : "Bairro A-Z", clear: () => setSortBy("recentes") });
+    return chips;
+  }, [query, selectedCategory, selectedCategoryFromUrl, selectedNeighborhood, selectedNeighborhoodFromUrl, selectedPartner, sortBy]);
+
+  const hotOffers = useMemo(() => filteredOffers.filter((o) => o.isHot), [filteredOffers]);
+  const regularOffers = useMemo(() => filteredOffers.filter((o) => !o.isHot), [filteredOffers]);
+
+  const renderCard = (offer: PublicOffer) => (
+    <OfferCard
+      key={offer.id}
+      actionHref={viewer?.role === "consumer" ? undefined : "/auth"}
+      actionLabel={viewer?.role === "consumer" ? "Gerar código de resgate" : "Quero essa oferta"}
+      onAction={viewer?.role === "consumer" ? () => handleGenerateCode(offer.id) : undefined}
+      offer={offer}
+    />
+  );
+
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <PublicPageHeader />
@@ -327,12 +352,35 @@ function OffersPageContent() {
         </p>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-start">
-        <aside className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[var(--shadow-soft)] md:sticky md:top-6">
-          <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Filtrar ofertas</h2>
+      <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)] xl:items-start">
+        <aside className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] xl:sticky xl:top-6">
+          <div className="flex items-center justify-between">
+            <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Filtros</h2>
+            {activeFilters.length > 0 && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--brand)] transition-colors"
+                style={{ fontFamily: "var(--font-dm), sans-serif", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                Limpar todos
+              </button>
+            )}
+          </div>
+
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {activeFilters.map((chip) => (
+                <button key={chip.key} type="button" className="filter-chip" onClick={chip.clear}>
+                  {chip.label}
+                  <span className="filter-chip-x" aria-hidden="true">×</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           <label className="field">
-            <span>Busca por termo</span>
+            <span>Busca</span>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -383,56 +431,92 @@ function OffersPageContent() {
             <span>Ordenar por</span>
             <select value={sortBy} onChange={(event) => setSortBy(event.target.value as SortOption)}>
               <option value="recentes">Mais recentes</option>
-              <option value="desconto">Maior destaque de desconto</option>
+              <option value="desconto">Maior desconto</option>
               <option value="bairro">Bairro (A-Z)</option>
             </select>
           </label>
-
-          <button type="button" className="btn btn-ghost" onClick={resetFilters}>
-            Limpar filtros
-          </button>
         </aside>
 
-        <section className="grid gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--line)] bg-white px-3 py-2.5">
+        <section className="grid gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--line)] bg-white px-4 py-3">
             <p className="m-0 text-sm font-semibold text-[var(--success-text)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-              {loading ? "Carregando ofertas..." : `${filteredOffers.length} oferta(s) encontrada(s) com os filtros atuais`}
+              {loading ? (
+                <span className="skeleton inline-block h-4 w-48 rounded" />
+              ) : (
+                <>
+                  <span style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>{filteredOffers.length}</span>
+                  {" "}oferta{filteredOffers.length !== 1 ? "s" : ""} encontrada{filteredOffers.length !== 1 ? "s" : ""}
+                </>
+              )}
             </p>
             {viewer?.role === "consumer" ? (
-              <span className="badge badge-ok" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Logado — pode resgatar</span>
+              <span className="badge badge-ok" style={{ fontFamily: "var(--font-poppins), sans-serif", fontSize: 12 }}>
+                ✓ Logado — pode resgatar
+              </span>
             ) : (
               <Link href="/auth" className="text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-                Quero acessar com login
+                Entrar para resgatar →
               </Link>
             )}
           </div>
 
           {loadingError ? (
             <article className="status-error rounded-2xl px-3 py-2 text-sm">
-              Não foi possível carregar as ofertas do Supabase. Detalhe: {loadingError}
+              Não foi possível carregar as ofertas. Detalhe: {loadingError}
             </article>
           ) : null}
 
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {filteredOffers.map((offer) => (
-              <OfferCard
-                key={offer.id}
-                actionHref={viewer?.role === "consumer" ? undefined : "/auth"}
-                actionLabel={viewer?.role === "consumer" ? "Gerar código de resgate" : "Quero essa oferta"}
-                onAction={viewer?.role === "consumer" ? () => handleGenerateCode(offer.id) : undefined}
-                offer={offer}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="card grid gap-3 !rounded-2xl">
+                  <div className="skeleton h-[180px] w-full rounded-xl" />
+                  <div className="skeleton h-3 w-2/3 rounded" />
+                  <div className="skeleton h-5 w-5/6 rounded" />
+                  <div className="skeleton h-3 w-full rounded" />
+                  <div className="skeleton h-3 w-4/5 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <>
+              {hotOffers.length > 0 && (
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: 18 }}>🔥</span>
+                    <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Em alta agora</h2>
+                    <span className="badge badge-accent" style={{ fontSize: 11, padding: "3px 10px" }}>{hotOffers.length}</span>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {hotOffers.map(renderCard)}
+                  </div>
+                  {regularOffers.length > 0 && (
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="h-px flex-1 bg-[var(--line)]" />
+                      <span className="text-xs font-semibold text-[var(--muted)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Todas as ofertas</span>
+                      <div className="h-px flex-1 bg-[var(--line)]" />
+                    </div>
+                  )}
+                </div>
+              )}
 
-          {filteredOffers.length === 0 && (
-            <article className="grid gap-2 rounded-2xl border border-[var(--line)] bg-white p-5 text-center shadow-[var(--shadow-soft)]">
-              <h3 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Nenhuma oferta encontrada</h3>
-              <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Ajuste os filtros ou limpe a busca para ver mais resultados.</p>
-              <button type="button" className="btn btn-primary mx-auto !w-auto" onClick={resetFilters}>
-                Limpar filtros agora
-              </button>
-            </article>
+              {regularOffers.length > 0 && (
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {regularOffers.map(renderCard)}
+                </div>
+              )}
+
+              {filteredOffers.length === 0 && (
+                <article className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-8 text-center shadow-[var(--shadow-soft)]">
+                  <p style={{ margin: 0, fontSize: 40, lineHeight: 1 }}>🔍</p>
+                  <h3 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Nenhuma oferta encontrada</h3>
+                  <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Tente ajustar os filtros ou buscar por outro termo.</p>
+                  <button type="button" className="btn btn-primary mx-auto" style={{ width: "auto", paddingInline: 28 }} onClick={resetFilters}>
+                    Limpar filtros
+                  </button>
+                </article>
+              )}
+            </>
           )}
         </section>
       </div>

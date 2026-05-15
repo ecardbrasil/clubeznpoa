@@ -306,7 +306,7 @@ export function OfferCard({
   return (
     <>
       <article
-        className={`card ${isLandingCarousel ? "flex flex-col gap-3" : "!grid !gap-3 !rounded-2xl"} ${isClickable ? "cursor-pointer" : ""}`}
+        className={`card offer-card-root ${isLandingCarousel ? "flex flex-col gap-3" : "!grid !gap-3 !rounded-2xl"} ${isClickable ? "cursor-pointer" : ""}`}
         onClick={() => setOpen(true)}
         role={isClickable ? "button" : undefined}
         tabIndex={isClickable ? 0 : -1}
@@ -348,93 +348,57 @@ export function OfferCard({
                   borderRadius: 16,
                   background: "#dfe5d4",
                 } satisfies CSSProperties)
-              : ({ position: "relative", overflow: "hidden", borderRadius: 10 } satisfies CSSProperties)
+              : ({ position: "relative", overflow: "hidden", borderRadius: 12, aspectRatio: "4 / 3", background: "#eaefe4" } satisfies CSSProperties)
           }
         >
           {currentImage ? (
             <>
               <Image
                 alt={`Capa da oferta ${offer.title}`}
-                fill={isLandingCarousel}
-                height={isLandingCarousel ? undefined : 120}
+                fill
                 src={currentImage}
                 unoptimized
-                width={isLandingCarousel ? undefined : 320}
-                sizes={isLandingCarousel ? "(max-width: 768px) 82vw, 320px" : undefined}
-                style={
-                  isLandingCarousel
-                    ? ({ objectFit: "cover", objectPosition: "center", borderRadius: 16 } satisfies CSSProperties)
-                    : ({ width: "100%", height: 120, objectFit: "cover", borderRadius: 10 } satisfies CSSProperties)
-                }
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                style={{ objectFit: "cover", objectPosition: "center", borderRadius: isLandingCarousel ? 16 : 12 } satisfies CSSProperties}
               />
               {hasGallery ? (
                 <>
                   <button
                     type="button"
                     aria-label="Foto anterior"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      goPrev();
-                    }}
+                    onClick={(event) => { event.stopPropagation(); goPrev(); }}
                     onMouseDown={(event) => event.preventDefault()}
                     style={{
-                      position: "absolute",
-                      left: 8,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      width: 34,
-                      height: 34,
-                      borderRadius: 999,
-                      border: "1px solid rgba(255,255,255,0.35)",
-                      background: "rgba(0,0,0,0.55)",
-                      color: "white",
-                      display: "grid",
-                      placeItems: "center",
-                      zIndex: 2,
-                      cursor: "pointer",
+                      position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
+                      width: 32, height: 32, borderRadius: 999,
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      background: "rgba(0,0,0,0.5)", color: "white",
+                      display: "grid", placeItems: "center", zIndex: 2, cursor: "pointer",
                     }}
                   >
-                    {"<"}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
                   <button
                     type="button"
                     aria-label="Próxima foto"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      goNext();
-                    }}
+                    onClick={(event) => { event.stopPropagation(); goNext(); }}
                     onMouseDown={(event) => event.preventDefault()}
                     style={{
-                      position: "absolute",
-                      right: 8,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      width: 34,
-                      height: 34,
-                      borderRadius: 999,
-                      border: "1px solid rgba(255,255,255,0.35)",
-                      background: "rgba(0,0,0,0.55)",
-                      color: "white",
-                      display: "grid",
-                      placeItems: "center",
-                      zIndex: 2,
-                      cursor: "pointer",
+                      position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                      width: 32, height: 32, borderRadius: 999,
+                      border: "1px solid rgba(255,255,255,0.3)",
+                      background: "rgba(0,0,0,0.5)", color: "white",
+                      display: "grid", placeItems: "center", zIndex: 2, cursor: "pointer",
                     }}
                   >
-                    {">"}
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </button>
                   <div
                     style={{
-                      position: "absolute",
-                      bottom: 8,
-                      right: 8,
-                      background: "rgba(0,0,0,0.55)",
-                      color: "white",
-                      borderRadius: 999,
-                      padding: "2px 8px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      zIndex: 2,
+                      position: "absolute", bottom: 8, right: 8,
+                      background: "rgba(0,0,0,0.55)", color: "white",
+                      borderRadius: 999, padding: "2px 8px",
+                      fontSize: 11, fontWeight: 700, zIndex: 2,
                     }}
                   >
                     {activeImageIndex + 1}/{imageCount}
@@ -444,70 +408,45 @@ export function OfferCard({
             </>
           ) : (
             <div
-              style={
-                isLandingCarousel
-                  ? ({
-                      position: "absolute",
-                      inset: 0,
-                      display: "grid",
-                      placeItems: "center",
-                      color: "var(--muted)",
-                      fontWeight: 700,
-                      fontSize: 12,
-                      background: "linear-gradient(135deg, rgba(255,255,255,0.55), rgba(223,229,212,0.85))",
-                    } satisfies CSSProperties)
-                  : ({
-                      width: "100%",
-                      height: 120,
-                      borderRadius: 10,
-                      border: "1px solid var(--line)",
-                      display: "grid",
-                      placeItems: "center",
-                      color: "var(--muted)",
-                      fontWeight: 700,
-                      fontSize: 12,
-                    } satisfies CSSProperties)
-              }
-              >
+              style={{
+                position: "absolute", inset: 0, display: "grid", placeItems: "center",
+                color: "var(--muted)", fontWeight: 700, fontSize: 12,
+                background: "linear-gradient(135deg, rgba(255,255,255,0.55), rgba(223,229,212,0.85))",
+              }}
+            >
               Sem foto
             </div>
           )}
-          <div
-            style={{
-              position: "absolute",
-              top: 8,
-              left: 8,
-              display: "grid",
-              gap: 6,
-              zIndex: 1,
-            }}
-          >
-            <span className="badge badge-accent">{offer.discountLabel}</span>
+          <div style={{ position: "absolute", top: 8, left: 8, display: "grid", gap: 5, zIndex: 1 }}>
+            <span className="badge badge-accent" style={{ fontSize: 12, padding: "4px 10px" }}>{offer.discountLabel}</span>
             {offer.isHot ? (
-              <span
-                className="badge"
-                style={{
-                  background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)",
-                  color: "#0f1a13",
-                  fontFamily: "var(--font-poppins), sans-serif",
-                }}
-              >
-                🔥 Quente agora
+              <span className="badge" style={{ background: "rgba(15,26,19,0.82)", color: "#c9f549", fontSize: 11, padding: "3px 9px", backdropFilter: "blur(4px)" }}>
+                🔥 Em alta
               </span>
             ) : null}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
-          <span className="min-w-0 truncate font-semibold text-[var(--brand)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+        <div className="flex items-center gap-2">
+          {offer.partnerLogoImage ? (
+            <Image
+              alt={`Logo ${offer.companyName}`}
+              src={offer.partnerLogoImage}
+              width={22}
+              height={22}
+              unoptimized
+              style={{ width: 22, height: 22, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)", flexShrink: 0 } satisfies CSSProperties}
+            />
+          ) : null}
+          <span className="min-w-0 truncate text-xs font-semibold text-[var(--brand)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
             {offer.companyName}
           </span>
-          <span className="shrink-0" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-            {offer.neighborhood}
+          <span className="shrink-0 text-xs text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+            · {offer.neighborhood}
           </span>
         </div>
         <h4
-          className="m-0 text-lg leading-tight text-[#0f1a13]"
+          className="m-0 text-base leading-snug text-[#0f1a13]"
           style={
             isLandingCarousel
               ? ({
@@ -518,25 +457,28 @@ export function OfferCard({
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
                 } satisfies CSSProperties)
-              : ({ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700 } satisfies CSSProperties)
+              : ({
+                  fontFamily: "var(--font-poppins), sans-serif",
+                  fontWeight: 700,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                } satisfies CSSProperties)
           }
         >
           {offer.title}
         </h4>
         <p
           className="m-0 text-sm text-[var(--muted)]"
-          style={
-            isLandingCarousel
-              ? ({
-                  fontFamily: "var(--font-dm), sans-serif",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                  minHeight: 54,
-                } satisfies CSSProperties)
-              : ({ fontFamily: "var(--font-dm), sans-serif" } satisfies CSSProperties)
-          }
+          style={({
+            fontFamily: "var(--font-dm), sans-serif",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            ...(isLandingCarousel ? { minHeight: 40 } : {}),
+          } satisfies CSSProperties)}
         >
           {offer.description}
         </p>
@@ -553,186 +495,177 @@ export function OfferCard({
             role="dialog"
             aria-modal="true"
             aria-label={`Detalhes da oferta ${offer.title}`}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "start" }}>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 22, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>{offer.title}</h3>
-                  <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--muted)", fontFamily: "var(--font-dm), sans-serif" }}>{subtitle}</p>
-                </div>
-              <button
-                className="btn btn-ghost"
-                onClick={() => setOpen(false)}
-                style={{ width: "auto", padding: "6px 10px", flexShrink: 0 }}
-                type="button"
-                >
-                  Fechar
-                </button>
+          >
+            {/* Modal header */}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "start", position: "sticky", top: 0, background: "var(--panel)", zIndex: 2, padding: "4px 0 8px", borderBottom: "1px solid var(--line)", marginBottom: 4 }}>
+              <div style={{ minWidth: 0 }}>
+                <h3 style={{ margin: 0, fontSize: 20, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13", lineHeight: 1.25 }}>{offer.title}</h3>
+                <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-dm), sans-serif" }}>{subtitle}</p>
               </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Fechar modal"
+                style={{
+                  flexShrink: 0, width: 32, height: 32, borderRadius: 999,
+                  border: "1px solid var(--line)", background: "#fff",
+                  display: "grid", placeItems: "center", cursor: "pointer",
+                  color: "var(--muted)",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+            </div>
 
             <div className="offer-modal-grid">
+              {/* Coluna de mídia */}
               <div className="offer-modal-media">
                 {currentImage ? (
-                  <div style={{ position: "relative" }}>
+                  <div style={{ position: "relative", aspectRatio: "4/3", borderRadius: 14, overflow: "hidden", background: "#eaefe4" }}>
                     <Image
                       alt={`Imagem ${activeImageIndex + 1} da oferta ${offer.title}`}
-                      height={200}
+                      fill
                       src={currentImage}
                       unoptimized
-                      width={400}
-                      style={{ width: "100%", height: 240, objectFit: "cover", borderRadius: 14 }}
+                      sizes="(max-width: 860px) 100vw, 400px"
+                      style={{ objectFit: "cover" } satisfies CSSProperties}
                     />
                     {hasGallery && (
                       <>
                         <button
-                          className="btn"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            goPrev();
-                          }}
-                          style={{
-                            position: "absolute",
-                            left: 8,
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            background: "rgba(0,0,0,0.55)",
-                            color: "white",
-                            padding: 0,
-                          }}
                           type="button"
+                          aria-label="Foto anterior"
+                          onClick={(event) => { event.stopPropagation(); goPrev(); }}
+                          style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 34, height: 34, borderRadius: 999, border: "1px solid rgba(255,255,255,0.3)", background: "rgba(0,0,0,0.52)", color: "white", display: "grid", placeItems: "center", cursor: "pointer" }}
                         >
-                          {"<"}
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </button>
                         <button
-                          className="btn"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            goNext();
-                          }}
-                          style={{
-                            position: "absolute",
-                            right: 8,
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            background: "rgba(0,0,0,0.55)",
-                            color: "white",
-                            padding: 0,
-                          }}
                           type="button"
+                          aria-label="Próxima foto"
+                          onClick={(event) => { event.stopPropagation(); goNext(); }}
+                          style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", width: 34, height: 34, borderRadius: 999, border: "1px solid rgba(255,255,255,0.3)", background: "rgba(0,0,0,0.52)", color: "white", display: "grid", placeItems: "center", cursor: "pointer" }}
                         >
-                          {">"}
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                         </button>
-                        <div
-                          style={{
-                            position: "absolute",
-                            bottom: 10,
-                            right: 10,
-                            background: "rgba(0,0,0,0.55)",
-                            color: "white",
-                            borderRadius: 999,
-                            padding: "2px 8px",
-                            fontSize: 11,
-                            fontWeight: 700,
-                          }}
-                        >
+                        <div style={{ position: "absolute", bottom: 10, right: 10, background: "rgba(0,0,0,0.55)", color: "white", borderRadius: 999, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>
                           {activeImageIndex + 1}/{imageCount}
                         </div>
                       </>
                     )}
                   </div>
                 ) : (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: 240,
-                      borderRadius: 14,
-                      border: "1px solid var(--line)",
-                      display: "grid",
-                      placeItems: "center",
-                      color: "var(--muted)",
-                      fontWeight: 700,
-                    }}
-                  >
+                  <div style={{ aspectRatio: "4/3", borderRadius: 14, border: "1px solid var(--line)", display: "grid", placeItems: "center", color: "var(--muted)", fontWeight: 700, background: "#f3f6f1" }}>
                     Oferta sem foto
+                  </div>
+                )}
+
+                {/* Miniaturas da galeria */}
+                {hasGallery && (
+                  <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 2 }}>
+                    {offer.images.map((img, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setActiveImageIndex(idx)}
+                        style={{
+                          flexShrink: 0, width: 52, height: 42, borderRadius: 8,
+                          overflow: "hidden", padding: 0,
+                          border: idx === activeImageIndex ? "2px solid #c9f549" : "2px solid var(--line)",
+                          cursor: "pointer", background: "#eaefe4",
+                        }}
+                      >
+                        <Image src={img} alt={`Miniatura ${idx + 1}`} width={52} height={42} unoptimized style={{ width: 52, height: 42, objectFit: "cover" } satisfies CSSProperties} />
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
 
+              {/* Coluna de detalhes */}
               <div className="offer-modal-details">
-                {offer.isHot ? (
-                  <span className="badge" style={{ width: "fit-content", background: "linear-gradient(135deg, #c9f549 0%, #a8d63a 100%)", color: "#0f1a13", fontFamily: "var(--font-poppins), sans-serif" }}>
-                    🔥 Oferta em alta
-                  </span>
-                ) : null}
-                {modalAction}
-                {offer.partnerCoverImage ? (
-                  <Image
-                    alt={`Capa de ${offer.companyName}`}
-                    height={96}
-                    src={offer.partnerCoverImage}
-                    unoptimized
-                    width={640}
-                    style={{ width: "100%", height: 96, objectFit: "cover", borderRadius: 12 }}
-                  />
-                ) : null}
-                <span className="badge badge-accent" style={{ width: "fit-content" }}>
-                  {offer.discountLabel}
-                </span>
-                <p style={{ margin: 0, lineHeight: 1.6, fontFamily: "var(--font-dm), sans-serif", color: "var(--muted)" }}>{offer.description}</p>
-                <div className="offer-modal-metadata">
-                  <span>{offer.neighborhood}</span>
-                  <span>Categoria: {offer.category}</span>
-                  <span>Empresa: {offer.companyName}</span>
-                  <span>Fotos: {imageCount}</span>
-                  {offer.partnerAddressLine ? (
-                    <span>
-                      Distância:{" "}
-                      {distanceLoading
-                        ? "calculando..."
-                        : distanceKm !== null
-                          ? `~${distanceKm.toFixed(1)} km`
-                          : "não disponível"}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  <span className="badge badge-accent" style={{ fontSize: 13 }}>{offer.discountLabel}</span>
+                  {offer.isHot ? (
+                    <span className="badge" style={{ background: "rgba(15,26,19,0.85)", color: "#c9f549", fontSize: 12, backdropFilter: "blur(4px)" }}>
+                      🔥 Em alta
                     </span>
                   ) : null}
                 </div>
+
+                {modalAction}
+
+                <p style={{ margin: 0, lineHeight: 1.65, fontFamily: "var(--font-dm), sans-serif", color: "var(--muted)", fontSize: 14 }}>{offer.description}</p>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  <span className="badge" style={{ background: "#f3f6f1", color: "var(--brand)", fontSize: 12, fontFamily: "var(--font-dm), sans-serif", fontWeight: 600 }}>
+                    📍 {offer.neighborhood}
+                  </span>
+                  <span className="badge" style={{ background: "#f3f6f1", color: "var(--brand)", fontSize: 12, fontFamily: "var(--font-dm), sans-serif", fontWeight: 600 }}>
+                    {offer.category}
+                  </span>
+                  {offer.partnerAddressLine ? (
+                    <span className="badge" style={{ background: "#f3f6f1", color: "var(--brand)", fontSize: 12, fontFamily: "var(--font-dm), sans-serif", fontWeight: 600 }}>
+                      🗺{" "}
+                      {distanceLoading ? "calculando..." : distanceKm !== null ? `~${distanceKm.toFixed(1)} km` : "distância indisponível"}
+                    </span>
+                  ) : null}
+                </div>
+
                 {offer.partnerAddressLine && companyCoordinates && mapEmbedUrl ? (
-                  <div className="card !grid !gap-2 !rounded-xl !p-2">
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif" }}>
-                      Localização da empresa parceira
+                  <div className="card !grid !gap-2 !rounded-xl !p-2 !shadow-none">
+                    <p style={{ margin: 0, fontSize: 11, color: "var(--muted)", fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                      Localização
                     </p>
                     <iframe
-                      title={`Mapa de localização de ${offer.companyName}`}
+                      title={`Mapa de ${offer.companyName}`}
                       src={mapEmbedUrl}
-                      style={{ width: "100%", height: 180, border: "1px solid var(--line)", borderRadius: 10 }}
+                      style={{ width: "100%", height: 160, border: "1px solid var(--line)", borderRadius: 10 }}
                       loading="lazy"
                     />
                   </div>
                 ) : null}
                 {offer.partnerAddressLine && mapLoading ? (
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Carregando mapa...</p>
+                  <div style={{ height: 160, borderRadius: 10, background: "#eaefe4", display: "grid", placeItems: "center", fontSize: 12, color: "var(--muted)" }}>
+                    Carregando mapa...
+                  </div>
                 ) : null}
-                <div className="card !grid !gap-1.5 !rounded-xl !p-3">
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif" }}>Perfil do parceiro</p>
-                  <div className="flex items-center gap-2">
+
+                {/* Perfil do parceiro */}
+                <div className="card !grid !gap-2 !rounded-xl !p-3 !shadow-none" style={{ borderColor: "var(--line)" }}>
+                  <p style={{ margin: 0, fontSize: 11, color: "var(--muted)", fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif", textTransform: "uppercase", letterSpacing: "0.08em" }}>Parceiro</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {offer.partnerLogoImage ? (
                       <Image
                         alt={`Logo de ${offer.companyName}`}
-                        height={36}
+                        height={40}
                         src={offer.partnerLogoImage}
                         unoptimized
-                        width={36}
-                        style={{ width: 36, height: 36, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)" }}
+                        width={40}
+                        style={{ width: 40, height: 40, borderRadius: 999, objectFit: "cover", border: "1px solid var(--line)", flexShrink: 0 } satisfies CSSProperties}
                       />
-                    ) : null}
+                    ) : (
+                      <div style={{ width: 40, height: 40, borderRadius: 999, background: "linear-gradient(135deg, #c9f549, #a8d63a)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: "#0f1a13" }}>{offer.companyName.charAt(0).toUpperCase()}</span>
+                      </div>
+                    )}
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 700, fontSize: 14, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13", lineHeight: 1.3 }}>{offer.companyName}</p>
+                      {offer.neighborhood ? <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-dm), sans-serif" }}>{offer.neighborhood}</p> : null}
+                    </div>
                   </div>
-                  {offer.neighborhood ? <p style={{ margin: 0, fontSize: 13 }}>{offer.neighborhood}</p> : null}
+                  {offer.partnerCoverImage ? (
+                    <Image
+                      alt={`Capa de ${offer.companyName}`}
+                      height={80}
+                      src={offer.partnerCoverImage}
+                      unoptimized
+                      width={640}
+                      style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: 10 } satisfies CSSProperties}
+                    />
+                  ) : null}
                   {socialLinks.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                       {socialLinks.map((item) => (
                         <a
                           key={item.label}
@@ -740,19 +673,18 @@ export function OfferCard({
                           target="_blank"
                           rel="noreferrer"
                           className="badge badge-ok"
-                          style={{ textDecoration: "none" }}
+                          style={{ textDecoration: "none", fontSize: 12 }}
                         >
-                          {item.label}: {item.value}
+                          {item.label}
                         </a>
                       ))}
                     </div>
-                  ) : (
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Redes não informadas.</p>
-                  )}
-                  <Link href={partnerProfileHref} className="btn btn-ghost !w-full text-center">
-                    Ver perfil da empresa
+                  ) : null}
+                  <Link href={partnerProfileHref} className="btn btn-ghost !w-full text-center" style={{ height: 38, fontSize: 13 }}>
+                    Ver perfil completo →
                   </Link>
                 </div>
+
                 {secondaryHref ? (
                   <Link href={secondaryHref} className="btn btn-ghost !w-full text-center">
                     {secondaryLabel}

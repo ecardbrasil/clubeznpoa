@@ -383,6 +383,7 @@ div {
   display: grid;
   align-items: end;
   padding: 0;
+  animation: overlay-in 180ms ease forwards;
 }
 
 .offer-modal-panel {
@@ -393,6 +394,7 @@ div {
   border-bottom-right-radius: 0;
   display: grid;
   gap: 10px;
+  animation: panel-slide-up 240ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
 .offer-modal-grid {
@@ -413,6 +415,81 @@ div {
   font-size: 13px;
 }
 
+/* Skeleton loading */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #e8ede2 25%, #d8dfd2 50%, #e8ede2 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: 10px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Modal animations */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes panel-slide-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Filter chips */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 12px;
+  border-radius: 999px;
+  background: #eefbcf;
+  border: 1px solid #c9f549;
+  color: #243318;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-poppins), sans-serif;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.filter-chip:hover {
+  background: #d8f7a0;
+  border-color: #a8d63a;
+}
+
+.filter-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(36,51,24,0.15);
+  font-size: 10px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Offer card hover */
+.offer-card-root {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.offer-card-root:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px rgba(17, 35, 24, 0.13);
+  border-color: rgba(201, 245, 73, 0.5);
+}
+
 @media (min-width: 860px) {
   .clubezn-shell {
     padding: 30px 24px 40px;
@@ -428,10 +505,16 @@ div {
     width: min(100%, 720px);
     max-height: calc(100vh - 48px);
     border-radius: 24px;
+    animation: panel-fade-in 220ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
   }
 
   .offer-modal-grid {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
     align-items: start;
   }
+}
+
+@keyframes panel-fade-in {
+  from { transform: scale(0.97) translateY(8px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
 }
