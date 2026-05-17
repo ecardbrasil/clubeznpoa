@@ -10,6 +10,7 @@ import {
   Heart,
   Mail,
   MapPin,
+  RefreshCw,
   Search,
   ShieldCheck,
   Sparkles,
@@ -163,6 +164,7 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
   const [trendingOffers] = useState<OfferCardData[]>(initialData.trendingOffers);
   const [featuredOffers] = useState<OfferCardData[]>(initialData.featuredOffers);
   const [partnerProfiles] = useState<Company[]>(initialData.partnerProfiles);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [canScrollTrendingOffersPrev, setCanScrollTrendingOffersPrev] = useState(false);
   const [canScrollTrendingOffersNext, setCanScrollTrendingOffersNext] = useState(false);
   const [canScrollOffersPrev, setCanScrollOffersPrev] = useState(false);
@@ -232,6 +234,12 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
     const q = searchQuery.trim();
     if (q) router.push(`/ofertas?q=${encodeURIComponent(q)}`);
     else router.push("/ofertas");
+  };
+
+  const handleRetry = () => {
+    setIsRetrying(true);
+    router.refresh();
+    setTimeout(() => setIsRetrying(false), 3000);
   };
 
   return (
@@ -514,12 +522,20 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
               ))}
             </div>
           ) : (
-            <div ref={trendingOffersTrackRef} className="czn-offer-carousel-track">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="czn-offer-slide">
-                  <SkeletonCard />
-                </div>
-              ))}
+            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-[#dfe5d4] bg-white px-6 py-12 text-center">
+              <p className="text-sm text-[#44584c]" style={{ fontFamily: "var(--font-dm)" }}>
+                Não foi possível carregar as ofertas agora.
+              </p>
+              <button
+                type="button"
+                onClick={handleRetry}
+                disabled={isRetrying}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#1e3228] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#13210f] disabled:opacity-60"
+                style={{ fontFamily: "var(--font-poppins)" }}
+              >
+                <RefreshCw size={15} className={isRetrying ? "animate-spin" : ""} />
+                {isRetrying ? "Carregando..." : "Tentar novamente"}
+              </button>
             </div>
           )}
         </section>
