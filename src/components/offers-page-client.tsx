@@ -46,6 +46,11 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
   const [selectedNeighborhood, setSelectedNeighborhood] = useState("all");
   const [selectedPartner, setSelectedPartner] = useState("all");
   const [sortBy, setSortBy] = useState<SortOption>("recentes");
+  const [confirmedCode, setConfirmedCode] = useState<{
+    code: string;
+    offerTitle: string;
+    expiresAt: string;
+  } | null>(null);
 
   const categories = useMemo(
     () => ["all", ...Array.from(new Set(allOffers.map((offer) => offer.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))],
@@ -133,6 +138,9 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
     if (!viewer || viewer.role !== "consumer") return;
 
     try {
+      const offer = allOffers.find((o) => o.id === offerId);
+      if (!offer) throw new Error("Oferta não encontrada.");
+
       if (isSupabaseMode) {
         const response = await fetch("/api/consumer", {
           method: "POST",
@@ -146,12 +154,24 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
             offerId,
           }),
         });
-        const payload = (await response.json()) as { error?: string };
+        const payload = (await response.json()) as { error?: string; redemption?: { code: string; expiresAt: string } };
         if (!response.ok || payload.error) {
           throw new Error(payload.error || "Falha ao gerar código de resgate.");
         }
+        if (payload.redemption) {
+          setConfirmedCode({
+            code: payload.redemption.code,
+            offerTitle: offer.title,
+            expiresAt: payload.redemption.expiresAt,
+          });
+        }
       } else {
-        generateRedemption(viewer.id, offerId);
+        const redemption = generateRedemption(viewer.id, offerId);
+        setConfirmedCode({
+          code: redemption.code,
+          offerTitle: offer.title,
+          expiresAt: redemption.expiresAt,
+        });
       }
 
       showToast("Código de resgate gerado com sucesso.", "success");
@@ -329,6 +349,68 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
           )}
         </section>
       </div>
+
+      {confirmedCode && (
+        <section
+          className="offer-modal-overlay"
+          onClick={() => setConfirmedCode(null)}
+          aria-label="Fechar confirmação"
+        >
+          <article
+            className="card offer-modal-panel"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 480, margin: "auto" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "start", position: "sticky", top: 0, background: "var(--panel)", zIndex: 2, padding: "4px 0 8px", borderBottom: "1px solid var(--line)", marginBottom: 4 }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--muted)", fontFamily: "var(--font-dm), sans-serif" }}>Código gerado com sucesso!</p>
+                <h3 style={{ margin: "6px 0 0", fontSize: 20, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13", lineHeight: 1.25 }}>{confirmedCode.offerTitle}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setConfirmedCode(null)}
+                aria-label="Fechar modal"
+                style={{
+                  flexShrink: 0, width: 32, height: 32, borderRadius: 999,
+                  border: "1px solid var(--line)", background: "#fff",
+                  display: "grid", placeItems: "center", cursor: "pointer",
+                  color: "var(--muted)",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+
+            <div style={{ padding: "2rem", textAlign: "center" }}>
+              <p style={{ margin: "0 0 1rem 0", fontSize: "0.95rem", fontFamily: "var(--font-dm), sans-serif" }}>Seu código de resgate:</p>
+              <div style={{ fontSize: "2.5rem", letterSpacing: "0.3em", padding: "1rem 2rem", display: "inline-block", fontFamily: "monospace", fontWeight: 700, background: "var(--panel)", borderRadius: "0.5rem", border: "1px solid var(--line)", color: "#0f1a13" }}>
+                {confirmedCode.code}
+              </div>
+              <p style={{ marginTop: "0.75rem", fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-dm), sans-serif" }}>
+                Válido por 10 minutos · expira às {new Date(confirmedCode.expiresAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              </p>
+              <hr style={{ margin: "1.5rem 0", border: "none", borderTop: "1px solid var(--line)" }} />
+              <p style={{ fontSize: "0.95rem", fontFamily: "var(--font-dm), sans-serif", marginBottom: "1.5rem" }}>
+                Você pode acessar todos os seus códigos a qualquer momento no{" "}
+                <Link href="/consumer" onClick={() => setConfirmedCode(null)} style={{ color: "var(--brand)", textDecoration: "underline", fontWeight: 600 }}>
+                  seu painel
+                </Link>
+                .
+              </p>
+              <button
+                type="button"
+                className="btn btn-coupon"
+                onClick={() => setConfirmedCode(null)}
+                style={{ marginTop: "1rem", width: "100%" }}
+              >
+                Fechar
+              </button>
+            </div>
+          </article>
+        </section>
+      )}
     </main>
   );
 }
