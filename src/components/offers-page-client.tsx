@@ -189,21 +189,6 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <PublicPageHeader />
 
-      <section className="grid gap-2 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] md:p-5">
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-flex h-1 w-6 rounded-full"
-            style={{ background: "linear-gradient(90deg, #c9f549 0%, #a8d63a 100%)" }}
-            aria-hidden="true"
-          />
-          <p className="m-0 text-xs font-bold uppercase tracking-[0.12em] text-[var(--brand)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Ofertas abertas</p>
-        </div>
-        <h1 className="m-0 text-3xl leading-tight md:text-4xl" style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>Escolha por bairro, categoria e parceiro.</h1>
-        <p className="m-0 max-w-3xl text-sm text-[var(--muted)] md:text-base" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-          Explore os benefícios da Zona Norte com filtros completos para encontrar a melhor oferta para o seu dia.
-        </p>
-      </section>
-
       <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)] xl:items-start">
         <aside className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] xl:sticky xl:top-6">
           <div className="flex items-center justify-between">
