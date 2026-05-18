@@ -52,6 +52,7 @@ type OfferRow = {
   category: string;
   neighborhood: string;
   images: string[] | null;
+  is_featured: boolean;
   created_at: string;
 };
 
@@ -121,6 +122,7 @@ const mapOfferRow = (row: OfferRow): Offer => ({
   category: row.category,
   neighborhood: row.neighborhood,
   images: Array.isArray(row.images) ? row.images : [],
+  isFeatured: row.is_featured,
   createdAt: row.created_at,
 });
 
@@ -167,7 +169,7 @@ const getDashboardData = async (): Promise<{ data?: AppData; error?: string }> =
       ),
     supabase
       .from("offers")
-      .select("id, company_id, title, description, discount_label, category, neighborhood, images, created_at"),
+      .select("id, company_id, title, description, discount_label, category, neighborhood, images, is_featured, created_at"),
     supabase.from("redemptions").select("id, user_id, offer_id, code, status, created_at, expires_at, used_at"),
     supabase.from("notifications").select("id, user_id, company_id, offer_id, type, title, message, read, created_at"),
   ]);

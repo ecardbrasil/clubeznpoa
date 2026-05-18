@@ -11,7 +11,7 @@ export type OfferCardData = Pick<
   "id" | "companyId" | "title" | "description" | "discountLabel" | "category" | "neighborhood" | "images"
 > & {
   companyName: string;
-  isHot?: boolean;
+  isFeatured?: boolean;
   partnerLogoImage?: string;
   partnerCoverImage?: string;
   partnerAddressLine?: string;
@@ -419,7 +419,7 @@ export function OfferCard({
           )}
           <div style={{ position: "absolute", top: 8, left: 8, display: "grid", gap: 5, zIndex: 1 }}>
             <span className="badge badge-accent" style={{ fontSize: 12, padding: "4px 10px" }}>{offer.discountLabel}</span>
-            {offer.isHot ? (
+            {offer.isFeatured ? (
               <span className="badge" style={{ background: "rgba(15,26,19,0.82)", color: "#c9f549", fontSize: 11, padding: "3px 9px", backdropFilter: "blur(4px)" }}>
                 🔥 Em alta
               </span>
@@ -586,7 +586,7 @@ export function OfferCard({
               <div className="offer-modal-details">
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   <span className="badge badge-accent" style={{ fontSize: 13 }}>{offer.discountLabel}</span>
-                  {offer.isHot ? (
+                  {offer.isFeatured ? (
                     <span className="badge" style={{ background: "rgba(15,26,19,0.85)", color: "#c9f549", fontSize: 12, backdropFilter: "blur(4px)" }}>
                       🔥 Em alta
                     </span>

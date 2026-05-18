@@ -5,6 +5,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
 import { PublicPageHeader } from "@/components/public-page-header";
+import { FeaturedOffersCarousel } from "@/components/featured-offers-carousel";
 import { useToast } from "@/components/ui/toast";
 import { isSupabaseMode } from "@/lib/runtime-config";
 import { generateRedemption, getAuthHeaders, getCurrentUser } from "@/lib/storage";
@@ -194,8 +195,8 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
     return chips;
   }, [query, selectedCategory, selectedCategoryFromUrl, selectedNeighborhood, selectedNeighborhoodFromUrl, selectedPartner, sortBy]);
 
-  const hotOffers = useMemo(() => filteredOffers.filter((o) => o.isHot), [filteredOffers]);
-  const regularOffers = useMemo(() => filteredOffers.filter((o) => !o.isHot), [filteredOffers]);
+  const featuredOffers = useMemo(() => allOffers.filter((o) => o.isFeatured), [allOffers]);
+  const regularOffers = useMemo(() => filteredOffers.filter((o) => !o.isFeatured), [filteredOffers]);
 
   const renderCard = (offer: PublicOffer) => (
     <OfferCard
@@ -210,6 +211,23 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <PublicPageHeader />
+
+      {featuredOffers.length > 0 && (
+        <div className="grid gap-3">
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: 18 }}>⭐</span>
+            <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Ofertas em alta</h2>
+            <span className="badge badge-accent" style={{ fontSize: 11, padding: "3px 10px" }}>{featuredOffers.length}</span>
+          </div>
+          <FeaturedOffersCarousel
+            offers={featuredOffers}
+            onCardClick={(offer) => {
+              const el = document.getElementById(offer.id);
+              el?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
+          />
+        </div>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)] xl:items-start">
         <aside className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] xl:sticky xl:top-6">
@@ -312,26 +330,6 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
               </Link>
             )}
           </div>
-
-          {hotOffers.length > 0 && (
-            <div className="grid gap-3">
-              <div className="flex items-center gap-2">
-                <span style={{ fontSize: 18 }}>🔥</span>
-                <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Em alta agora</h2>
-                <span className="badge badge-accent" style={{ fontSize: 11, padding: "3px 10px" }}>{hotOffers.length}</span>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {hotOffers.map(renderCard)}
-              </div>
-              {regularOffers.length > 0 && (
-                <div className="flex items-center gap-3 py-1">
-                  <div className="h-px flex-1 bg-[var(--line)]" />
-                  <span className="text-xs font-semibold text-[var(--muted)]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Todas as ofertas</span>
-                  <div className="h-px flex-1 bg-[var(--line)]" />
-                </div>
-              )}
-            </div>
-          )}
 
           {regularOffers.length > 0 && (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

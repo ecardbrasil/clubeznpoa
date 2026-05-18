@@ -70,6 +70,7 @@ export default function AdminPage() {
   const [nowTimestamp, setNowTimestamp] = useState(0);
   const [loadingData, setLoadingData] = useState(true);
   const [actingOfferId, setActingOfferId] = useState<string | null>(null);
+  const [togglingFeaturedId, setTogglingFeaturedId] = useState<string | null>(null);
   const [actingUserId, setActingUserId] = useState<string | null>(null);
   const [roleDrafts, setRoleDrafts] = useState<Record<string, UserRole>>({});
   const user = getCurrentUser();
@@ -219,6 +220,38 @@ export default function AdminPage() {
       showToast(error instanceof Error ? error.message : "Falha ao excluir oferta.", "error");
     } finally {
       setActingOfferId(null);
+    }
+  };
+
+  const handleToggleFeatured = async (offer: Offer) => {
+    const next = !offer.isFeatured;
+    setTogglingFeaturedId(offer.id);
+    try {
+      if (!isSupabaseMode) {
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            offers: prev.offers.map((o) => o.id === offer.id ? { ...o, isFeatured: next } : o),
+          };
+        });
+      } else {
+        const response = await fetch(`/api/admin/offers/${offer.id}/featured`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ featured: next }),
+        });
+        const payload = (await response.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+        if (!response.ok || payload?.error) {
+          throw new Error(payload?.error || "Falha ao atualizar oferta.");
+        }
+        await loadRemoteDashboard();
+      }
+      showToast(next ? "Oferta marcada como em alta." : "Oferta removida do destaque.", "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Falha ao atualizar oferta.", "error");
+    } finally {
+      setTogglingFeaturedId(null);
     }
   };
 
@@ -509,7 +542,9 @@ export default function AdminPage() {
             offers={sortByCreatedAtDesc(data.offers)}
             companies={data.companies}
             actingOfferId={actingOfferId}
+            togglingFeaturedId={togglingFeaturedId}
             onAction={handleOfferAction}
+            onToggleFeatured={handleToggleFeatured}
           />
         )}
 
@@ -648,23 +683,39 @@ function OffersList({
   offers,
   companies,
   actingOfferId,
+  togglingFeaturedId,
   onAction,
+  onToggleFeatured,
 }: {
   offers: Offer[];
   companies: Company[];
   actingOfferId: string | null;
+  togglingFeaturedId: string | null;
   onAction: (action: "deleteOffer", offer: Offer) => Promise<void>;
+  onToggleFeatured: (offer: Offer) => Promise<void>;
 }) {
   const companyById = new Map(companies.map((company) => [company.id, company]));
+  const featuredCount = offers.filter((o) => o.isFeatured).length;
   return (
     <section className="card grid gap-2">
-      <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Ofertas cadastradas</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Ofertas cadastradas</h2>
+        {featuredCount > 0 && (
+          <span className="badge badge-accent" style={{ fontSize: 12 }}>⭐ {featuredCount} em alta</span>
+        )}
+      </div>
       {offers.map((offer) => {
         const company = companyById.get(offer.companyId);
         const busy = actingOfferId === offer.id;
+        const toggling = togglingFeaturedId === offer.id;
         return (
           <article key={offer.id} className="grid gap-2 border-t pt-2" style={{ borderColor: "var(--line)" }}>
-            <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p style={{ margin: 0, fontWeight: 700 }}>{offer.title}</p>
+              {offer.isFeatured && (
+                <span className="badge badge-accent" style={{ fontSize: 11, padding: "2px 8px" }}>⭐ Em alta</span>
+              )}
+            </div>
             <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
               {offer.discountLabel} • {company?.name} • {offer.neighborhood}
             </p>
@@ -673,7 +724,15 @@ function OffersList({
               Criada em {formatDate(offer.createdAt)}
             </p>
             <div className="flex flex-wrap gap-2">
-              <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("deleteOffer", offer)} disabled={busy}>
+              <button
+                className="btn btn-ghost !w-auto !px-3 !py-1.5"
+                onClick={() => void onToggleFeatured(offer)}
+                disabled={toggling || busy}
+                style={offer.isFeatured ? { background: "var(--brand)", color: "#fff", borderColor: "var(--brand)" } : undefined}
+              >
+                {toggling ? "Salvando..." : offer.isFeatured ? "⭐ Em alta" : "Marcar em alta"}
+              </button>
+              <button className="btn btn-ghost !w-auto !px-3 !py-1.5" onClick={() => void onAction("deleteOffer", offer)} disabled={busy || toggling}>
                 Excluir
               </button>
             </div>

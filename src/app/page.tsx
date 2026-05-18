@@ -79,7 +79,7 @@ async function fetchLandingData() {
         discountLabel: o.discount_label,
         category: o.category,
         neighborhood: o.neighborhood,
-        isHot: hotOfferIds.has(o.id),
+        isFeatured: false,
         companyName: c.public_name ?? c.name ?? "Parceiro ClubeZN",
         images: Array.isArray(o.images) ? o.images : [],
         partnerLogoImage: c.logo_image ?? undefined,

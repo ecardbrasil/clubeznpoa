@@ -88,6 +88,7 @@ create table if not exists public.offers (
   images text[] not null default '{}',
   approved boolean not null default false,
   rejected boolean not null default false,
+  is_featured boolean not null default false,
   created_at timestamptz not null default now()
 );
 

@@ -120,6 +120,7 @@ const mapOfferRow = (row: OfferRow): Offer => ({
   category: row.category,
   neighborhood: row.neighborhood,
   images: Array.isArray(row.images) ? row.images : [],
+  isFeatured: false,
   createdAt: row.created_at,
 });
 

@@ -96,7 +96,7 @@ export default function PartnerPublicProfilePage() {
                   category: offer.category,
                   neighborhood: offer.neighborhood,
                   images: offer.images,
-                  isHot: hotOfferIds.has(offer.id),
+                  isFeatured: false,
                   companyName: localCompany.publicName ?? localCompany.name,
                   partnerLogoImage: localCompany.logoImage,
                   partnerCoverImage: localCompany.coverImage,

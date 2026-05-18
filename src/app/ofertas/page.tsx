@@ -1,6 +1,5 @@
 import { OffersPageClient } from "@/components/offers-page-client";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { getHotOfferIdsFromSupabase } from "@/lib/utils";
 import type { OfferCardData } from "@/components/offer-card";
 
 export const revalidate = 30;
@@ -21,6 +20,7 @@ type SupabaseOfferRow = {
   images: string[] | null;
   approved: boolean;
   rejected: boolean;
+  is_featured: boolean;
   created_at: string;
 };
 
@@ -42,27 +42,22 @@ async function fetchOffers(): Promise<PublicOffer[]> {
   try {
     const supabase = getSupabaseServerClient();
 
-    const [offersRes, companiesRes, redemptionsRes] = await Promise.all([
+    const [offersRes, companiesRes] = await Promise.all([
       supabase
         .from("offers")
-        .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, created_at")
+        .select("id, company_id, title, description, discount_label, category, neighborhood, images, approved, rejected, is_featured, created_at")
         .eq("approved", true)
         .eq("rejected", false),
       supabase
         .from("companies")
         .select("id, name, public_name, approved, logo_image, cover_image, address_line, instagram, facebook, website, whatsapp")
         .eq("approved", true),
-      supabase.from("redemptions").select("offer_id, status"),
     ]);
 
     const offers = (offersRes.data ?? []) as SupabaseOfferRow[];
     const companies = (companiesRes.data ?? []) as SupabaseCompanyRow[];
-    const redemptions = redemptionsRes.error
-      ? []
-      : ((redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>);
 
     const companiesById = new Map(companies.map((c) => [c.id, c]));
-    const hotOfferIds = getHotOfferIdsFromSupabase(redemptions, 4);
 
     return offers
       .filter((o) => companiesById.has(o.company_id))
@@ -75,7 +70,7 @@ async function fetchOffers(): Promise<PublicOffer[]> {
           title: o.title,
           description: o.description,
           discountLabel: o.discount_label,
-          isHot: hotOfferIds.has(o.id),
+          isFeatured: o.is_featured,
           category: o.category,
           neighborhood: o.neighborhood,
           images: Array.isArray(o.images) ? o.images : [],

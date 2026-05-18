@@ -41,6 +41,7 @@ export interface Offer {
   category: string;
   neighborhood: string;
   images: string[];
+  isFeatured: boolean;
   createdAt: string;
 }
 
