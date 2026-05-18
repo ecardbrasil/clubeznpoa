@@ -166,11 +166,13 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
           });
         }
       } else {
-        const redemption = generateRedemption(viewer.id, offerId);
+        generateRedemption(viewer.id, offerId);
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
         setConfirmedCode({
-          code: redemption.code,
+          code,
           offerTitle: offer.title,
-          expiresAt: redemption.expiresAt,
+          expiresAt,
         });
       }
 
