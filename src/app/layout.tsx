@@ -16,6 +16,9 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "ClubeZN | Clube de Vantagens Zona Norte",
   description: "Plataforma de vantagens e descontos para moradores da Zona Norte de Porto Alegre.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
