@@ -61,7 +61,11 @@
       "Bash(curl -s -X POST http://localhost:3000/api/auth -H 'Content-Type: application/json' -d '{\"action\":\"requestPasswordReset\",\"identifier\":\"ecardbrasil@gmail.com\"}')",
       "Bash(curl -s -X POST https://eofxxmwzoittoinzylkt.supabase.co/functions/v1/send-reset-email -H 'Content-Type: application/json' -H 'x-internal-secret: 4ce28dc7af4ea7a1e26a9a7352da206c7b38789ef9e54689bbc2ae239631849a' -d '{\"to\":\"ecardbrasil@gmail.com\",\"otp\":\"123456\",\"name\":\"Teste\"}')",
       "Bash(curl -s -X POST https://eofxxmwzoittoinzylkt.supabase.co/functions/v1/send-reset-email -H 'Content-Type: application/json' -H 'x-internal-secret: 4ce28dc7af4ea7a1e26a9a7352da206c7b38789ef9e54689bbc2ae239631849a' -d '{\"to\":\"ecardbrasil@gmail.com\",\"otp\":\"999888\",\"name\":\"Gustavo\"}')",
-      "Bash(curl -s -X POST https://eofxxmwzoittoinzylkt.supabase.co/functions/v1/send-reset-email -H 'Content-Type: application/json' -H 'x-internal-secret: __TRACKED_VAR__' -d '{\"to\":\"ecardbrasil@gmail.com\",\"otp\":\"999888\",\"name\":\"Gustavo\"}')"
+      "Bash(curl -s -X POST https://eofxxmwzoittoinzylkt.supabase.co/functions/v1/send-reset-email -H 'Content-Type: application/json' -H 'x-internal-secret: __TRACKED_VAR__' -d '{\"to\":\"ecardbrasil@gmail.com\",\"otp\":\"999888\",\"name\":\"Gustavo\"}')",
+      "Bash(mv \"/Users/gustavocardoso/clube zn 04 junho /clubeznpoa/ClubeZN favicon.png\" \"/Users/gustavocardoso/clube zn 04 junho /clubeznpoa/public/favicon.png\")"
+    ],
+    "additionalDirectories": [
+      "/Users/gustavocardoso/clube zn 04 junho /clubeznpoa"
     ]
   }
 }

@@ -2,18 +2,21 @@
 
 import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Building2, ChevronDown, Eye, EyeOff, Loader2, UserRound, X, Search } from "lucide-react";
 import { PublicPageHeader } from "@/components/public-page-header";
+import { GoogleAuthButton } from "@/components/google-auth-button";
 import { useToast } from "@/components/ui/toast";
 import { CATEGORY_GROUPS, DEFAULT_CATEGORIES, serializeCategories } from "@/lib/categories";
 import {
   initStorage,
-  requestPasswordResetWithProvider,
-  confirmPasswordResetWithProvider,
   routeByRole,
-  signInWithProvider,
-  signUpWithProvider,
 } from "@/lib/storage";
+import {
+  serverSignUp,
+  requestPasswordReset,
+  confirmPasswordReset,
+} from "./actions";
 
 type Mode = "login" | "register";
 type RegisterRole = "consumer" | "partner";
@@ -460,16 +463,25 @@ function AuthPageInner() {
 
     try {
       const normalizedIdentifier = identifierLooksLikeEmail ? identifierTrimmed.toLowerCase() : identifierDigits;
-      const result = await signInWithProvider(normalizedIdentifier, password);
-      if (!result.user) {
-        const message = result.error || "Não foi possível entrar.";
+      const result = await signIn("credentials", {
+        identifier: normalizedIdentifier,
+        password,
+        redirect: false,
+      });
+
+      if (!result?.ok) {
+        const message = result?.error || "Não foi possível entrar.";
         setError(message);
         showToast(message, "error");
         return;
       }
 
       showToast("Login realizado com sucesso.", "success");
-      router.push(routeByRole(result.user.role));
+      router.push("/consumer");
+    } catch {
+      const message = "Erro ao fazer login.";
+      setError(message);
+      showToast(message, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -501,7 +513,7 @@ function AuthPageInner() {
       const normalizedIdentifier = recoverIdentifierLooksLikeEmail
         ? recoverIdentifierTrimmed.toLowerCase()
         : recoverIdentifierDigits;
-      const response = await requestPasswordResetWithProvider(normalizedIdentifier);
+      const response = await requestPasswordReset(normalizedIdentifier);
       if (response.error) {
         setError(response.error);
         showToast(response.error, "error");
@@ -550,7 +562,7 @@ function AuthPageInner() {
       const normalizedIdentifier = recoverIdentifierLooksLikeEmail
         ? recoverIdentifierTrimmed.toLowerCase()
         : recoverIdentifierDigits;
-      const response = await confirmPasswordResetWithProvider(normalizedIdentifier, recoverOtp.trim(), recoverNewPassword);
+      const response = await confirmPasswordReset(normalizedIdentifier, recoverOtp.trim(), recoverNewPassword);
       if (response.error) {
         setError(response.error);
         showToast(response.error, "error");
@@ -619,7 +631,7 @@ function AuthPageInner() {
 
     setIsSubmitting(true);
     try {
-      const response = await signUpWithProvider({
+      const response = await serverSignUp({
         name: name.trim(),
         email: email.trim() || undefined,
         phone: phoneDigits || undefined,
@@ -631,18 +643,18 @@ function AuthPageInner() {
         companyNeighborhood,
       });
 
-      if (response.error || !response.user) {
-        setError(response.error || "Não foi possível criar a conta.");
-        showToast(response.error || "Não foi possível criar a conta.", "error");
+      if (response.error) {
+        setError(response.error);
+        showToast(response.error, "error");
         return;
       }
 
       const successMessage =
-        response.user.role === "partner"
+        registerRole === "partner"
           ? "Conta criada. Sua empresa será analisada antes da publicação das ofertas."
           : "Conta criada com sucesso.";
       showToast(successMessage, "success");
-      router.push(routeByRole(response.user.role));
+      router.push(registerRole === "partner" ? "/partner" : "/consumer");
     } finally {
       setIsSubmitting(false);
     }
@@ -667,6 +679,14 @@ function AuthPageInner() {
                 ? "Acesse ofertas exclusivas da Zona Norte."
                 : "Economize na Zona Norte com ofertas exclusivas."}
             </p>
+          </div>
+
+          <GoogleAuthButton mode={mode === "login" ? "login" : "signup"} className="w-full" />
+
+          <div className="relative flex items-center gap-3">
+            <div className="flex-1 h-px bg-[var(--line)]" />
+            <span className="text-xs text-[var(--muted)] font-medium">ou</span>
+            <div className="flex-1 h-px bg-[var(--line)]" />
           </div>
 
           <div role="tablist" aria-label="Escolha entre login e cadastro" className="grid grid-cols-2 rounded-xl border border-[var(--line)] bg-[#f8fbf4] p-1 gap-1">
