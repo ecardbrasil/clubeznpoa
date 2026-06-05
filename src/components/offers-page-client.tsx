@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
 import { PublicPageHeader } from "@/components/public-page-header";
@@ -19,15 +19,6 @@ type PublicOffer = OfferCardData & {
   createdAt: string;
 };
 
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
-    return error.message;
-  }
-  return fallback;
-};
-
 type OffersPageContentProps = {
   initialOffers: PublicOffer[];
 };
@@ -37,21 +28,50 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
   const searchParams = useSearchParams();
   const [allOffers] = useState<PublicOffer[]>(initialOffers);
   const [viewer, setViewer] = useState<User | null>(null);
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setViewer(getCurrentUser());
   }, []);
+
+  useEffect(() => {
+    if (!filterDrawerOpen) return;
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFilterDrawerOpen(false); };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [filterDrawerOpen]);
 
   const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedNeighborhood, setSelectedNeighborhood] = useState("all");
   const [selectedPartner, setSelectedPartner] = useState("all");
   const [sortBy, setSortBy] = useState<SortOption>("recentes");
+
+  // Drawer temp state (applied on confirm)
+  const [tempNeighborhood, setTempNeighborhood] = useState("all");
+  const [tempPartner, setTempPartner] = useState("all");
+  const [tempSort, setTempSort] = useState<SortOption>("recentes");
+
   const [confirmedCode, setConfirmedCode] = useState<{
     code: string;
     offerTitle: string;
     expiresAt: string;
   } | null>(null);
+
+  const openDrawer = () => {
+    setTempNeighborhood(selectedNeighborhood);
+    setTempPartner(selectedPartner);
+    setTempSort(sortBy);
+    setFilterDrawerOpen(true);
+  };
+
+  const applyDrawer = () => {
+    setSelectedNeighborhood(tempNeighborhood);
+    setSelectedPartner(tempPartner);
+    setSortBy(tempSort);
+    setFilterDrawerOpen(false);
+  };
 
   const categories = useMemo(
     () => ["all", ...Array.from(new Set(allOffers.map((offer) => offer.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))],
@@ -75,7 +95,6 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
   const selectedNeighborhoodFromUrl = useMemo(() => {
     const bairroParam = searchParams.get("bairro");
     if (!bairroParam) return "all";
-
     const matchedNeighborhood = neighborhoods.find((item) => item.toLowerCase() === bairroParam.toLowerCase());
     return matchedNeighborhood ?? "all";
   }, [neighborhoods, searchParams]);
@@ -83,7 +102,6 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
   const selectedCategoryFromUrl = useMemo(() => {
     const categoriaParam = searchParams.get("categoria");
     if (!categoriaParam) return "all";
-
     const matchedCategory = categories.find((item) => item.toLowerCase() === categoriaParam.toLowerCase());
     return matchedCategory ?? "all";
   }, [categories, searchParams]);
@@ -186,14 +204,22 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
   const activeFilters = useMemo(() => {
     const chips: { key: string; label: string; clear: () => void }[] = [];
     if (query.trim()) chips.push({ key: "query", label: `"${query.trim()}"`, clear: () => setQuery("") });
-    const effectiveCategory = selectedCategory !== "all" ? selectedCategory : selectedCategoryFromUrl;
-    if (effectiveCategory !== "all") chips.push({ key: "category", label: effectiveCategory, clear: () => setSelectedCategory("all") });
     const effectiveNeighborhood = selectedNeighborhood !== "all" ? selectedNeighborhood : selectedNeighborhoodFromUrl;
     if (effectiveNeighborhood !== "all") chips.push({ key: "neighborhood", label: effectiveNeighborhood, clear: () => setSelectedNeighborhood("all") });
     if (selectedPartner !== "all") chips.push({ key: "partner", label: selectedPartner, clear: () => setSelectedPartner("all") });
     if (sortBy !== "recentes") chips.push({ key: "sort", label: sortBy === "desconto" ? "Maior desconto" : "Bairro A-Z", clear: () => setSortBy("recentes") });
     return chips;
-  }, [query, selectedCategory, selectedCategoryFromUrl, selectedNeighborhood, selectedNeighborhoodFromUrl, selectedPartner, sortBy]);
+  }, [query, selectedNeighborhood, selectedNeighborhoodFromUrl, selectedPartner, sortBy]);
+
+  // Count advanced filters active (drawer ones only)
+  const advancedFilterCount = useMemo(() => {
+    let count = 0;
+    const effectiveNeighborhood = selectedNeighborhood !== "all" ? selectedNeighborhood : selectedNeighborhoodFromUrl;
+    if (effectiveNeighborhood !== "all") count++;
+    if (selectedPartner !== "all") count++;
+    if (sortBy !== "recentes") count++;
+    return count;
+  }, [selectedNeighborhood, selectedNeighborhoodFromUrl, selectedPartner, sortBy]);
 
   const featuredOffers = useMemo(() => allOffers.filter((o) => o.isFeatured), [allOffers]);
   const regularOffers = useMemo(() => filteredOffers.filter((o) => !o.isFeatured), [filteredOffers]);
@@ -229,127 +255,318 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
         </div>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)] xl:items-start">
-        <aside className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] xl:sticky xl:top-6">
-          <div className="flex items-center justify-between">
-            <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Filtros</h2>
-            {activeFilters.length > 0 && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--brand)] transition-colors"
-                style={{ fontFamily: "var(--font-dm), sans-serif", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-              >
-                Limpar todos
-              </button>
-            )}
-          </div>
+      {/* Search + filter controls */}
+      <div className="grid gap-3">
+        {/* Search bar */}
+        <div className="relative flex items-center">
+          <svg
+            className="pointer-events-none absolute left-4 text-[var(--muted)]"
+            width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar ofertas, parceiros, bairros..."
+            style={{
+              width: "100%",
+              paddingLeft: 44,
+              paddingRight: 16,
+              paddingTop: 12,
+              paddingBottom: 12,
+              fontSize: 15,
+              borderRadius: 999,
+              border: "1.5px solid var(--line)",
+              background: "#fff",
+              fontFamily: "var(--font-dm), sans-serif",
+              outline: "none",
+              boxShadow: "var(--shadow-soft)",
+              transition: "border-color 0.15s",
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#b7d84b"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "var(--line)"; }}
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Limpar busca"
+              style={{
+                position: "absolute", right: 14,
+                background: "none", border: "none", cursor: "pointer",
+                color: "var(--muted)", display: "grid", placeItems: "center",
+                padding: 4, borderRadius: 999,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
+        </div>
 
-          {activeFilters.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {activeFilters.map((chip) => (
-                <button key={chip.key} type="button" className="filter-chip" onClick={chip.clear}>
-                  {chip.label}
-                  <span className="filter-chip-x" aria-hidden="true">×</span>
+        {/* Category chips + Filters button */}
+        <div className="flex items-center gap-2">
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              overflowX: "auto",
+              flex: 1,
+              paddingBottom: 2,
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+            }}
+          >
+            {categories.map((cat) => {
+              const effective = selectedCategory !== "all" ? selectedCategory : selectedCategoryFromUrl;
+              const isActive = cat === effective;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  style={{
+                    flexShrink: 0,
+                    padding: "7px 16px",
+                    borderRadius: 999,
+                    border: isActive ? "1.5px solid #8ab828" : "1.5px solid var(--line)",
+                    background: isActive ? "#b7d84b" : "#fff",
+                    color: isActive ? "#1a2e0e" : "var(--muted)",
+                    fontFamily: "var(--font-poppins), sans-serif",
+                    fontSize: 13,
+                    fontWeight: isActive ? 700 : 500,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    transition: "all 0.15s",
+                    boxShadow: isActive ? "0 1px 4px rgba(0,0,0,0.10)" : "none",
+                  }}
+                >
+                  {cat === "all" ? "Todas" : cat}
                 </button>
-              ))}
-            </div>
-          )}
-
-          <label className="field">
-            <span>Busca</span>
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Oferta, parceiro, bairro..."
-            />
-          </label>
-
-          <label className="field">
-            <span>Categoria</span>
-            <select
-              value={selectedCategory !== "all" ? selectedCategory : selectedCategoryFromUrl}
-              onChange={(event) => setSelectedCategory(event.target.value)}
-            >
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category === "all" ? "Todas as categorias" : category}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="field">
-            <span>Bairro</span>
-            <select
-              value={selectedNeighborhood !== "all" ? selectedNeighborhood : selectedNeighborhoodFromUrl}
-              onChange={(event) => setSelectedNeighborhood(event.target.value)}
-            >
-              {neighborhoods.map((neighborhood) => (
-                <option key={neighborhood} value={neighborhood}>
-                  {neighborhood === "all" ? "Todos os bairros" : neighborhood}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="field">
-            <span>Parceiro</span>
-            <select value={selectedPartner} onChange={(event) => setSelectedPartner(event.target.value)}>
-              {partners.map((partner) => (
-                <option key={partner} value={partner}>
-                  {partner === "all" ? "Todos os parceiros" : partner}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="field">
-            <span>Ordenar por</span>
-            <select value={sortBy} onChange={(event) => setSortBy(event.target.value as SortOption)}>
-              <option value="recentes">Mais recentes</option>
-              <option value="desconto">Maior desconto</option>
-              <option value="bairro">Bairro (A-Z)</option>
-            </select>
-          </label>
-        </aside>
-
-        <section className="grid gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--line)] bg-white px-4 py-3">
-            <p className="m-0 text-sm font-semibold text-[var(--success-text)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-              <span style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>{filteredOffers.length}</span>
-              {" "}oferta{filteredOffers.length !== 1 ? "s" : ""} encontrada{filteredOffers.length !== 1 ? "s" : ""}
-            </p>
-            {viewer?.role === "consumer" ? (
-              <span className="badge badge-ok" style={{ fontFamily: "var(--font-poppins), sans-serif", fontSize: 12 }}>
-                ✓ Logado — pode resgatar
-              </span>
-            ) : (
-              <Link href="/auth" className="text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-                Entrar para resgatar →
-              </Link>
-            )}
+              );
+            })}
           </div>
 
-          {regularOffers.length > 0 && (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {regularOffers.map(renderCard)}
-            </div>
-          )}
+          {/* Filters button */}
+          <button
+            type="button"
+            onClick={openDrawer}
+            style={{
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "7px 14px",
+              borderRadius: 999,
+              border: advancedFilterCount > 0 ? "1.5px solid #8ab828" : "1.5px solid var(--line)",
+              background: advancedFilterCount > 0 ? "#eefbcf" : "#fff",
+              color: advancedFilterCount > 0 ? "#1a2e0e" : "var(--muted)",
+              fontFamily: "var(--font-poppins), sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              transition: "all 0.15s",
+              boxShadow: "var(--shadow-soft)",
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
+            </svg>
+            Filtros
+            {advancedFilterCount > 0 && (
+              <span style={{
+                background: "#8ab828", color: "#fff",
+                borderRadius: 999, fontSize: 11, fontWeight: 700,
+                padding: "1px 6px", lineHeight: 1.4,
+              }}>
+                {advancedFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
 
-          {filteredOffers.length === 0 && (
-            <article className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-8 text-center shadow-[var(--shadow-soft)]">
-              <p style={{ margin: 0, fontSize: 40, lineHeight: 1 }}>🔍</p>
-              <h3 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Nenhuma oferta encontrada</h3>
-              <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Tente ajustar os filtros ou buscar por outro termo.</p>
-              <button type="button" className="btn btn-primary mx-auto" style={{ width: "auto", paddingInline: 28 }} onClick={resetFilters}>
-                Limpar filtros
+        {/* Active filter chips */}
+        {activeFilters.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            {activeFilters.map((chip) => (
+              <button key={chip.key} type="button" className="filter-chip" onClick={chip.clear}>
+                {chip.label}
+                <span className="filter-chip-x" aria-hidden="true">×</span>
               </button>
-            </article>
+            ))}
+            <button
+              type="button"
+              onClick={resetFilters}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                fontSize: 12, fontWeight: 600, color: "var(--muted)",
+                fontFamily: "var(--font-dm), sans-serif", padding: "3px 6px",
+                textDecoration: "underline",
+              }}
+            >
+              Limpar todos
+            </button>
+          </div>
+        )}
+
+        {/* Results count + auth status */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="m-0 text-sm font-semibold text-[var(--success-text)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+            <span style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>{filteredOffers.length}</span>
+            {" "}oferta{filteredOffers.length !== 1 ? "s" : ""} encontrada{filteredOffers.length !== 1 ? "s" : ""}
+          </p>
+          {viewer?.role === "consumer" ? (
+            <span className="badge badge-ok" style={{ fontFamily: "var(--font-poppins), sans-serif", fontSize: 12 }}>
+              ✓ Logado — pode resgatar
+            </span>
+          ) : (
+            <Link href="/auth" className="text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+              Entrar para resgatar →
+            </Link>
           )}
-        </section>
+        </div>
       </div>
 
+      {/* Offers grid — full width */}
+      {regularOffers.length > 0 && (
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+          {regularOffers.map(renderCard)}
+        </div>
+      )}
+
+      {filteredOffers.length === 0 && (
+        <article className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-8 text-center shadow-[var(--shadow-soft)]">
+          <p style={{ margin: 0, fontSize: 40, lineHeight: 1 }}>🔍</p>
+          <h3 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Nenhuma oferta encontrada</h3>
+          <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Tente ajustar os filtros ou buscar por outro termo.</p>
+          <button type="button" className="btn btn-primary mx-auto" style={{ width: "auto", paddingInline: 28 }} onClick={resetFilters}>
+            Limpar filtros
+          </button>
+        </article>
+      )}
+
+      {/* Filter drawer */}
+      {filterDrawerOpen && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 50,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex", alignItems: "flex-end",
+          }}
+          onClick={() => setFilterDrawerOpen(false)}
+        >
+          <div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Filtros avançados"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 520,
+              margin: "0 auto",
+              background: "#fff",
+              borderRadius: "20px 20px 0 0",
+              padding: "24px 20px 32px",
+              display: "grid",
+              gap: 16,
+              boxShadow: "0 -4px 32px rgba(0,0,0,0.14)",
+            }}
+          >
+            {/* Handle bar */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: -8 }}>
+              <div style={{ width: 40, height: 4, borderRadius: 999, background: "#e0e0e0" }} />
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13" }}>
+                Filtros avançados
+              </h3>
+              <button
+                type="button"
+                onClick={() => setFilterDrawerOpen(false)}
+                aria-label="Fechar filtros"
+                style={{
+                  background: "none", border: "1px solid var(--line)", borderRadius: 999,
+                  width: 30, height: 30, display: "grid", placeItems: "center",
+                  cursor: "pointer", color: "var(--muted)",
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <label className="field">
+              <span>Bairro</span>
+              <select value={tempNeighborhood} onChange={(e) => setTempNeighborhood(e.target.value)}>
+                {neighborhoods.map((n) => (
+                  <option key={n} value={n}>{n === "all" ? "Todos os bairros" : n}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Parceiro</span>
+              <select value={tempPartner} onChange={(e) => setTempPartner(e.target.value)}>
+                {partners.map((p) => (
+                  <option key={p} value={p}>{p === "all" ? "Todos os parceiros" : p}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Ordenar por</span>
+              <select value={tempSort} onChange={(e) => setTempSort(e.target.value as SortOption)}>
+                <option value="recentes">Mais recentes</option>
+                <option value="desconto">Maior desconto</option>
+                <option value="bairro">Bairro (A-Z)</option>
+              </select>
+            </label>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setTempNeighborhood("all");
+                  setTempPartner("all");
+                  setTempSort("recentes");
+                }}
+                style={{
+                  flex: 1, padding: "11px 0", borderRadius: 999,
+                  border: "1.5px solid var(--line)", background: "#fff",
+                  fontFamily: "var(--font-poppins), sans-serif", fontSize: 14,
+                  fontWeight: 600, cursor: "pointer", color: "var(--muted)",
+                  transition: "all 0.15s",
+                }}
+              >
+                Limpar
+              </button>
+              <button
+                type="button"
+                onClick={applyDrawer}
+                style={{
+                  flex: 2, padding: "11px 0", borderRadius: 999,
+                  border: "none", background: "#b7d84b",
+                  fontFamily: "var(--font-poppins), sans-serif", fontSize: 14,
+                  fontWeight: 700, cursor: "pointer", color: "#1a2e0e",
+                  transition: "all 0.15s",
+                  boxShadow: "0 2px 8px rgba(183,216,75,0.4)",
+                }}
+              >
+                Aplicar filtros
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Redemption code modal */}
       {confirmedCode && (
         <section
           className="offer-modal-overlay"

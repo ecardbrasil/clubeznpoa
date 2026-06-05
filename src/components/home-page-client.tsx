@@ -715,12 +715,20 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
                 >
                   <Link href={`/parceiros/${partner.id}`} className="czn-partner-card">
                     <div className="flex items-start gap-3">
-                      <div
-                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-black"
-                        style={{ background: "#C9F549", color: "#0a0f0c", fontFamily: "var(--font-poppins)" }}
-                      >
-                        {(partner.publicName ?? partner.name).charAt(0).toUpperCase()}
-                      </div>
+                      {partner.logoImage ? (
+                        <img
+                          src={partner.logoImage}
+                          alt={partner.publicName ?? partner.name}
+                          className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div
+                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-black"
+                          style={{ background: "#C9F549", color: "#0a0f0c", fontFamily: "var(--font-poppins)" }}
+                        >
+                          {(partner.publicName ?? partner.name).charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <p
                           className="font-bold text-[#18231c] truncate"
