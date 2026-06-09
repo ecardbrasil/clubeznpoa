@@ -527,9 +527,9 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
         {/* Hero Banner */}
         <section className="czn-hero-banner rounded-2xl">
           <div className="max-w-7xl mx-auto px-4 py-14 md:px-6 md:py-20 relative z-10">
-            <div className="grid gap-8 md:grid-cols-2 md:items-center">
+            <div className="grid gap-8 md:grid-cols-2 md:items-center md:gap-12">
               <motion.div
-                className="space-y-5"
+                className="space-y-5 order-2 md:order-1"
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7 }}
@@ -591,6 +591,22 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
                     Cadastrar grátis
                   </Link>
                 </div>
+              </motion.div>
+
+              {/* Hero Image */}
+              <motion.div
+                className="relative flex items-center justify-center order-1 md:order-2"
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.25, duration: 0.7 }}
+                viewport={{ once: true }}
+              >
+                <img
+                  src="/images/hero-phone.jpg"
+                  alt="Usuário segurando telefone com ClubeZN"
+                  className="w-full max-w-sm rounded-2xl shadow-2xl object-cover"
+                  loading="lazy"
+                />
               </motion.div>
 
               {/* Stats grid */}
@@ -878,6 +894,14 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
               backgroundImage: "radial-gradient(circle at 80% 50%, rgba(16,33,19,0.3) 0%, transparent 60%)",
             }}
           />
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 opacity-70">
+            <img
+              src="/images/pig-icon.png"
+              alt="Ícone porquinho"
+              className="w-24 h-24 md:w-32 md:h-32 object-cover"
+              loading="lazy"
+            />
+          </div>
           <div className="relative z-10 px-8 py-12 md:px-12 max-w-2xl">
             <span
               className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#0a0f0c] bg-white px-4 py-1.5 text-xs font-black uppercase tracking-widest text-[#0a0f0c] mb-4"
