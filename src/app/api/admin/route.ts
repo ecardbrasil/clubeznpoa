@@ -161,17 +161,21 @@ const getDashboardData = async (): Promise<{ data?: AppData; error?: string }> =
   await supabase.from("redemptions").update({ status: "expired" }).eq("status", "generated").lt("expires_at", nowIso());
 
   const [usersRes, companiesRes, offersRes, redemptionsRes, notificationsRes] = await Promise.all([
-    supabase.from("users").select("id, name, email, phone, neighborhood, role, company_id, blocked, created_at"),
+    supabase.from("users").select("id, name, email, phone, neighborhood, role, company_id, blocked, created_at").order("created_at", { ascending: false }).limit(500),
     supabase
       .from("companies")
       .select(
         "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
-      ),
+      )
+      .order("created_at", { ascending: false })
+      .limit(500),
     supabase
       .from("offers")
-      .select("id, company_id, title, description, discount_label, category, neighborhood, images, is_featured, created_at"),
-    supabase.from("redemptions").select("id, user_id, offer_id, code, status, created_at, expires_at, used_at"),
-    supabase.from("notifications").select("id, user_id, company_id, offer_id, type, title, message, read, created_at"),
+      .select("id, company_id, title, description, discount_label, category, neighborhood, images, is_featured, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500),
+    supabase.from("redemptions").select("id, user_id, offer_id, code, status, created_at, expires_at, used_at").order("created_at", { ascending: false }).limit(200),
+    supabase.from("notifications").select("id, user_id, company_id, offer_id, type, title, message, read, created_at").order("created_at", { ascending: false }).limit(200),
   ]);
 
   if (usersRes.error || companiesRes.error || offersRes.error || redemptionsRes.error || notificationsRes.error) {

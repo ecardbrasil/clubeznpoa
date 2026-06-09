@@ -1,15 +1,14 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
 import { PublicPageHeader } from "@/components/public-page-header";
 import { PartnerProfileCard } from "@/components/partner/profile-card";
 import { isSupabaseMode } from "@/lib/runtime-config";
 import { getData, initStorage } from "@/lib/storage";
-import { getSupabaseBrowserClient, hasSupabaseEnv } from "@/lib/supabase/client";
-import { Company } from "@/lib/types";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
+import type { Company } from "@/lib/types";
 import { getHotOfferIds } from "@/lib/utils";
+
+export const revalidate = 3600;
 
 type SupabaseCompanyRow = {
   id: string;
@@ -64,172 +63,90 @@ const mapSupabaseCompany = (row: SupabaseCompanyRow): Company => ({
   createdAt: row.created_at,
 });
 
-export default function PartnerPublicProfilePage() {
-  const params = useParams<{ companyId: string }>();
-  const companyId = Array.isArray(params.companyId) ? params.companyId[0] : params.companyId;
-  const [loading, setLoading] = useState(true);
-  const [company, setCompany] = useState<Company | null>(null);
-  const [offers, setOffers] = useState<OfferCardData[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      setLoading(true);
-      if (!isSupabaseMode) {
-        initStorage();
-        const data = getData();
-        const localCompany = data.companies.find((item) => item.id === companyId) ?? null;
-        const hotOfferIds = getHotOfferIds(data, 4);
-        const localOffers =
-          localCompany === null
-            ? []
-            : data.offers
-                .filter((offer) => offer.companyId === localCompany.id)
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                .map((offer) => ({
-                  id: offer.id,
-                  companyId: offer.companyId,
-                  title: offer.title,
-                  description: offer.description,
-                  discountLabel: offer.discountLabel,
-                  category: offer.category,
-                  neighborhood: offer.neighborhood,
-                  images: offer.images,
-                  isFeatured: false,
-                  companyName: localCompany.publicName ?? localCompany.name,
-                  partnerLogoImage: localCompany.logoImage,
-                  partnerCoverImage: localCompany.coverImage,
-                  partnerAddressLine: localCompany.addressLine,
-                  partnerInstagram: localCompany.instagram,
-                  partnerFacebook: localCompany.facebook,
-                  partnerWebsite: localCompany.website,
-                  partnerWhatsapp: localCompany.whatsapp,
-                }));
-
-        if (!cancelled) {
-          setCompany(localCompany);
-          setOffers(localOffers);
-          setLoading(false);
-        }
-        return;
-      }
-
-      if (!hasSupabaseEnv()) {
-        if (!cancelled) {
-          setCompany(null);
-          setOffers([]);
-          setLoading(false);
-        }
-        return;
-      }
-
-      const supabase = getSupabaseBrowserClient();
-      const [companyRes, offersRes, redemptionsRes] = await Promise.all([
-        supabase
-          .from("companies")
-          .select(
-            "id, name, public_name, category, neighborhood, city, state, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
-          )
-          .eq("id", companyId)
-          .maybeSingle<SupabaseCompanyRow>(),
-        supabase
-          .from("offers")
-          .select("id, company_id, title, description, discount_label, category, neighborhood, images, rejected, created_at")
-          .eq("company_id", companyId)
-          .eq("rejected", false),
-        supabase.from("redemptions").select("offer_id, status"),
-      ]);
-
-      if (companyRes.error || !companyRes.data || offersRes.error) {
-        if (!cancelled) {
-          setCompany(null);
-          setOffers([]);
-          setLoading(false);
-        }
-        return;
-      }
-
-      const mappedCompany = mapSupabaseCompany(companyRes.data);
-      const redemptions = redemptionsRes.error
-        ? []
-        : ((redemptionsRes.data ?? []) as Array<{ offer_id: string; status: "generated" | "used" | "expired" }>);
-
-      const usageScoreByOffer = redemptions
-        .reduce<Record<string, number>>((acc, redemption) => {
-          const score = redemption.status === "used" ? 2 : redemption.status === "generated" ? 1 : 0;
-          if (score <= 0) return acc;
-          acc[redemption.offer_id] = (acc[redemption.offer_id] ?? 0) + score;
-          return acc;
-        }, {});
-      const hotOfferIds = new Set(
-        Object.entries(usageScoreByOffer)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 4)
-          .filter(([, score]) => score > 0)
-          .map(([offerId]) => offerId),
-      );
-
-      const mappedOffers = ((offersRes.data ?? []) as SupabaseOfferRow[])
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .map((offer) => ({
-          id: offer.id,
-          companyId: offer.company_id,
-          title: offer.title,
-          description: offer.description,
-          discountLabel: offer.discount_label,
-          category: offer.category,
-          neighborhood: offer.neighborhood,
-          images: Array.isArray(offer.images) ? offer.images : [],
-          isHot: hotOfferIds.has(offer.id),
-          companyName: mappedCompany.publicName ?? mappedCompany.name,
-          partnerLogoImage: mappedCompany.logoImage,
-          partnerCoverImage: mappedCompany.coverImage,
-          partnerAddressLine: mappedCompany.addressLine,
-          partnerInstagram: mappedCompany.instagram,
-          partnerFacebook: mappedCompany.facebook,
-          partnerWebsite: mappedCompany.website,
-          partnerWhatsapp: mappedCompany.whatsapp,
-        }));
-
-      if (!cancelled) {
-        setCompany(mappedCompany);
-        setOffers(mappedOffers);
-        setLoading(false);
-      }
-    };
-
-    void load().catch(() => {
-      if (!cancelled) {
-        setCompany(null);
-        setOffers([]);
-        setLoading(false);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [companyId]);
-
-  const hasCompany = useMemo(() => Boolean(company), [company]);
-
-  if (loading) {
-    return <main className="mx-auto grid min-h-screen w-full max-w-[1200px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6">Carregando...</main>;
+async function getCompanyData(companyId: string): Promise<{ company: Company; offers: OfferCardData[] } | null> {
+  if (!isSupabaseMode) {
+    initStorage();
+    const data = getData();
+    const localCompany = data.companies.find((item) => item.id === companyId) ?? null;
+    if (!localCompany) return null;
+    const localOffers = data.offers
+      .filter((offer) => offer.companyId === localCompany.id)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .map((offer) => ({
+        id: offer.id,
+        companyId: offer.companyId,
+        title: offer.title,
+        description: offer.description,
+        discountLabel: offer.discountLabel,
+        category: offer.category,
+        neighborhood: offer.neighborhood,
+        images: offer.images,
+        isFeatured: false,
+        isHot: getHotOfferIds(data, 4).has(offer.id),
+        companyName: localCompany.publicName ?? localCompany.name,
+        partnerLogoImage: localCompany.logoImage,
+        partnerCoverImage: localCompany.coverImage,
+        partnerAddressLine: localCompany.addressLine,
+        partnerInstagram: localCompany.instagram,
+        partnerFacebook: localCompany.facebook,
+        partnerWebsite: localCompany.website,
+        partnerWhatsapp: localCompany.whatsapp,
+      }));
+    return { company: localCompany, offers: localOffers };
   }
 
-  if (!hasCompany || !company) {
-    return (
-      <main className="mx-auto grid min-h-screen w-full max-w-[1200px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6">
-        <PublicPageHeader />
-        <section className="card grid gap-2 text-center">
-          <h1 className="m-0 text-2xl font-black text-[#0f1a13]">Parceiro não encontrado</h1>
-          <p className="m-0 text-sm text-[var(--muted)]">
-            Este perfil não existe ou ainda não está aprovado para exibição pública.
-          </p>
-        </section>
-      </main>
-    );
+  const supabase = getSupabaseServerClient();
+  const [companyRes, offersRes] = await Promise.all([
+    supabase
+      .from("companies")
+      .select("id, name, public_name, category, neighborhood, city, state, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at")
+      .eq("id", companyId)
+      .eq("approved", true)
+      .maybeSingle<SupabaseCompanyRow>(),
+    supabase
+      .from("offers")
+      .select("id, company_id, title, description, discount_label, category, neighborhood, images, rejected, created_at")
+      .eq("company_id", companyId)
+      .eq("rejected", false),
+  ]);
+
+  if (companyRes.error || !companyRes.data || offersRes.error) return null;
+
+  const mappedCompany = mapSupabaseCompany(companyRes.data);
+  const mappedOffers = ((offersRes.data ?? []) as SupabaseOfferRow[])
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .map((offer) => ({
+      id: offer.id,
+      companyId: offer.company_id,
+      title: offer.title,
+      description: offer.description,
+      discountLabel: offer.discount_label,
+      category: offer.category,
+      neighborhood: offer.neighborhood,
+      images: Array.isArray(offer.images) ? offer.images : [],
+      isFeatured: false,
+      companyName: mappedCompany.publicName ?? mappedCompany.name,
+      partnerLogoImage: mappedCompany.logoImage,
+      partnerCoverImage: mappedCompany.coverImage,
+      partnerAddressLine: mappedCompany.addressLine,
+      partnerInstagram: mappedCompany.instagram,
+      partnerFacebook: mappedCompany.facebook,
+      partnerWebsite: mappedCompany.website,
+      partnerWhatsapp: mappedCompany.whatsapp,
+    }));
+
+  return { company: mappedCompany, offers: mappedOffers };
+}
+
+export default async function PartnerPublicProfilePage({ params }: { params: Promise<{ companyId: string }> }) {
+  const { companyId } = await params;
+  const result = await getCompanyData(companyId);
+
+  if (!result) {
+    notFound();
   }
+
+  const { company, offers } = result;
 
   return (
     <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">

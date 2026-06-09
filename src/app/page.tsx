@@ -1,6 +1,5 @@
 import { HomePageClient } from "@/components/home-page-client";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { getHotOfferIdsFromSupabase } from "@/lib/utils";
 import type { OfferCardData } from "@/components/offer-card";
 import type { Company } from "@/lib/types";
 
@@ -52,7 +51,7 @@ async function fetchLandingData() {
         .from("companies")
         .select("id, name, public_name, category, neighborhood, city, state, approved, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp")
         .eq("approved", true),
-      supabase.from("redemptions").select("offer_id, status"),
+      supabase.from("redemptions").select("offer_id, status").in("status", ["used", "generated"]).limit(500),
     ]);
 
     const offers = (offersRes.data ?? []) as SupabaseOfferRow[];
@@ -60,8 +59,6 @@ async function fetchLandingData() {
     const redemptions = redemptionsRes.error ? [] : (redemptionsRes.data ?? []);
 
     const companiesById = new Map(companies.map((c) => [c.id, c]));
-    const hotOfferIds = getHotOfferIdsFromSupabase(redemptions, 3);
-
     const offerCountByCompanyId = offers.reduce<Record<string, number>>((acc, o) => {
       if (companiesById.has(o.company_id)) acc[o.company_id] = (acc[o.company_id] ?? 0) + 1;
       return acc;
