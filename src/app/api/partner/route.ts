@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readApiSessionFromRequest } from "@/lib/server-auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { randomUUID } from "crypto";
 import type { AppData, AppNotification, Company, Offer, Redemption, User } from "@/lib/types";
 
 type PartnerActionPayload =
@@ -460,7 +461,7 @@ export async function POST(request: Request) {
       const payload = body.payload;
       const now = nowIso();
       const insertPayload = {
-        id: `o_${crypto.randomUUID()}`,
+        id: `o_${randomUUID()}`,
         company_id: companyId,
         title: payload.title.trim(),
         description: payload.description.trim(),

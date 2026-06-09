@@ -2,7 +2,7 @@ import NextAuth, { type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { scryptSync, timingSafeEqual } from "crypto";
+import { scryptSync, timingSafeEqual, randomUUID } from "crypto";
 import type { User } from "@/lib/types";
 
 const HASH_PREFIX = "scrypt";
@@ -119,7 +119,7 @@ export const authOptions: NextAuthOptions = {
           token.role = existingUser.role;
           token.companyId = existingUser.company_id ?? undefined;
         } else {
-          const userId = `u_${crypto.randomUUID()}`;
+          const userId = `u_${randomUUID()}`;
           const nowIso = new Date().toISOString();
 
           const { error } = await supabase.from("users").insert({

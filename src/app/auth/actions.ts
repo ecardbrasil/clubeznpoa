@@ -1,7 +1,7 @@
 "use server";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual, randomUUID } from "crypto";
 import type { SignUpInput } from "@/lib/storage";
 
 const HASH_PREFIX = "scrypt";
@@ -31,8 +31,8 @@ const verifyPassword = (password: string, stored: string) => {
   };
 };
 
-const createUserId = () => `u_${crypto.randomUUID()}`;
-const createCompanyId = () => `c_${crypto.randomUUID()}`;
+const createUserId = () => `u_${randomUUID()}`;
+const createCompanyId = () => `c_${randomUUID()}`;
 
 export async function serverSignIn(identifier: string, password: string) {
   try {
@@ -184,7 +184,7 @@ export async function requestPasswordReset(identifier: string) {
 
     const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
     const tokenHash = createHash("sha256").update(rawOtp).digest("hex");
-    const tokenId = `prt_${crypto.randomUUID()}`;
+    const tokenId = `prt_${randomUUID()}`;
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
     await supabase.from("password_reset_tokens").insert({

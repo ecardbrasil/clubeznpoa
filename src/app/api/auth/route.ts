@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual, randomUUID } from "crypto";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { createApiSessionToken } from "@/lib/server-auth";
 import type { SignUpInput } from "@/lib/storage";
@@ -30,8 +30,8 @@ const mapUserRow = (row: SupabaseUserRow): User => ({
   createdAt: row.created_at,
 });
 
-const createUserId = () => `u_${crypto.randomUUID()}`;
-const createCompanyId = () => `c_${crypto.randomUUID()}`;
+const createUserId = () => `u_${randomUUID()}`;
+const createCompanyId = () => `c_${randomUUID()}`;
 const HASH_PREFIX = "scrypt";
 
 const hashPassword = (password: string) => {
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
 
       const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
       const tokenHash = createHash("sha256").update(rawOtp).digest("hex");
-      const tokenId = `prt_${crypto.randomUUID()}`;
+      const tokenId = `prt_${randomUUID()}`;
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
       await supabase.from("password_reset_tokens").insert({

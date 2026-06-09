@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readApiSessionFromRequest } from "@/lib/server-auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { randomUUID } from "crypto";
 import type { AppData, AppNotification, Company, Offer, Redemption, User } from "@/lib/types";
 
 type ConsumerActionPayload =
@@ -285,7 +286,7 @@ export async function POST(request: Request) {
 
       const code = await ensureUniqueCode();
       const redemption = {
-        id: `r_${crypto.randomUUID()}`,
+        id: `r_${randomUUID()}`,
         user_id: userId,
         offer_id: offerId,
         code,
