@@ -32,14 +32,23 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-3">
               <a
-                href="https://instagram.com/clubeznpoa"
+                href="https://instagram.com/clubezn"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-all hover:border-[#C9F549] hover:text-[#C9F549]"
                 style={{ background: "rgba(255,255,255,0.06)" }}
-                aria-label="Instagram ClubeZN"
+                aria-label="Instagram @clubezn"
               >
-                <Heart size={16} />
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="4.5" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <circle cx="12" cy="12" r="3.5" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+                </svg>
               </a>
               <a
                 href="mailto:contato@clubezn.com"

@@ -880,6 +880,39 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
           </div>
         </section>
 
+        {/* Instagram Feed Section */}
+        <section>
+          <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+            <div className="space-y-1">
+              <span className="czn-section-label">✦ Siga-nos</span>
+              <h2 className="czn-section-title">Últimas novidades no Instagram</h2>
+            </div>
+            <a
+              href="https://instagram.com/clubezn"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-xl border border-[#dfe5d4] bg-white px-4 py-2.5 text-sm font-bold text-[#1e3228] no-underline transition-all hover:border-[#C9F549] hover:bg-[#f3f6f1]"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              @clubezn
+              <ArrowRight size={16} />
+            </a>
+          </div>
+          <div className="rounded-2xl overflow-hidden border border-[#dfe5d4] bg-white p-6">
+            <iframe
+              src="https://www.instagram.com/clubezn/embed"
+              width="100%"
+              height="600"
+              frameBorder="0"
+              scrolling="no"
+              allowTransparency={true}
+              className="w-full"
+              style={{ minHeight: "400px" }}
+              title="Instagram Feed ClubeZN"
+            />
+          </div>
+        </section>
+
         {/* CTA Banner */}
         <motion.section
           className="rounded-2xl overflow-hidden relative"
@@ -952,7 +985,7 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
               </p>
               <div className="flex items-center gap-3">
                 <a
-                  href="https://instagram.com/clubeznpoa"
+                  href="https://instagram.com/clubezn"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/8 transition-all hover:border-[#C9F549] hover:text-[#C9F549]"
