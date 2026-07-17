@@ -3,7 +3,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { OfferCardData } from "@/components/offer-card";
 import type { Company } from "@/lib/types";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 type SupabaseOfferRow = {
   id: string;

@@ -57,12 +57,8 @@ export function SiteHeader({
   actionsSlot,
 }: SiteHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => getCurrentUser());
   const mobileMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setUser(getCurrentUser());
-  }, []);
 
   function handleSignOut() {
     clearSession();
