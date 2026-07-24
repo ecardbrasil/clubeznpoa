@@ -9,6 +9,14 @@ import type { Company } from "@/lib/types";
 import { getHotOfferIds } from "@/lib/utils";
 
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  if (!isSupabaseMode) return [];
+  const supabase = getSupabaseServerClient();
+  const { data } = await supabase.from("companies").select("id").eq("approved", true);
+  return (data ?? []).map((row) => ({ companyId: row.id }));
+}
 
 type SupabaseCompanyRow = {
   id: string;
