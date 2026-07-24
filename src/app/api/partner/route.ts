@@ -265,45 +265,46 @@ const validatePartnerCode = async (companyId: string, code: string): Promise<Sta
   const supabase = getSupabaseServerClient();
   const trimmedCode = code.trim();
 
-  const { data: redemption, error: redemptionError } = await supabase
+  // Atomically mark as used only if still in "generated" state and not expired,
+  // preventing race conditions when two partners validate the same code simultaneously.
+  const { data: updated, error: updateError } = await supabase
     .from("redemptions")
-    .select("id, user_id, offer_id, code, status, created_at, expires_at, used_at")
+    .update({ status: "used", used_at: nowIso() })
     .eq("code", trimmedCode)
+    .eq("status", "generated")
+    .gt("expires_at", nowIso())
+    .select("id, user_id, offer_id, code, status, created_at, expires_at, used_at")
     .maybeSingle<RedemptionRow>();
 
-  if (redemptionError || !redemption) {
-    return { ok: false, message: "Código não encontrado." };
+  if (updateError) {
+    return { ok: false, message: "Falha ao validar código." };
   }
 
-  if (redemption.status !== "generated") {
-    return { ok: false, message: "Código já utilizado ou expirado." };
-  }
+  if (!updated) {
+    // Distinguish between not found, already used/expired
+    const { data: existing } = await supabase
+      .from("redemptions")
+      .select("status, expires_at")
+      .eq("code", trimmedCode)
+      .maybeSingle<{ status: string; expires_at: string }>();
 
-  if (new Date(redemption.expires_at).getTime() < Date.now()) {
-    await supabase.from("redemptions").update({ status: "expired" }).eq("id", redemption.id);
+    if (!existing) return { ok: false, message: "Código não encontrado." };
+    if (existing.status !== "generated") return { ok: false, message: "Código já utilizado ou expirado." };
     return { ok: false, message: "Código expirado." };
   }
 
-  const { data: offer, error: offerError } = await supabase
-    .from("offers")
-    .select("id, company_id")
-    .eq("id", redemption.offer_id)
-    .maybeSingle<{ id: string; company_id: string }>();
+  if (updated.offer_id) {
+    const { data: offer } = await supabase
+      .from("offers")
+      .select("company_id")
+      .eq("id", updated.offer_id)
+      .maybeSingle<{ company_id: string }>();
 
-  if (offerError || !offer || offer.company_id !== companyId) {
-    return { ok: false, message: "Código não pertence à sua empresa." };
-  }
-
-  const usedAt = nowIso();
-  const { data: updated, error: updateError } = await supabase
-    .from("redemptions")
-    .update({ status: "used", used_at: usedAt })
-    .eq("id", redemption.id)
-    .select("id, user_id, offer_id, code, status, created_at, expires_at, used_at")
-    .single<RedemptionRow>();
-
-  if (updateError || !updated) {
-    return { ok: false, message: "Falha ao validar código." };
+    if (!offer || offer.company_id !== companyId) {
+      // Undo: code doesn't belong to this company
+      await supabase.from("redemptions").update({ status: "generated", used_at: null }).eq("id", updated.id);
+      return { ok: false, message: "Código não pertence à sua empresa." };
+    }
   }
 
   return { ok: true, message: "Benefício validado com sucesso.", redemption: mapRedemptionRow(updated) };

@@ -20,6 +20,18 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.png",
   },
+  openGraph: {
+    title: "ClubeZN | Clube de Vantagens Zona Norte",
+    description: "Plataforma de vantagens e descontos para moradores da Zona Norte de Porto Alegre.",
+    siteName: "ClubeZN",
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ClubeZN | Clube de Vantagens Zona Norte",
+    description: "Plataforma de vantagens e descontos para moradores da Zona Norte de Porto Alegre.",
+  },
 };
 
 export default function RootLayout({
