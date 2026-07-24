@@ -190,12 +190,15 @@ const getDashboardData = async (userId: string): Promise<{ data?: AppData; error
     supabase
       .from("offers")
       .select("id, company_id, title, description, discount_label, category, neighborhood, images, created_at")
+      .eq("approved", true)
+      .eq("rejected", false)
       .order("created_at", { ascending: false }),
     supabase
       .from("companies")
       .select(
         "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
-      ),
+      )
+      .eq("approved", true),
     supabase.from("redemptions").select("id, user_id, offer_id, code, status, created_at, expires_at, used_at").eq("user_id", userId),
     supabase.from("notifications").select("id, user_id, company_id, offer_id, type, title, message, read, created_at").eq("user_id", userId),
   ]);

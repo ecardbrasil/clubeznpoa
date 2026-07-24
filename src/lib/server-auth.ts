@@ -14,9 +14,9 @@ const base64urlEncode = (value: string) => Buffer.from(value, "utf8").toString("
 const base64urlDecode = (value: string) => Buffer.from(value, "base64url").toString("utf8");
 
 const getSecret = () => {
-  const secret = process.env.API_SESSION_SECRET ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secret = process.env.API_SESSION_SECRET;
   if (!secret) {
-    throw new Error("Missing API session secret. Set API_SESSION_SECRET or SUPABASE_SERVICE_ROLE_KEY.");
+    throw new Error("Missing API_SESSION_SECRET environment variable.");
   }
   return secret;
 };

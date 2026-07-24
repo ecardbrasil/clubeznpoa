@@ -9,6 +9,14 @@ import type { Company } from "@/lib/types";
 import { getHotOfferIds } from "@/lib/utils";
 
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  if (!isSupabaseMode) return [];
+  const supabase = getSupabaseServerClient();
+  const { data } = await supabase.from("companies").select("id").eq("approved", true);
+  return (data ?? []).map((row) => ({ companyId: row.id }));
+}
 
 type SupabaseCompanyRow = {
   id: string;
@@ -107,6 +115,7 @@ async function getCompanyData(companyId: string): Promise<{ company: Company; of
       .from("offers")
       .select("id, company_id, title, description, discount_label, category, neighborhood, images, rejected, created_at")
       .eq("company_id", companyId)
+      .eq("approved", true)
       .eq("rejected", false),
   ]);
 
@@ -136,6 +145,20 @@ async function getCompanyData(companyId: string): Promise<{ company: Company; of
     }));
 
   return { company: mappedCompany, offers: mappedOffers };
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ companyId: string }> }) {
+  const { companyId } = await params;
+  const result = await getCompanyData(companyId);
+  if (!result) return {};
+  const { company } = result;
+  const name = company.publicName ?? company.name;
+  const description = company.bio ?? `Confira as ofertas de ${name} no ClubeZN.`;
+  return {
+    title: `${name} | ClubeZN`,
+    description,
+    openGraph: { title: name, description, type: "profile" as const },
+  };
 }
 
 export default async function PartnerPublicProfilePage({ params }: { params: Promise<{ companyId: string }> }) {

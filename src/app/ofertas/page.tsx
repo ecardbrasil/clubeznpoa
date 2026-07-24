@@ -2,7 +2,7 @@ import { OffersPageClient } from "@/components/offers-page-client";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { OfferCardData } from "@/components/offer-card";
 
-export const revalidate = 120;
+export const revalidate = 300;
 
 type PublicOffer = OfferCardData & {
   companyId: string;

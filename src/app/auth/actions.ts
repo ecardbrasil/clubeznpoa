@@ -27,7 +27,7 @@ const verifyPassword = (password: string, stored: string) => {
   if (expectedBuffer.length !== providedBuffer.length) return { valid: false, shouldRehash: false };
   return {
     valid: timingSafeEqual(expectedBuffer, providedBuffer),
-    shouldRehash: true,
+    shouldRehash: false,
   };
 };
 
