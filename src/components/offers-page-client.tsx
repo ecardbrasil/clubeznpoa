@@ -325,6 +325,7 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
       actionLabel={viewer?.role === "consumer" ? "Gerar código de resgate" : "Quero essa oferta"}
       onAction={viewer?.role === "consumer" ? () => handleGenerateCode(offer.id) : undefined}
       offer={offer}
+      showQuickAction
     />
   );
 

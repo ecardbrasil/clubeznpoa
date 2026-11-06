@@ -29,6 +29,8 @@ type OfferCardProps = {
   secondaryLabel?: string;
   secondaryHref?: string;
   variant?: "default" | "landing-carousel";
+  /** Mostra botão de ação direto no card (listagem de ofertas). */
+  showQuickAction?: boolean;
 };
 
 type PartnerSocial = {
@@ -97,6 +99,7 @@ export function OfferCard({
   secondaryLabel,
   secondaryHref,
   variant = "default",
+  showQuickAction = false,
 }: OfferCardProps) {
   const [open, setOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -348,7 +351,7 @@ export function OfferCard({
                   borderRadius: 16,
                   background: "#dfe5d4",
                 } satisfies CSSProperties)
-              : ({ position: "relative", overflow: "hidden", borderRadius: 12, aspectRatio: "4 / 3", background: "#eaefe4" } satisfies CSSProperties)
+              : ({ position: "relative", overflow: "hidden", borderRadius: 12, aspectRatio: showQuickAction ? "16 / 9" : "4 / 3", background: "#eaefe4" } satisfies CSSProperties)
           }
         >
           {currentImage ? (
@@ -418,7 +421,17 @@ export function OfferCard({
             </div>
           )}
           <div style={{ position: "absolute", top: 8, left: 8, display: "grid", gap: 5, zIndex: 1 }}>
-            <span className="badge badge-accent" style={{ fontSize: 12, padding: "4px 10px" }}>{offer.discountLabel}</span>
+            <span
+              className="badge badge-accent"
+              style={{
+                fontSize: showQuickAction ? 14 : 12,
+                padding: showQuickAction ? "5px 12px" : "4px 10px",
+                boxShadow: showQuickAction ? "0 4px 12px rgba(15,26,19,0.22)" : undefined,
+                maxWidth: "100%",
+              }}
+            >
+              {offer.discountLabel}
+            </span>
             {offer.isFeatured ? (
               <span className="badge" style={{ background: "rgba(15,26,19,0.82)", color: "#c9f549", fontSize: 11, padding: "3px 9px", backdropFilter: "blur(4px)" }}>
                 🔥 Em alta
@@ -482,6 +495,30 @@ export function OfferCard({
         >
           {offer.description}
         </p>
+        {showQuickAction && !isLandingCarousel ? (
+          actionHref ? (
+            <Link
+              href={actionHref}
+              onClick={(event) => event.stopPropagation()}
+              className="btn btn-coupon !w-full text-center"
+              style={{ marginTop: "auto", height: 40, fontSize: 14 }}
+            >
+              {actionLabel}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-coupon"
+              style={{ marginTop: "auto", height: 40, fontSize: 14 }}
+              onClick={(event) => {
+                event.stopPropagation();
+                onAction?.();
+              }}
+            >
+              {actionLabel}
+            </button>
+          )
+        ) : null}
       </article>
 
       {open && (
