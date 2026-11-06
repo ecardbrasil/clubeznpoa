@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { MapPin, Search, SlidersHorizontal, X } from "lucide-react";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
 import { PublicPageHeader } from "@/components/public-page-header";
 import { FeaturedOffersCarousel } from "@/components/featured-offers-carousel";
@@ -23,13 +24,122 @@ type OffersPageContentProps = {
   initialOffers: PublicOffer[];
 };
 
+const PAGE_SIZE = 12;
+const ALL = "all";
+
+const SORT_LABELS: Record<SortOption, string> = {
+  recentes: "Mais recentes",
+  desconto: "Maior desconto",
+  bairro: "Bairro (A-Z)",
+};
+
+const byPt = (a: string, b: string) => a.localeCompare(b, "pt-BR");
+
+/** Conta ocorrências de uma chave, ordenado por quantidade desc e nome. */
+function countBy(offers: PublicOffer[], pick: (o: PublicOffer) => string) {
+  const map = new Map<string, number>();
+  for (const offer of offers) {
+    const key = pick(offer);
+    if (!key) continue;
+    map.set(key, (map.get(key) ?? 0) + 1);
+  }
+  return [...map.entries()].sort((a, b) => b[1] - a[1] || byPt(a[0], b[0]));
+}
+
+function matchParam(value: string | null, options: string[]) {
+  if (!value) return ALL;
+  return options.find((item) => item.toLowerCase() === value.toLowerCase()) ?? ALL;
+}
+
+type FilterPanelProps = {
+  neighborhoods: [string, number][];
+  partners: [string, number][];
+  neighborhood: string;
+  partner: string;
+  onNeighborhood: (value: string) => void;
+  onPartner: (value: string) => void;
+  total: number;
+};
+
+/** Painel de filtros reutilizado na sidebar (desktop) e no drawer (mobile), estilo Sympla. */
+function FilterPanel({ neighborhoods, partners, neighborhood, partner, onNeighborhood, onPartner, total }: FilterPanelProps) {
+  const [showAllHoods, setShowAllHoods] = useState(false);
+  const visibleHoods = showAllHoods ? neighborhoods : neighborhoods.slice(0, 6);
+
+  const optionStyle = (active: boolean) => ({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    width: "100%",
+    padding: "8px 10px",
+    borderRadius: 10,
+    border: "none",
+    background: active ? "#eefbcf" : "transparent",
+    color: active ? "#1a2e0e" : "var(--text)",
+    fontFamily: "var(--font-dm), sans-serif",
+    fontSize: 14,
+    fontWeight: active ? 700 : 500,
+    cursor: "pointer",
+    textAlign: "left" as const,
+  });
+
+  const groupTitle = {
+    margin: "0 0 6px",
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: "0.08em",
+    textTransform: "uppercase" as const,
+    color: "var(--muted)",
+    fontFamily: "var(--font-poppins), sans-serif",
+  };
+
+  return (
+    <div className="grid gap-5">
+      <div>
+        <p style={groupTitle}>Bairro</p>
+        <div className="grid gap-0.5">
+          <button type="button" style={optionStyle(neighborhood === ALL)} onClick={() => onNeighborhood(ALL)}>
+            <span>Todos os bairros</span>
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>{total}</span>
+          </button>
+          {visibleHoods.map(([name, count]) => (
+            <button key={name} type="button" style={optionStyle(neighborhood === name)} onClick={() => onNeighborhood(name)}>
+              <span className="truncate">{name}</span>
+              <span style={{ fontSize: 12, color: "var(--muted)" }}>{count}</span>
+            </button>
+          ))}
+          {neighborhoods.length > 6 && (
+            <button
+              type="button"
+              onClick={() => setShowAllHoods((v) => !v)}
+              style={{ ...optionStyle(false), color: "var(--brand)", fontWeight: 700, fontSize: 13 }}
+            >
+              {showAllHoods ? "Ver menos" : `Ver todos (${neighborhoods.length})`}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <label className="field">
+        <span style={groupTitle}>Parceiro</span>
+        <select value={partner} onChange={(e) => onPartner(e.target.value)}>
+          <option value={ALL}>Todos os parceiros</option>
+          {partners.map(([name, count]) => (
+            <option key={name} value={name}>{`${name} (${count})`}</option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+}
+
 function OffersPageContent({ initialOffers }: OffersPageContentProps) {
   const { showToast } = useToast();
   const searchParams = useSearchParams();
   const [allOffers] = useState<PublicOffer[]>(initialOffers);
   const [viewer, setViewer] = useState<User | null>(null);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setViewer(getCurrentUser());
@@ -42,16 +152,21 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
     return () => document.removeEventListener("keydown", handleKey);
   }, [filterDrawerOpen]);
 
+  // Estado inicial vem da URL (?q=&categoria=&bairro=) e depois é mantido em sincronia.
   const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedNeighborhood, setSelectedNeighborhood] = useState("all");
-  const [selectedPartner, setSelectedPartner] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState(() =>
+    matchParam(searchParams.get("categoria"), initialOffers.map((o) => o.category)),
+  );
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState(() =>
+    matchParam(searchParams.get("bairro"), initialOffers.map((o) => o.neighborhood)),
+  );
+  const [selectedPartner, setSelectedPartner] = useState(ALL);
   const [sortBy, setSortBy] = useState<SortOption>("recentes");
+  const [pagination, setPagination] = useState({ signature: "", count: PAGE_SIZE });
 
-  // Drawer temp state (applied on confirm)
-  const [tempNeighborhood, setTempNeighborhood] = useState("all");
-  const [tempPartner, setTempPartner] = useState("all");
-  const [tempSort, setTempSort] = useState<SortOption>("recentes");
+  // Drawer (mobile) aplica ao confirmar
+  const [tempNeighborhood, setTempNeighborhood] = useState(ALL);
+  const [tempPartner, setTempPartner] = useState(ALL);
 
   const [confirmedCode, setConfirmedCode] = useState<{
     code: string;
@@ -59,97 +174,85 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
     expiresAt: string;
   } | null>(null);
 
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (query.trim()) params.set("q", query.trim());
+    if (selectedCategory !== ALL) params.set("categoria", selectedCategory);
+    if (selectedNeighborhood !== ALL) params.set("bairro", selectedNeighborhood);
+    const qs = params.toString();
+    window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+  }, [query, selectedCategory, selectedNeighborhood]);
+
   const openDrawer = () => {
     setTempNeighborhood(selectedNeighborhood);
     setTempPartner(selectedPartner);
-    setTempSort(sortBy);
     setFilterDrawerOpen(true);
   };
 
   const applyDrawer = () => {
     setSelectedNeighborhood(tempNeighborhood);
     setSelectedPartner(tempPartner);
-    setSortBy(tempSort);
     setFilterDrawerOpen(false);
   };
 
-  const categories = useMemo(
-    () => ["all", ...Array.from(new Set(allOffers.map((offer) => offer.category))).sort((a, b) => a.localeCompare(b, "pt-BR"))],
-    [allOffers],
-  );
-  const neighborhoods = useMemo(
-    () => [
-      "all",
-      ...Array.from(new Set(allOffers.map((offer) => offer.neighborhood))).sort((a, b) => a.localeCompare(b, "pt-BR")),
-    ],
-    [allOffers],
-  );
-  const partners = useMemo(
-    () => [
-      "all",
-      ...Array.from(new Set(allOffers.map((offer) => offer.companyName))).sort((a, b) => a.localeCompare(b, "pt-BR")),
-    ],
-    [allOffers],
-  );
+  const normalizedQuery = query.trim().toLowerCase();
 
-  const selectedNeighborhoodFromUrl = useMemo(() => {
-    const bairroParam = searchParams.get("bairro");
-    if (!bairroParam) return "all";
-    const matchedNeighborhood = neighborhoods.find((item) => item.toLowerCase() === bairroParam.toLowerCase());
-    return matchedNeighborhood ?? "all";
-  }, [neighborhoods, searchParams]);
-
-  const selectedCategoryFromUrl = useMemo(() => {
-    const categoriaParam = searchParams.get("categoria");
-    if (!categoriaParam) return "all";
-    const matchedCategory = categories.find((item) => item.toLowerCase() === categoriaParam.toLowerCase());
-    return matchedCategory ?? "all";
-  }, [categories, searchParams]);
-
-  const filteredOffers = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    const effectiveNeighborhood = selectedNeighborhood !== "all" ? selectedNeighborhood : selectedNeighborhoodFromUrl;
-    const effectiveCategory = selectedCategory !== "all" ? selectedCategory : selectedCategoryFromUrl;
-
-    let output = allOffers.filter((offer) => {
-      if (effectiveCategory !== "all" && offer.category !== effectiveCategory) return false;
-      if (effectiveNeighborhood !== "all" && offer.neighborhood !== effectiveNeighborhood) return false;
-      if (selectedPartner !== "all" && offer.companyName !== selectedPartner) return false;
+  /** Filtra ignorando uma dimensão, para calcular contagens por faceta (como Sympla). */
+  const filterOffers = (skip?: "category" | "neighborhood") =>
+    allOffers.filter((offer) => {
+      if (skip !== "category" && selectedCategory !== ALL && offer.category !== selectedCategory) return false;
+      if (skip !== "neighborhood" && selectedNeighborhood !== ALL && offer.neighborhood !== selectedNeighborhood) return false;
+      if (selectedPartner !== ALL && offer.companyName !== selectedPartner) return false;
       if (!normalizedQuery) return true;
-
       return [offer.title, offer.description, offer.companyName, offer.category, offer.neighborhood]
         .join(" ")
         .toLowerCase()
         .includes(normalizedQuery);
     });
 
-    output = [...output].sort((a, b) => {
+  const categoryFacet = useMemo(
+    () => countBy(filterOffers("category"), (o) => o.category),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allOffers, normalizedQuery, selectedNeighborhood, selectedPartner],
+  );
+  const neighborhoodFacet = useMemo(
+    () => countBy(filterOffers("neighborhood"), (o) => o.neighborhood),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [allOffers, normalizedQuery, selectedCategory, selectedPartner],
+  );
+  const partnerFacet = useMemo(
+    () => countBy(allOffers, (o) => o.companyName).sort((a, b) => byPt(a[0], b[0])),
+    [allOffers],
+  );
+  const categoryTotal = useMemo(
+    () => categoryFacet.reduce((sum, [, count]) => sum + count, 0),
+    [categoryFacet],
+  );
+
+  const filteredOffers = useMemo(() => {
+    const output = filterOffers();
+    return output.sort((a, b) => {
       if (sortBy === "desconto") {
         const scoreDiff = parseDiscountSortWeight(b.discountLabel) - parseDiscountSortWeight(a.discountLabel);
         if (scoreDiff !== 0) return scoreDiff;
         return b.discountLabel.localeCompare(a.discountLabel, "pt-BR");
       }
-      if (sortBy === "bairro") return a.neighborhood.localeCompare(b.neighborhood, "pt-BR");
+      if (sortBy === "bairro") return byPt(a.neighborhood, b.neighborhood);
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allOffers, normalizedQuery, selectedCategory, selectedNeighborhood, selectedPartner, sortBy]);
 
-    return output;
-  }, [
-    allOffers,
-    query,
-    selectedCategory,
-    selectedCategoryFromUrl,
-    selectedNeighborhood,
-    selectedNeighborhoodFromUrl,
-    selectedPartner,
-    sortBy,
-  ]);
+  const signature = [normalizedQuery, selectedCategory, selectedNeighborhood, selectedPartner, sortBy].join("|");
+  const visibleCount = pagination.signature === signature ? pagination.count : PAGE_SIZE;
+  const visibleOffers = filteredOffers.slice(0, visibleCount);
+  const remaining = filteredOffers.length - visibleOffers.length;
 
   const resetFilters = () => {
     setQuery("");
-    setSelectedCategory("all");
-    setSelectedNeighborhood("all");
-    setSelectedPartner("all");
+    setSelectedCategory(ALL);
+    setSelectedNeighborhood(ALL);
+    setSelectedPartner(ALL);
     setSortBy("recentes");
   };
 
@@ -201,28 +304,19 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
     }
   };
 
+
   const activeFilters = useMemo(() => {
     const chips: { key: string; label: string; clear: () => void }[] = [];
     if (query.trim()) chips.push({ key: "query", label: `"${query.trim()}"`, clear: () => setQuery("") });
-    const effectiveNeighborhood = selectedNeighborhood !== "all" ? selectedNeighborhood : selectedNeighborhoodFromUrl;
-    if (effectiveNeighborhood !== "all") chips.push({ key: "neighborhood", label: effectiveNeighborhood, clear: () => setSelectedNeighborhood("all") });
-    if (selectedPartner !== "all") chips.push({ key: "partner", label: selectedPartner, clear: () => setSelectedPartner("all") });
-    if (sortBy !== "recentes") chips.push({ key: "sort", label: sortBy === "desconto" ? "Maior desconto" : "Bairro A-Z", clear: () => setSortBy("recentes") });
+    if (selectedNeighborhood !== ALL) chips.push({ key: "neighborhood", label: selectedNeighborhood, clear: () => setSelectedNeighborhood(ALL) });
+    if (selectedPartner !== ALL) chips.push({ key: "partner", label: selectedPartner, clear: () => setSelectedPartner(ALL) });
     return chips;
-  }, [query, selectedNeighborhood, selectedNeighborhoodFromUrl, selectedPartner, sortBy]);
+  }, [query, selectedNeighborhood, selectedPartner]);
 
-  // Count advanced filters active (drawer ones only)
-  const advancedFilterCount = useMemo(() => {
-    let count = 0;
-    const effectiveNeighborhood = selectedNeighborhood !== "all" ? selectedNeighborhood : selectedNeighborhoodFromUrl;
-    if (effectiveNeighborhood !== "all") count++;
-    if (selectedPartner !== "all") count++;
-    if (sortBy !== "recentes") count++;
-    return count;
-  }, [selectedNeighborhood, selectedNeighborhoodFromUrl, selectedPartner, sortBy]);
+  const advancedFilterCount = (selectedNeighborhood !== ALL ? 1 : 0) + (selectedPartner !== ALL ? 1 : 0);
+  const hasAnyFilter = activeFilters.length > 0 || selectedCategory !== ALL;
 
   const featuredOffers = useMemo(() => allOffers.filter((o) => o.isFeatured), [allOffers]);
-  const regularOffers = useMemo(() => filteredOffers.filter((o) => !o.isFeatured), [filteredOffers]);
 
   const renderCard = (offer: PublicOffer) => (
     <OfferCard
@@ -231,333 +325,329 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
       actionLabel={viewer?.role === "consumer" ? "Gerar código de resgate" : "Quero essa oferta"}
       onAction={viewer?.role === "consumer" ? () => handleGenerateCode(offer.id) : undefined}
       offer={offer}
+      showQuickAction
     />
   );
 
+  const heading = selectedCategory !== ALL ? selectedCategory : "Todas as ofertas";
+
   return (
-    <main className="mx-auto grid min-h-screen w-full max-w-[1400px] gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
+    <main className="mx-auto grid min-h-screen w-full max-w-[1400px] content-start gap-4 px-3 py-4 md:gap-6 md:px-6 md:py-6 xl:px-8">
       <PublicPageHeader />
 
-      {featuredOffers.length > 0 && (
-        <div className="grid gap-3">
-          <div className="flex items-center gap-2">
-            <span style={{ fontSize: 18 }}>⭐</span>
-            <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Ofertas em alta</h2>
-            <span className="badge badge-accent" style={{ fontSize: 11, padding: "3px 10px" }}>{featuredOffers.length}</span>
-          </div>
-          <FeaturedOffersCarousel
-            offers={featuredOffers}
-            onCardClick={(offer) => {
-              const el = document.getElementById(offer.id);
-              el?.scrollIntoView({ behavior: "smooth", block: "center" });
-            }}
-          />
-        </div>
-      )}
-
-      {/* Search + filter controls */}
-      <div className="grid gap-3">
-        {/* Search bar */}
-        <div className="relative flex items-center">
-          <svg
-            className="pointer-events-none absolute left-4 text-[var(--muted)]"
-            width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-          </svg>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar ofertas, parceiros, bairros..."
-            style={{
-              width: "100%",
-              paddingLeft: 44,
-              paddingRight: 16,
-              paddingTop: 12,
-              paddingBottom: 12,
-              fontSize: 15,
-              borderRadius: 999,
-              border: "1.5px solid var(--line)",
-              background: "#fff",
-              fontFamily: "var(--font-dm), sans-serif",
-              outline: "none",
-              boxShadow: "var(--shadow-soft)",
-              transition: "border-color 0.15s",
-            }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = "#b7d84b"; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = "var(--line)"; }}
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              aria-label="Limpar busca"
+      {/* Barra sticky: busca + ordenação + filtros (mobile) + categorias */}
+      <div
+        className="sticky top-0 z-30 -mx-3 grid gap-3 px-3 py-3 md:-mx-6 md:px-6 xl:-mx-8 xl:px-8"
+        style={{ background: "rgba(243,246,241,0.92)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--line)" }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="relative flex min-w-0 flex-1 items-center">
+            <Search size={18} className="pointer-events-none absolute left-4 text-[var(--muted)]" aria-hidden="true" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar ofertas, parceiros, bairros..."
+              aria-label="Buscar ofertas"
               style={{
-                position: "absolute", right: 14,
-                background: "none", border: "none", cursor: "pointer",
-                color: "var(--muted)", display: "grid", placeItems: "center",
-                padding: 4, borderRadius: 999,
+                width: "100%",
+                padding: "12px 40px 12px 44px",
+                fontSize: 15,
+                borderRadius: 999,
+                border: "1.5px solid var(--line)",
+                background: "#fff",
+                fontFamily: "var(--font-dm), sans-serif",
+                outline: "none",
+                boxShadow: "var(--shadow-soft)",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "#b7d84b"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "var(--line)"; }}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Limpar busca"
+                className="absolute right-3 grid place-items-center rounded-full p-1 text-[var(--muted)]"
+                style={{ background: "none", border: "none", cursor: "pointer" }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <label className="hidden items-center gap-2 md:flex">
+            <span className="sr-only">Ordenar por</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              aria-label="Ordenar por"
+              style={{
+                padding: "11px 36px 11px 16px",
+                borderRadius: 999,
+                border: "1.5px solid var(--line)",
+                background: "#fff",
+                fontFamily: "var(--font-poppins), sans-serif",
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--text)",
+                boxShadow: "var(--shadow-soft)",
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-          )}
-        </div>
+              {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+                <option key={key} value={key}>{SORT_LABELS[key]}</option>
+              ))}
+            </select>
+          </label>
 
-        {/* Category chips + Filters button */}
-        <div className="flex items-center gap-2">
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              overflowX: "auto",
-              flex: 1,
-              paddingBottom: 2,
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-            }}
-          >
-            {categories.map((cat) => {
-              const effective = selectedCategory !== "all" ? selectedCategory : selectedCategoryFromUrl;
-              const isActive = cat === effective;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  style={{
-                    flexShrink: 0,
-                    padding: "7px 16px",
-                    borderRadius: 999,
-                    border: isActive ? "1.5px solid #8ab828" : "1.5px solid var(--line)",
-                    background: isActive ? "#b7d84b" : "#fff",
-                    color: isActive ? "#1a2e0e" : "var(--muted)",
-                    fontFamily: "var(--font-poppins), sans-serif",
-                    fontSize: 13,
-                    fontWeight: isActive ? 700 : 500,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                    transition: "all 0.15s",
-                    boxShadow: isActive ? "0 1px 4px rgba(0,0,0,0.10)" : "none",
-                  }}
-                >
-                  {cat === "all" ? "Todas" : cat}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Filters button */}
           <button
             type="button"
             onClick={openDrawer}
+            className="flex shrink-0 items-center gap-1.5 lg:hidden"
             style={{
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "7px 14px",
+              padding: "10px 14px",
               borderRadius: 999,
               border: advancedFilterCount > 0 ? "1.5px solid #8ab828" : "1.5px solid var(--line)",
               background: advancedFilterCount > 0 ? "#eefbcf" : "#fff",
-              color: advancedFilterCount > 0 ? "#1a2e0e" : "var(--muted)",
+              color: "var(--text)",
               fontFamily: "var(--font-poppins), sans-serif",
               fontSize: 13,
               fontWeight: 600,
               cursor: "pointer",
-              whiteSpace: "nowrap",
-              transition: "all 0.15s",
               boxShadow: "var(--shadow-soft)",
             }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/>
-            </svg>
+            <SlidersHorizontal size={15} aria-hidden="true" />
             Filtros
             {advancedFilterCount > 0 && (
-              <span style={{
-                background: "#8ab828", color: "#fff",
-                borderRadius: 999, fontSize: 11, fontWeight: 700,
-                padding: "1px 6px", lineHeight: 1.4,
-              }}>
+              <span style={{ background: "#8ab828", color: "#fff", borderRadius: 999, fontSize: 11, fontWeight: 700, padding: "1px 6px" }}>
                 {advancedFilterCount}
               </span>
             )}
           </button>
         </div>
 
-        {/* Active filter chips */}
-        {activeFilters.length > 0 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-            {activeFilters.map((chip) => (
-              <button key={chip.key} type="button" className="filter-chip" onClick={chip.clear}>
-                {chip.label}
-                <span className="filter-chip-x" aria-hidden="true">×</span>
+        {/* Categorias com contagem */}
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none", paddingBottom: 2 }}>
+          {[[ALL, categoryTotal] as [string, number], ...categoryFacet].map(([cat, count]) => {
+            const isActive = cat === selectedCategory;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                aria-pressed={isActive}
+                style={{
+                  flexShrink: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "7px 14px",
+                  borderRadius: 999,
+                  border: isActive ? "1.5px solid #8ab828" : "1.5px solid var(--line)",
+                  background: isActive ? "#b7d84b" : "#fff",
+                  color: isActive ? "#1a2e0e" : "var(--muted)",
+                  fontFamily: "var(--font-poppins), sans-serif",
+                  fontSize: 13,
+                  fontWeight: isActive ? 700 : 500,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.15s",
+                }}
+              >
+                {cat === ALL ? "Todas" : cat}
+                <span style={{ fontSize: 11, opacity: 0.7, fontWeight: 600 }}>{count}</span>
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={resetFilters}
-              style={{
-                background: "none", border: "none", cursor: "pointer",
-                fontSize: 12, fontWeight: 600, color: "var(--muted)",
-                fontFamily: "var(--font-dm), sans-serif", padding: "3px 6px",
-                textDecoration: "underline",
-              }}
-            >
-              Limpar todos
-            </button>
-          </div>
-        )}
-
-        {/* Results count + auth status */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="m-0 text-sm font-semibold text-[var(--success-text)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-            <span style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 800, color: "#0f1a13" }}>{filteredOffers.length}</span>
-            {" "}oferta{filteredOffers.length !== 1 ? "s" : ""} encontrada{filteredOffers.length !== 1 ? "s" : ""}
-          </p>
-          {viewer?.role === "consumer" ? (
-            <span className="badge badge-ok" style={{ fontFamily: "var(--font-poppins), sans-serif", fontSize: 12 }}>
-              ✓ Logado — pode resgatar
-            </span>
-          ) : (
-            <Link href="/auth" className="text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
-              Entrar para resgatar →
-            </Link>
-          )}
+            );
+          })}
         </div>
       </div>
 
-      {/* Offers grid — full width */}
-      {regularOffers.length > 0 && (
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-          {regularOffers.map(renderCard)}
-        </div>
+      {/* Destaques: só quando não há filtro ativo, como a home do Sympla */}
+      {featuredOffers.length > 0 && !hasAnyFilter && (
+        <section className="grid gap-3" aria-label="Ofertas em alta">
+          <div className="flex items-center gap-2">
+            <h2 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Em alta no ClubeZN</h2>
+            <span className="badge badge-accent" style={{ fontSize: 11, padding: "3px 10px" }}>{featuredOffers.length}</span>
+          </div>
+          <FeaturedOffersCarousel
+            offers={featuredOffers}
+            onCardClick={(offer) => {
+              setQuery(offer.title);
+            }}
+          />
+        </section>
       )}
 
-      {filteredOffers.length === 0 && (
-        <article className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-8 text-center shadow-[var(--shadow-soft)]">
-          <p style={{ margin: 0, fontSize: 40, lineHeight: 1 }}>🔍</p>
-          <h3 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Nenhuma oferta encontrada</h3>
-          <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Tente ajustar os filtros ou buscar por outro termo.</p>
-          <button type="button" className="btn btn-primary mx-auto" style={{ width: "auto", paddingInline: 28 }} onClick={resetFilters}>
-            Limpar filtros
-          </button>
-        </article>
-      )}
+      <div className="grid items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        {/* Sidebar de filtros (desktop) */}
+        <aside
+          className="sticky hidden rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] lg:block"
+          style={{ top: 132 }}
+          aria-label="Filtros"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="m-0 text-base font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Filtros</h2>
+            {hasAnyFilter && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 700, color: "var(--brand)", textDecoration: "underline" }}
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+          <FilterPanel
+            neighborhoods={neighborhoodFacet}
+            partners={partnerFacet}
+            neighborhood={selectedNeighborhood}
+            partner={selectedPartner}
+            onNeighborhood={setSelectedNeighborhood}
+            onPartner={setSelectedPartner}
+            total={neighborhoodFacet.reduce((sum, [, c]) => sum + c, 0)}
+          />
+        </aside>
 
-      {/* Filter drawer */}
+        {/* Resultados */}
+        <section className="grid min-w-0 gap-4" aria-label="Resultados">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div className="min-w-0">
+              <h2 className="m-0 text-xl font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>{heading}</h2>
+              <p className="m-0 mt-0.5 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+                <strong style={{ color: "#0f1a13" }}>{filteredOffers.length}</strong>
+                {" "}oferta{filteredOffers.length !== 1 ? "s" : ""} encontrada{filteredOffers.length !== 1 ? "s" : ""}
+                {selectedNeighborhood !== ALL && (
+                  <>
+                    {" "}em <MapPin size={12} className="inline align-[-1px]" aria-hidden="true" /> {selectedNeighborhood}
+                  </>
+                )}
+              </p>
+            </div>
+            {viewer?.role === "consumer" ? (
+              <span className="badge badge-ok" style={{ fontSize: 12 }}>✓ Logado, pode resgatar</span>
+            ) : (
+              <Link href="/auth" className="text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+                Entrar para resgatar →
+              </Link>
+            )}
+          </div>
+
+          {activeFilters.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+              {activeFilters.map((chip) => (
+                <button key={chip.key} type="button" className="filter-chip" onClick={chip.clear}>
+                  {chip.label}
+                  <span className="filter-chip-x" aria-hidden="true">×</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={resetFilters}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, color: "var(--muted)", padding: "3px 6px", textDecoration: "underline" }}
+              >
+                Limpar todos
+              </button>
+            </div>
+          )}
+
+          {visibleOffers.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 2xl:grid-cols-4">
+              {visibleOffers.map(renderCard)}
+            </div>
+          )}
+
+          {remaining > 0 && (
+            <button
+              type="button"
+              className="btn btn-ghost mx-auto"
+              style={{ width: "auto", paddingInline: 32 }}
+              onClick={() => setPagination({ signature, count: visibleCount + PAGE_SIZE })}
+            >
+              Ver mais ofertas ({remaining})
+            </button>
+          )}
+
+          {filteredOffers.length === 0 && (
+            <article className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-8 text-center shadow-[var(--shadow-soft)]">
+              <p style={{ margin: 0, fontSize: 40, lineHeight: 1 }}>🔍</p>
+              <h3 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Nenhuma oferta encontrada</h3>
+              <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Tente ajustar os filtros ou buscar por outro termo.</p>
+              <button type="button" className="btn btn-primary mx-auto" style={{ width: "auto", paddingInline: 28 }} onClick={resetFilters}>
+                Limpar filtros
+              </button>
+            </article>
+          )}
+        </section>
+      </div>
+
+      {/* Drawer de filtros (mobile/tablet) */}
       {filterDrawerOpen && (
         <div
-          style={{
-            position: "fixed", inset: 0, zIndex: 50,
-            background: "rgba(0,0,0,0.45)",
-            display: "flex", alignItems: "flex-end",
-          }}
+          style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "flex-end" }}
           onClick={() => setFilterDrawerOpen(false)}
         >
           <div
-            ref={drawerRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Filtros avançados"
+            aria-label="Filtros"
             onClick={(e) => e.stopPropagation()}
             style={{
               width: "100%",
               maxWidth: 520,
+              maxHeight: "85vh",
+              overflowY: "auto",
               margin: "0 auto",
               background: "#fff",
               borderRadius: "20px 20px 0 0",
-              padding: "24px 20px 32px",
+              padding: "20px 20px 28px",
               display: "grid",
               gap: 16,
               boxShadow: "0 -4px 32px rgba(0,0,0,0.14)",
             }}
           >
-            {/* Handle bar */}
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: -8 }}>
-              <div style={{ width: 40, height: 4, borderRadius: 999, background: "#e0e0e0" }} />
-            </div>
-
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13" }}>
-                Filtros avançados
-              </h3>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, fontFamily: "var(--font-poppins), sans-serif", color: "#0f1a13" }}>Filtros</h3>
               <button
                 type="button"
                 onClick={() => setFilterDrawerOpen(false)}
                 aria-label="Fechar filtros"
-                style={{
-                  background: "none", border: "1px solid var(--line)", borderRadius: 999,
-                  width: 30, height: 30, display: "grid", placeItems: "center",
-                  cursor: "pointer", color: "var(--muted)",
-                }}
+                style={{ background: "none", border: "1px solid var(--line)", borderRadius: 999, width: 30, height: 30, display: "grid", placeItems: "center", cursor: "pointer", color: "var(--muted)" }}
               >
-                <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
+                <X size={14} />
               </button>
             </div>
 
             <label className="field">
-              <span>Bairro</span>
-              <select value={tempNeighborhood} onChange={(e) => setTempNeighborhood(e.target.value)}>
-                {neighborhoods.map((n) => (
-                  <option key={n} value={n}>{n === "all" ? "Todos os bairros" : n}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Parceiro</span>
-              <select value={tempPartner} onChange={(e) => setTempPartner(e.target.value)}>
-                {partners.map((p) => (
-                  <option key={p} value={p}>{p === "all" ? "Todos os parceiros" : p}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="field">
               <span>Ordenar por</span>
-              <select value={tempSort} onChange={(e) => setTempSort(e.target.value as SortOption)}>
-                <option value="recentes">Mais recentes</option>
-                <option value="desconto">Maior desconto</option>
-                <option value="bairro">Bairro (A-Z)</option>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}>
+                {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+                  <option key={key} value={key}>{SORT_LABELS[key]}</option>
+                ))}
               </select>
             </label>
+
+            <FilterPanel
+              neighborhoods={neighborhoodFacet}
+              partners={partnerFacet}
+              neighborhood={tempNeighborhood}
+              partner={tempPartner}
+              onNeighborhood={setTempNeighborhood}
+              onPartner={setTempPartner}
+              total={neighborhoodFacet.reduce((sum, [, c]) => sum + c, 0)}
+            />
 
             <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
               <button
                 type="button"
-                onClick={() => {
-                  setTempNeighborhood("all");
-                  setTempPartner("all");
-                  setTempSort("recentes");
-                }}
-                style={{
-                  flex: 1, padding: "11px 0", borderRadius: 999,
-                  border: "1.5px solid var(--line)", background: "#fff",
-                  fontFamily: "var(--font-poppins), sans-serif", fontSize: 14,
-                  fontWeight: 600, cursor: "pointer", color: "var(--muted)",
-                  transition: "all 0.15s",
-                }}
+                onClick={() => { setTempNeighborhood(ALL); setTempPartner(ALL); }}
+                style={{ flex: 1, padding: "11px 0", borderRadius: 999, border: "1.5px solid var(--line)", background: "#fff", fontFamily: "var(--font-poppins), sans-serif", fontSize: 14, fontWeight: 600, cursor: "pointer", color: "var(--muted)" }}
               >
                 Limpar
               </button>
               <button
                 type="button"
                 onClick={applyDrawer}
-                style={{
-                  flex: 2, padding: "11px 0", borderRadius: 999,
-                  border: "none", background: "#b7d84b",
-                  fontFamily: "var(--font-poppins), sans-serif", fontSize: 14,
-                  fontWeight: 700, cursor: "pointer", color: "#1a2e0e",
-                  transition: "all 0.15s",
-                  boxShadow: "0 2px 8px rgba(183,216,75,0.4)",
-                }}
+                style={{ flex: 2, padding: "11px 0", borderRadius: 999, border: "none", background: "#b7d84b", fontFamily: "var(--font-poppins), sans-serif", fontSize: 14, fontWeight: 700, cursor: "pointer", color: "#1a2e0e", boxShadow: "0 2px 8px rgba(183,216,75,0.4)" }}
               >
                 Aplicar filtros
               </button>

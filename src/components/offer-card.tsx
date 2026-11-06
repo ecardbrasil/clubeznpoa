@@ -29,6 +29,8 @@ type OfferCardProps = {
   secondaryLabel?: string;
   secondaryHref?: string;
   variant?: "default" | "landing-carousel";
+  /** Mostra botão de ação direto no card (listagem de ofertas). */
+  showQuickAction?: boolean;
 };
 
 type PartnerSocial = {
@@ -40,6 +42,21 @@ type PartnerSocial = {
 type Coordinates = {
   latitude: number;
   longitude: number;
+};
+
+const quickActionStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 999,
+  border: "none",
+  background: "#b7d84b",
+  color: "#1a2e0e",
+  fontFamily: "var(--font-poppins), sans-serif",
+  fontWeight: 700,
+  cursor: "pointer",
+  textDecoration: "none",
+  boxShadow: "0 2px 8px rgba(183,216,75,0.4)",
 };
 
 const ensureHttp = (value: string) => {
@@ -97,6 +114,7 @@ export function OfferCard({
   secondaryLabel,
   secondaryHref,
   variant = "default",
+  showQuickAction = false,
 }: OfferCardProps) {
   const [open, setOpen] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -348,7 +366,7 @@ export function OfferCard({
                   borderRadius: 16,
                   background: "#dfe5d4",
                 } satisfies CSSProperties)
-              : ({ position: "relative", overflow: "hidden", borderRadius: 12, aspectRatio: "4 / 3", background: "#eaefe4" } satisfies CSSProperties)
+              : ({ position: "relative", overflow: "hidden", borderRadius: 12, aspectRatio: showQuickAction ? "16 / 9" : "4 / 3", background: "#eaefe4" } satisfies CSSProperties)
           }
         >
           {currentImage ? (
@@ -417,8 +435,25 @@ export function OfferCard({
               Sem foto
             </div>
           )}
-          <div style={{ position: "absolute", top: 8, left: 8, display: "grid", gap: 5, zIndex: 1 }}>
-            <span className="badge badge-accent" style={{ fontSize: 12, padding: "4px 10px" }}>{offer.discountLabel}</span>
+          <div
+            className={showQuickAction ? "hidden md:grid" : undefined}
+            style={{ position: "absolute", top: 8, left: 8, right: 8, display: showQuickAction ? undefined : "grid", justifyItems: "start", gap: 5, zIndex: 1 }}
+          >
+            <span
+              className="badge badge-accent"
+              style={{
+                fontSize: showQuickAction ? 14 : 12,
+                padding: showQuickAction ? "5px 12px" : "4px 10px",
+                boxShadow: showQuickAction ? "0 4px 12px rgba(15,26,19,0.22)" : undefined,
+                maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "block",
+              }}
+            >
+              {offer.discountLabel}
+            </span>
             {offer.isFeatured ? (
               <span className="badge" style={{ background: "rgba(15,26,19,0.82)", color: "#c9f549", fontSize: 11, padding: "3px 9px", backdropFilter: "blur(4px)" }}>
                 🔥 Em alta
@@ -426,6 +461,17 @@ export function OfferCard({
             ) : null}
           </div>
         </div>
+
+        {showQuickAction && !isLandingCarousel ? (
+          <div className="flex flex-wrap items-center gap-1.5 md:hidden">
+            <span className="badge badge-accent" style={{ fontSize: 12, padding: "4px 10px" }}>{offer.discountLabel}</span>
+            {offer.isFeatured ? (
+              <span className="badge" style={{ background: "rgba(15,26,19,0.85)", color: "#c9f549", fontSize: 11, padding: "3px 9px" }}>
+                🔥 Em alta
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-2">
           {offer.partnerLogoImage ? (
@@ -482,6 +528,29 @@ export function OfferCard({
         >
           {offer.description}
         </p>
+        {showQuickAction && !isLandingCarousel ? (
+          actionHref ? (
+            <Link
+              href={actionHref}
+              onClick={(event) => event.stopPropagation()}
+              className="!w-full text-center"
+              style={{ ...quickActionStyle, marginTop: "auto", minHeight: 40, height: "auto", padding: "6px 22px", fontSize: 13, lineHeight: 1.15, letterSpacing: 0, textAlign: "center" }}
+            >
+              {actionLabel}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              style={{ ...quickActionStyle, marginTop: "auto", minHeight: 40, height: "auto", padding: "6px 22px", fontSize: 13, lineHeight: 1.15, letterSpacing: 0, textAlign: "center" }}
+              onClick={(event) => {
+                event.stopPropagation();
+                onAction?.();
+              }}
+            >
+              {actionLabel}
+            </button>
+          )
+        ) : null}
       </article>
 
       {open && (
