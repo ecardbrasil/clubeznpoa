@@ -14,9 +14,10 @@ const base64urlEncode = (value: string) => Buffer.from(value, "utf8").toString("
 const base64urlDecode = (value: string) => Buffer.from(value, "base64url").toString("utf8");
 
 const getSecret = () => {
-  const secret = process.env.API_SESSION_SECRET;
+  // Fallback para NEXTAUTH_SECRET: em produção só ele está definido na Vercel.
+  const secret = process.env.API_SESSION_SECRET || process.env.NEXTAUTH_SECRET;
   if (!secret) {
-    throw new Error("Missing API_SESSION_SECRET environment variable.");
+    throw new Error("Missing API_SESSION_SECRET (or NEXTAUTH_SECRET) environment variable.");
   }
   return secret;
 };
