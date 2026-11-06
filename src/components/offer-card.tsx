@@ -44,6 +44,21 @@ type Coordinates = {
   longitude: number;
 };
 
+const quickActionStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: 999,
+  border: "none",
+  background: "#b7d84b",
+  color: "#1a2e0e",
+  fontFamily: "var(--font-poppins), sans-serif",
+  fontWeight: 700,
+  cursor: "pointer",
+  textDecoration: "none",
+  boxShadow: "0 2px 8px rgba(183,216,75,0.4)",
+};
+
 const ensureHttp = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) return "";
@@ -420,7 +435,7 @@ export function OfferCard({
               Sem foto
             </div>
           )}
-          <div style={{ position: "absolute", top: 8, left: 8, display: "grid", gap: 5, zIndex: 1 }}>
+          <div style={{ position: "absolute", top: 8, left: 8, right: 8, display: "grid", justifyItems: "start", gap: 5, zIndex: 1 }}>
             <span
               className="badge badge-accent"
               style={{
@@ -428,6 +443,10 @@ export function OfferCard({
                 padding: showQuickAction ? "5px 12px" : "4px 10px",
                 boxShadow: showQuickAction ? "0 4px 12px rgba(15,26,19,0.22)" : undefined,
                 maxWidth: "100%",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "block",
               }}
             >
               {offer.discountLabel}
@@ -500,16 +519,15 @@ export function OfferCard({
             <Link
               href={actionHref}
               onClick={(event) => event.stopPropagation()}
-              className="btn btn-coupon !w-full text-center"
-              style={{ marginTop: "auto", height: 40, fontSize: 14 }}
+              className="!w-full text-center"
+              style={{ ...quickActionStyle, marginTop: "auto", minHeight: 40, height: "auto", padding: "6px 22px", fontSize: 13, lineHeight: 1.15, letterSpacing: 0, textAlign: "center" }}
             >
               {actionLabel}
             </Link>
           ) : (
             <button
               type="button"
-              className="btn btn-coupon"
-              style={{ marginTop: "auto", height: 40, fontSize: 14 }}
+              style={{ ...quickActionStyle, marginTop: "auto", minHeight: 40, height: "auto", padding: "6px 22px", fontSize: 13, lineHeight: 1.15, letterSpacing: 0, textAlign: "center" }}
               onClick={(event) => {
                 event.stopPropagation();
                 onAction?.();
