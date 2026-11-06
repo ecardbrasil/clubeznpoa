@@ -17,7 +17,7 @@ import type { AppData, Company, Offer } from "@/lib/types";
 import { isSupabaseMode } from "@/lib/runtime-config";
 import { DEFAULT_CATEGORIES, parseCategories, serializeCategories } from "@/lib/categories";
 import {
-  clearSession,
+  endSession,
   createOffer,
   getAuthHeaders,
   getCurrentUser,
@@ -759,8 +759,8 @@ export default function PartnerPage() {
         onSectionChange={selectSection}
         companyName={company?.publicName ?? company?.name ?? "Parceiro"}
         logoImage={effectiveLogoImage || undefined}
-        onLogout={() => {
-          clearSession();
+        onLogout={async () => {
+          await endSession();
           router.push("/auth");
         }}
       />

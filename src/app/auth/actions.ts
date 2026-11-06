@@ -1,7 +1,7 @@
 "use server";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { createHash, randomBytes, scryptSync, timingSafeEqual, randomUUID } from "crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual, randomUUID, randomInt } from "crypto";
 import type { SignUpInput } from "@/lib/storage";
 
 const HASH_PREFIX = "scrypt";
@@ -75,6 +75,12 @@ export async function serverSignUp(input: SignUpInput) {
   const supabase = getSupabaseServerClient();
 
   try {
+    if (input.role !== "consumer" && input.role !== "partner") {
+      return { error: "Tipo de conta inválido." };
+    }
+    if (!input.name?.trim() || !input.password || input.password.length < 6) {
+      return { error: "Informe nome e senha com ao menos 6 caracteres." };
+    }
     const hasIdentifier = Boolean(input.email?.trim()) || Boolean(input.phone?.trim());
     if (!hasIdentifier) {
       return { error: "Informe e-mail ou celular." };
@@ -182,7 +188,7 @@ export async function requestPasswordReset(identifier: string) {
 
     await supabase.from("password_reset_tokens").delete().eq("user_id", data.id);
 
-    const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
+    const rawOtp = String(randomInt(100000, 1000000));
     const tokenHash = createHash("sha256").update(rawOtp).digest("hex");
     const tokenId = `prt_${randomUUID()}`;
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();

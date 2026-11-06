@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
+import { SessionBridge } from "@/components/providers/session-bridge";
 import { AuthSessionProvider } from "@/components/providers/session-provider";
 import "./globals.css";
 
@@ -43,6 +44,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${inter.variable} ${fraunces.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <AuthSessionProvider>
+          <SessionBridge />
           <ToastProvider>{children}</ToastProvider>
         </AuthSessionProvider>
       </body>

@@ -55,6 +55,32 @@ export function clearSession() {
   sessionStorage.removeItem(TOKEN_KEY);
 }
 
+/** Troca a sessão NextAuth (cookie) pelo token de API usado pelos painéis. */
+export async function syncApiSession(): Promise<User | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/api/session-token", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { user?: User; token?: string };
+    if (!data.user || !data.token) return null;
+    setCurrentUser(data.user, data.token);
+    return data.user;
+  } catch {
+    return null;
+  }
+}
+
+/** Encerra sessão local e a sessão NextAuth. */
+export async function endSession(): Promise<void> {
+  clearSession();
+  try {
+    const { signOut } = await import("next-auth/react");
+    await signOut({ redirect: false });
+  } catch {
+    // ignora: sessão local já limpa
+  }
+}
+
 export function getAuthHeaders(): Record<string, string> {
   if (typeof window === "undefined") return {};
   const token = sessionStorage.getItem(TOKEN_KEY);

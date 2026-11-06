@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/brand-logo";
-import { getCurrentUser, clearSession } from "@/lib/storage";
+import { getCurrentUser, endSession } from "@/lib/storage";
 import type { User } from "@/lib/types";
 
 type HeaderLink = {
@@ -60,8 +60,8 @@ export function SiteHeader({
   const [user, setUser] = useState<User | null>(() => getCurrentUser());
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  function handleSignOut() {
-    clearSession();
+  async function handleSignOut() {
+    await endSession();
     setUser(null);
     window.location.href = "/auth";
   }

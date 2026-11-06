@@ -11,6 +11,7 @@ import { CATEGORY_GROUPS, DEFAULT_CATEGORIES, serializeCategories } from "@/lib/
 import {
   initStorage,
   routeByRole,
+  syncApiSession,
 } from "@/lib/storage";
 import {
   serverSignUp,
@@ -476,8 +477,16 @@ function AuthPageInner() {
         return;
       }
 
+      const sessionUser = await syncApiSession();
+      if (!sessionUser) {
+        const message = "Não foi possível iniciar a sessão. Tente novamente.";
+        setError(message);
+        showToast(message, "error");
+        return;
+      }
+
       showToast("Login realizado com sucesso.", "success");
-      router.push("/consumer");
+      router.push(routeByRole(sessionUser.role));
     } catch {
       const message = "Erro ao fazer login.";
       setError(message);
@@ -654,7 +663,18 @@ function AuthPageInner() {
           ? "Conta criada. Sua empresa será analisada antes da publicação das ofertas."
           : "Conta criada com sucesso.";
       showToast(successMessage, "success");
-      router.push(registerRole === "partner" ? "/partner" : "/consumer");
+      const loginResult = await signIn("credentials", {
+        identifier: email.trim() ? email.trim().toLowerCase() : phoneDigits,
+        password,
+        redirect: false,
+      });
+      const sessionUser = loginResult?.ok ? await syncApiSession() : null;
+      if (!sessionUser) {
+        setMode("login");
+        showToast("Conta criada. Faça login para continuar.", "info");
+        return;
+      }
+      router.push(routeByRole(sessionUser.role));
     } finally {
       setIsSubmitting(false);
     }

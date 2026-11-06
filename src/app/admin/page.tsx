@@ -8,7 +8,7 @@ import { isSupabaseMode } from "@/lib/runtime-config";
 import { AppData, Company, Offer, Redemption, User, UserRole } from "@/lib/types";
 import {
   blockUser as blockLocalUser,
-  clearSession,
+  endSession,
   deleteUser as deleteLocalUser,
   deleteOffer as deleteLocalOffer,
   getAuthHeaders,
@@ -189,6 +189,24 @@ export default function AdminPage() {
     setData(payload.data);
   };
 
+  const handleCompanyApproval = async (company: Company, approved: boolean) => {
+    try {
+      const response = await fetch("/api/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ action: "setCompanyApproval", companyId: company.id, approved }),
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok || payload?.error) {
+        throw new Error(payload?.error || "Falha ao atualizar empresa.");
+      }
+      await loadRemoteDashboard();
+      showToast(approved ? "Empresa aprovada." : "Aprovação removida.", "success");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Falha ao atualizar empresa.", "error");
+    }
+  };
+
   const handleOfferAction = async (action: "deleteOffer", offer: Offer) => {
     const confirmed = window.confirm(`Excluir a oferta "${offer.title}"? Esta ação remove a oferta do sistema.`);
     if (!confirmed) return;
@@ -328,7 +346,7 @@ export default function AdminPage() {
 
     const last7DaysStart = nowTimestamp - 7 * 24 * 60 * 60 * 1000;
 
-    const approvedCompanies = data.companies.length;
+    const approvedCompanies = data.companies.filter((company) => company.approved).length;
 
     const redemptionsByStatus = {
       generated: data.redemptions.filter((item) => item.status === "generated").length,
@@ -432,8 +450,8 @@ export default function AdminPage() {
             setSidebarOpen(false);
           }
         }}
-        onLogout={() => {
-          clearSession();
+        onLogout={async () => {
+          await endSession();
           router.push("/auth");
         }}
       />
@@ -442,7 +460,7 @@ export default function AdminPage() {
         {section === "dashboard" && (
           <>
             <section className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
-              <MetricCard label="Empresas ativas" value={dashboard.approvedCompanies} helper="Empresas cadastradas" />
+              <MetricCard label="Empresas ativas" value={dashboard.approvedCompanies} helper="Empresas aprovadas" />
               <MetricCard label="Ofertas totais" value={dashboard.funnel.offersTotal} helper="Ofertas cadastradas" />
               <MetricCard label="Resgates usados (7 dias)" value={dashboard.usedIn7Days} helper="Janela móvel semanal" />
               <MetricCard label="Taxa conversão" value={dashboard.conversionRate} helper="% de resgates usados" />
@@ -523,7 +541,7 @@ export default function AdminPage() {
         )}
 
         {section === "companies" && (
-          <CompaniesList companies={sortByCreatedAtDesc(data.companies)} />
+          <CompaniesList companies={sortByCreatedAtDesc(data.companies)} onApproval={handleCompanyApproval} />
         )}
 
         {section === "users" && (
@@ -584,7 +602,13 @@ function StatusLine({ label, value }: { label: string; value: number }) {
   );
 }
 
-function CompaniesList({ companies }: { companies: Company[] }) {
+function CompaniesList({
+  companies,
+  onApproval,
+}: {
+  companies: Company[];
+  onApproval: (company: Company, approved: boolean) => void;
+}) {
   return (
     <section className="card grid gap-2">
       <h2 style={{ margin: 0, fontSize: 18, fontFamily: "var(--font-poppins), sans-serif", fontWeight: 700, color: "#0f1a13" }}>Empresas cadastradas</h2>
@@ -595,8 +619,14 @@ function CompaniesList({ companies }: { companies: Company[] }) {
             {company.category} • {company.neighborhood} • {company.city}/{company.state}
           </p>
           <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>
-            Criada em {formatDate(company.createdAt)}
+            Criada em {formatDate(company.createdAt)} • {company.approved ? "Aprovada" : "Aguardando aprovação"}
           </p>
+          <button
+            className="btn btn-ghost !w-auto !px-3 !py-1.5"
+            onClick={() => onApproval(company, !company.approved)}
+          >
+            {company.approved ? "Remover aprovação" : "Aprovar empresa"}
+          </button>
         </article>
       ))}
       {companies.length === 0 && <p style={{ margin: 0 }}>Nenhuma empresa cadastrada.</p>}
