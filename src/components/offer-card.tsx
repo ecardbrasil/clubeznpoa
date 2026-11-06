@@ -435,7 +435,10 @@ export function OfferCard({
               Sem foto
             </div>
           )}
-          <div style={{ position: "absolute", top: 8, left: 8, right: 8, display: "grid", justifyItems: "start", gap: 5, zIndex: 1 }}>
+          <div
+            className={showQuickAction ? "hidden md:grid" : undefined}
+            style={{ position: "absolute", top: 8, left: 8, right: 8, display: showQuickAction ? undefined : "grid", justifyItems: "start", gap: 5, zIndex: 1 }}
+          >
             <span
               className="badge badge-accent"
               style={{
@@ -458,6 +461,17 @@ export function OfferCard({
             ) : null}
           </div>
         </div>
+
+        {showQuickAction && !isLandingCarousel ? (
+          <div className="flex flex-wrap items-center gap-1.5 md:hidden">
+            <span className="badge badge-accent" style={{ fontSize: 12, padding: "4px 10px" }}>{offer.discountLabel}</span>
+            {offer.isFeatured ? (
+              <span className="badge" style={{ background: "rgba(15,26,19,0.85)", color: "#c9f549", fontSize: 11, padding: "3px 9px" }}>
+                🔥 Em alta
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="flex items-center gap-2">
           {offer.partnerLogoImage ? (
