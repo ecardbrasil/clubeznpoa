@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readApiSessionFromRequest } from "@/lib/server-auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { randomUUID } from "crypto";
+import { randomInt, randomUUID } from "crypto";
 import type { AppData, AppNotification, Company, Offer, Redemption, User } from "@/lib/types";
 
 type ConsumerActionPayload =
@@ -87,7 +87,7 @@ type NotificationRow = {
 
 const nowIso = () => new Date().toISOString();
 const expiresAtIso = () => new Date(Date.now() + 10 * 60 * 1000).toISOString();
-const makeCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+const makeCode = () => randomInt(100000, 1000000).toString();
 
 const trimOrNull = (value?: string) => {
   const trimmed = value?.trim();
@@ -271,6 +271,8 @@ export async function POST(request: Request) {
         .from("offers")
         .select("id, company_id")
         .eq("id", offerId)
+        .eq("approved", true)
+        .eq("rejected", false)
         .maybeSingle();
 
       if (offerError || !offer) {
@@ -281,6 +283,7 @@ export async function POST(request: Request) {
         .from("companies")
         .select("id")
         .eq("id", offer.company_id)
+        .eq("approved", true)
         .maybeSingle();
 
       if (companyError || !company) {

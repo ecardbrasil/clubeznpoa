@@ -265,6 +265,21 @@ const validatePartnerCode = async (companyId: string, code: string): Promise<Sta
   const supabase = getSupabaseServerClient();
   const trimmedCode = code.trim();
 
+  // Confere dono do código ANTES de consumir (evita queimar código de outra empresa).
+  const { data: target } = await supabase
+    .from("redemptions")
+    .select("id, offers!inner(company_id)")
+    .eq("code", trimmedCode)
+    .eq("status", "generated")
+    .gt("expires_at", nowIso())
+    .maybeSingle<{ id: string; offers: { company_id: string } | { company_id: string }[] }>();
+  if (target) {
+    const offerRef = Array.isArray(target.offers) ? target.offers[0] : target.offers;
+    if (!offerRef || offerRef.company_id !== companyId) {
+      return { ok: false, message: "Código não pertence à sua empresa." };
+    }
+  }
+
   // Atomically mark as used only if still in "generated" state and not expired,
   // preventing race conditions when two partners validate the same code simultaneously.
   const { data: updated, error: updateError } = await supabase

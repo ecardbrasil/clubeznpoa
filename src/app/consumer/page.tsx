@@ -7,7 +7,7 @@ import { ConsumerDashboardSidebar, ConsumerSection } from "@/components/consumer
 import { useToast } from "@/components/ui/toast";
 import { isSupabaseMode } from "@/lib/runtime-config";
 import {
-  clearSession,
+  endSession,
   generateRedemption,
   getAuthHeaders,
   getCurrentUser,
@@ -369,8 +369,8 @@ export default function ConsumerPage() {
         section={section}
         onSectionChange={setSection}
         consumerName={user.name}
-        onLogout={() => {
-          clearSession();
+        onLogout={async () => {
+          await endSession();
           router.push("/auth");
         }}
       />

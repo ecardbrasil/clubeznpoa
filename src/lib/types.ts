@@ -29,6 +29,7 @@ export interface Company {
   facebook?: string;
   website?: string;
   whatsapp?: string;
+  approved?: boolean;
   createdAt: string;
 }
 

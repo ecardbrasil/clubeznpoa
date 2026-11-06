@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createHash, randomBytes, scryptSync, timingSafeEqual, randomUUID } from "crypto";
+import { createHash, randomBytes, scryptSync, timingSafeEqual, randomUUID, randomInt } from "crypto";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { createApiSessionToken } from "@/lib/server-auth";
 import type { SignUpInput } from "@/lib/storage";
@@ -134,7 +134,7 @@ export async function POST(request: Request) {
       // Delete any existing tokens for this user
       await supabase.from("password_reset_tokens").delete().eq("user_id", data.id);
 
-      const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
+      const rawOtp = String(randomInt(100000, 1000000));
       const tokenHash = createHash("sha256").update(rawOtp).digest("hex");
       const tokenId = `prt_${randomUUID()}`;
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
@@ -229,6 +229,12 @@ export async function POST(request: Request) {
     }
 
     const input = body.payload;
+    if (input.role !== "consumer" && input.role !== "partner") {
+      return NextResponse.json({ error: "Tipo de conta inválido." }, { status: 400 });
+    }
+    if (!input.name?.trim() || !input.password || input.password.length < 6) {
+      return NextResponse.json({ error: "Informe nome e senha com ao menos 6 caracteres." }, { status: 400 });
+    }
     const hasIdentifier = Boolean(input.email?.trim()) || Boolean(input.phone?.trim());
     if (!hasIdentifier) {
       return NextResponse.json({ error: "Informe e-mail ou celular." }, { status: 400 });

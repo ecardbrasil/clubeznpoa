@@ -54,6 +54,10 @@ async function fetchOffers(): Promise<PublicOffer[]> {
         .eq("approved", true),
     ]);
 
+    if (offersRes.error || companiesRes.error) {
+      throw new Error(`Supabase: ${offersRes.error?.message ?? companiesRes.error?.message}`);
+    }
+
     const offers = (offersRes.data ?? []) as SupabaseOfferRow[];
     const companies = (companiesRes.data ?? []) as SupabaseCompanyRow[];
 
@@ -84,8 +88,10 @@ async function fetchOffers(): Promise<PublicOffer[]> {
           partnerWhatsapp: c.whatsapp ?? undefined,
         };
       });
-  } catch {
-    return [];
+  } catch (error) {
+    // Re-lança: o Next mantém a última versão boa em cache e mostra app/error.tsx no primeiro acesso.
+    console.error("[ofertas] falha ao carregar dados do Supabase", error);
+    throw error;
   }
 }
 

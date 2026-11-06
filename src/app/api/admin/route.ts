@@ -6,6 +6,7 @@ import type { AppData, AppNotification, Company, Offer, Redemption, User } from 
 type AdminActionPayload =
   | { action: "getDashboardData" }
   | { action: "deleteOffer"; offerId: string }
+  | { action: "setCompanyApproval"; companyId: string; approved: boolean }
   | { action: "blockUser"; userId: string }
   | { action: "unblockUser"; userId: string }
   | { action: "deleteUser"; userId: string }
@@ -40,6 +41,7 @@ type CompanyRow = {
   facebook: string | null;
   website: string | null;
   whatsapp: string | null;
+  approved: boolean;
   created_at: string;
 };
 
@@ -110,6 +112,7 @@ const mapCompanyRow = (row: CompanyRow): Company => ({
   facebook: row.facebook ?? undefined,
   website: row.website ?? undefined,
   whatsapp: row.whatsapp ?? undefined,
+  approved: row.approved,
   createdAt: row.created_at,
 });
 
@@ -165,7 +168,7 @@ const getDashboardData = async (): Promise<{ data?: AppData; error?: string }> =
     supabase
       .from("companies")
       .select(
-        "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, created_at",
+        "id, name, public_name, category, neighborhood, city, state, owner_user_id, logo_image, cover_image, address_line, bio, instagram, facebook, website, whatsapp, approved, created_at",
       )
       .order("created_at", { ascending: false })
       .limit(500),
@@ -281,6 +284,20 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: output.error || "Falha ao carregar painel admin." }, { status: 500 });
       }
       return NextResponse.json({ data: output.data });
+    }
+
+    if (body.action === "setCompanyApproval") {
+      if (!body.companyId || typeof body.approved !== "boolean") {
+        return NextResponse.json({ error: "Parâmetros inválidos." }, { status: 400 });
+      }
+      const { error } = await getSupabaseServerClient()
+        .from("companies")
+        .update({ approved: body.approved })
+        .eq("id", body.companyId);
+      if (error) {
+        return NextResponse.json({ error: "Falha ao atualizar aprovação da empresa." }, { status: 500 });
+      }
+      return NextResponse.json({ ok: true });
     }
 
     if (body.action === "deleteOffer") {

@@ -54,6 +54,10 @@ async function fetchLandingData() {
       supabase.from("redemptions").select("offer_id, status").in("status", ["used", "generated"]).limit(500),
     ]);
 
+    if (offersRes.error || companiesRes.error) {
+      throw new Error(`Supabase: ${offersRes.error?.message ?? companiesRes.error?.message}`);
+    }
+
     const offers = (offersRes.data ?? []) as SupabaseOfferRow[];
     const companies = (companiesRes.data ?? []) as SupabaseCompanyRow[];
     const redemptions = redemptionsRes.error ? [] : (redemptionsRes.data ?? []);
@@ -122,8 +126,10 @@ async function fetchLandingData() {
       }));
 
     return { trendingOffers, featuredOffers, partnerProfiles };
-  } catch {
-    return { trendingOffers: [], featuredOffers: [], partnerProfiles: [] };
+  } catch (error) {
+    // Re-lança: o Next mantém a última versão boa em cache e mostra app/error.tsx no primeiro acesso.
+    console.error("[home] falha ao carregar dados do Supabase", error);
+    throw error;
   }
 }
 
