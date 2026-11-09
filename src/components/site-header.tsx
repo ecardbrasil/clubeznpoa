@@ -32,7 +32,7 @@ const publicLinks: HeaderLink[] = [
 
 function NavLink({ href, children, onClick }: { href: string; children: ReactNode; onClick?: () => void }) {
   const isAnchor = href.startsWith("#") || href.startsWith("/#");
-  const cls = "text-sm font-semibold text-[#1b2a20] no-underline hover:text-[#0f1a13]";
+  const cls = "inline-flex min-h-9 items-center text-sm font-semibold text-[#1b2a20] no-underline hover:text-[#0f1a13]";
   if (isAnchor) {
     return (
       <a href={href} className={cls} onClick={onClick}>
@@ -79,7 +79,7 @@ export function SiteHeader({
 
   const rootClassName = [
     sticky ? "sticky top-0 z-30" : "",
-    "border border-[#d6e88c] bg-white/95 px-4 py-3 backdrop-blur md:px-6",
+    "rounded-2xl border border-[var(--line)] bg-white/95 px-4 py-3 shadow-[var(--shadow-soft)] backdrop-blur md:px-6",
     className,
   ]
     .join(" ")
@@ -157,7 +157,7 @@ export function SiteHeader({
       {mobileOpen && (
         <div
           ref={mobileMenuRef}
-          className="mt-3 grid gap-1 border border-[#d6e88c] bg-white p-3 md:hidden"
+          className="mt-3 grid gap-1 rounded-xl border border-[var(--line)] bg-white p-3 md:hidden"
         >
           <nav aria-label="Navegação mobile" className="grid gap-1">
             {links.map((item) => (

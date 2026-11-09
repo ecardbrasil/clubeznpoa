@@ -69,10 +69,10 @@ export function Footer() {
             >
               Ofertas
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-0">
               {footerLinks.ofertas.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm" style={{ fontFamily: "var(--font-dm)" }}>
+                  <Link href={l.href} className="inline-block py-2 text-sm" style={{ fontFamily: "var(--font-dm)" }}>
                     {l.label}
                   </Link>
                 </li>
@@ -88,10 +88,10 @@ export function Footer() {
             >
               Institucional
             </p>
-            <ul className="space-y-2">
+            <ul className="space-y-0">
               {footerLinks.institucional.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm" style={{ fontFamily: "var(--font-dm)" }}>
+                  <Link href={l.href} className="inline-block py-2 text-sm" style={{ fontFamily: "var(--font-dm)" }}>
                     {l.label}
                   </Link>
                 </li>
@@ -108,7 +108,7 @@ export function Footer() {
               Contato
             </p>
             <div className="space-y-2 text-sm" style={{ fontFamily: "var(--font-dm)" }}>
-              <a href="mailto:contato@clubezn.com" className="block">
+              <a href="mailto:contato@clubezn.com" className="block py-1.5">
                 contato@clubezn.com
               </a>
               <div className="flex items-center gap-1.5 text-[#9db8a8]">
