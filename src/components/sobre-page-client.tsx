@@ -161,7 +161,9 @@ export function SobrePageClient({ featuredOffers, partnerProfiles }: Props) {
       </style>
 
       <section className="hero-grid relative min-h-screen w-full">
-        <SiteHeader sticky smallLogo className="md:px-6 relative z-20" />
+        <div className="sticky top-0 z-30 mx-auto w-full max-w-[1400px] px-3 pt-3 md:px-6 xl:px-8">
+        <SiteHeader smallLogo />
+      </div>
 
         <div className="relative z-10 grid w-full max-w-7xl gap-12 px-4 py-16 mx-auto md:gap-16 md:px-6 md:py-24">
           <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr] md:items-center">

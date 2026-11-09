@@ -18,7 +18,7 @@ export function BrandLogo({ href = "/", small = false, scale = 1 }: BrandLogoPro
   const scaleStyle = scale !== 1 ? { transform: `scale(${scale})`, transformOrigin: "left center" } : undefined;
 
   return (
-    <Link href={href} className="inline-flex items-center no-underline" aria-label="ClubeZN">
+    <Link href={href} className="inline-flex min-h-11 items-center no-underline" aria-label="ClubeZN">
       {!imgError ? (
         <Image
           src="/brand/clubezn-logo.webp"

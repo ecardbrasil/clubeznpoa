@@ -128,7 +128,7 @@ function AnimatedSearchHint() {
   const activeHint = searchHints[hintIndex];
 
   return (
-    <div className="pointer-events-none absolute inset-y-0 left-12 flex items-center pr-24 text-sm font-medium">
+    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pr-24 text-sm font-medium">
       <span className="whitespace-nowrap text-[#44584c]">Pesquisar</span>
       <span className="relative ml-2 h-5 overflow-hidden whitespace-nowrap text-[#1e3228]">
         <AnimatePresence mode="wait" initial={false}>
@@ -290,7 +290,7 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
         }
         @media (min-width: 768px) {
           .czn-offer-slide {
-            width: 340px;
+            width: 280px;
           }
         }
         .czn-carousel-button {
@@ -375,7 +375,7 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
             className="overflow-hidden"
             style={{ background: "#C9F549" }}
           >
-            <div className="flex items-center justify-center gap-3 px-4 py-2.5 text-[#0a0f0c] relative max-w-7xl mx-auto">
+            <div className="flex items-center justify-center gap-3 px-4 py-2.5 text-[#0a0f0c] relative max-w-7xl mx-auto pr-12">
               <Sparkles size={14} className="shrink-0" />
               <p className="text-xs font-bold text-center" style={{ fontFamily: "var(--font-poppins)" }}>
                 Novidades exclusivas na Zona Norte de Porto Alegre —{" "}
@@ -385,7 +385,7 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
               </p>
               <button
                 onClick={() => setAnnouncementVisible(false)}
-                className="absolute right-4 p-1 rounded hover:bg-black/10 transition-colors"
+                className="absolute right-2 inline-flex h-9 w-9 items-center justify-center rounded hover:bg-black/10 transition-colors"
                 aria-label="Fechar aviso"
               >
                 <X size={14} />
@@ -396,7 +396,9 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
       </AnimatePresence>
 
       {/* Header */}
-      <SiteHeader sticky smallLogo className="md:px-6 relative z-20" />
+      <div className="sticky top-0 z-30 bg-white pb-3 pt-3"><div className="mx-auto w-full max-w-[1400px] px-3 md:px-6 xl:px-8">
+        <SiteHeader smallLogo />
+      </div></div>
 
       {/* Search + Category Nav */}
       <div className="bg-white border-b border-[#dfe5d4]">
@@ -905,7 +907,6 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
               height="600"
               frameBorder="0"
               scrolling="no"
-              allowTransparency={true}
               className="w-full"
               style={{ minHeight: "400px" }}
               title="Instagram Feed ClubeZN"
@@ -1013,10 +1014,10 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
               >
                 Ofertas
               </p>
-              <ul className="space-y-2">
+              <ul className="space-y-0">
                 {footerLinks.ofertas.map((l) => (
                   <li key={l.href}>
-                    <Link href={l.href} className="text-sm" style={{ fontFamily: "var(--font-dm)" }}>
+                    <Link href={l.href} className="inline-block py-2 text-sm" style={{ fontFamily: "var(--font-dm)" }}>
                       {l.label}
                     </Link>
                   </li>
@@ -1032,10 +1033,10 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
               >
                 Institucional
               </p>
-              <ul className="space-y-2">
+              <ul className="space-y-0">
                 {footerLinks.institucional.map((l) => (
                   <li key={l.href}>
-                    <Link href={l.href} className="text-sm" style={{ fontFamily: "var(--font-dm)" }}>
+                    <Link href={l.href} className="inline-block py-2 text-sm" style={{ fontFamily: "var(--font-dm)" }}>
                       {l.label}
                     </Link>
                   </li>

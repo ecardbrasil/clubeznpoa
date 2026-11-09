@@ -526,7 +526,7 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
             {viewer?.role === "consumer" ? (
               <span className="badge badge-ok" style={{ fontSize: 12 }}>✓ Logado, pode resgatar</span>
             ) : (
-              <Link href="/auth" className="text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
+              <Link href="/auth" className="inline-flex min-h-9 items-center text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                 Entrar para resgatar →
               </Link>
             )}
