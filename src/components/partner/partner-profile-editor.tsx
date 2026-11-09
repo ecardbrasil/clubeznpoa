@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import Image from "next/image";
 import { UserCog } from "lucide-react";
 import { CATEGORY_GROUPS, parseCategories, serializeCategories } from "@/lib/categories";
+import { readImageAsOptimizedDataUrl } from "@/lib/partner/utils";
 
 export function PartnerProfileEditor({
   effectivePublicName,
@@ -85,12 +86,7 @@ export function PartnerProfileEditor({
     if (!selectedFile) return;
 
     try {
-      const reader = new FileReader();
-      const encoded = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(String(reader.result ?? ""));
-        reader.onerror = () => reject(new Error("Falha ao carregar imagem."));
-        reader.readAsDataURL(selectedFile);
-      });
+      const encoded = await readImageAsOptimizedDataUrl(selectedFile, { maxSize: kind === "logo" ? 400 : 1400 });
       if (kind === "logo") setLogoImage(encoded);
       if (kind === "cover") setCoverImage(encoded);
     } catch {

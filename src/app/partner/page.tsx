@@ -30,7 +30,7 @@ import {
   validateCode,
 } from "@/lib/storage";
 import { PartnerDashboardSkeleton } from "@/components/partner/skeleton-loader";
-import { formatDate, getOfferStatusLabel, readFileAsDataUrl } from "@/lib/partner/utils";
+import { formatDate, getOfferStatusLabel } from "@/lib/partner/utils";
 
 const northZoneNeighborhoods = [
   "Sarandi",

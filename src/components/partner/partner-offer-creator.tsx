@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import Image from "next/image";
 import { PlusCircle } from "lucide-react";
-import { readFileAsDataUrl } from "@/lib/partner/utils";
+import { readImageAsOptimizedDataUrl } from "@/lib/partner/utils";
 
 interface PartnerOfferCreatorProps {
   companyId: string;
@@ -119,7 +119,7 @@ export function PartnerOfferCreator({
     }
 
     try {
-      const encodedImages = await Promise.all(filesToRead.map((file) => readFileAsDataUrl(file)));
+      const encodedImages = await Promise.all(filesToRead.map((file) => readImageAsOptimizedDataUrl(file, { maxSize: 1200 })));
       setImages((current) => [...current, ...encodedImages].slice(0, 5));
     } catch {
       setImageFeedback("Não foi possível processar uma das imagens.");
