@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { PublicStaticPage } from "@/components/public-static-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Como funciona",
+  description: "Entenda como funciona o ClubeZN: cadastre-se, escolha uma oferta e resgate com um código.",
+};
 
 const steps = {
   residents: [

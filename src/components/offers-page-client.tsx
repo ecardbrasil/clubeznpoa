@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { MapPin, Search, SlidersHorizontal, X } from "lucide-react";
+import { Check, MapPin, Search, SearchX, SlidersHorizontal, X } from "lucide-react";
 import { OfferCard, type OfferCardData } from "@/components/offer-card";
 import { PublicPageHeader } from "@/components/public-page-header";
 import { FeaturedOffersCarousel } from "@/components/featured-offers-carousel";
@@ -524,7 +524,7 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
               </p>
             </div>
             {viewer?.role === "consumer" ? (
-              <span className="badge badge-ok" style={{ fontSize: 12 }}>✓ Logado, pode resgatar</span>
+              <span className="badge badge-ok" style={{ fontSize: 12 }}><Check size={13} aria-hidden="true" style={{ marginRight: 4 }} />Logado, pode resgatar</span>
             ) : (
               <Link href="/auth" className="inline-flex min-h-9 items-center text-sm font-bold text-[var(--brand)] hover:underline" style={{ fontFamily: "var(--font-dm), sans-serif" }}>
                 Entrar para resgatar →
@@ -569,7 +569,7 @@ function OffersPageContent({ initialOffers }: OffersPageContentProps) {
 
           {filteredOffers.length === 0 && (
             <article className="grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-8 text-center shadow-[var(--shadow-soft)]">
-              <p style={{ margin: 0, fontSize: 40, lineHeight: 1 }}>🔍</p>
+              <SearchX size={40} aria-hidden="true" className="mx-auto text-[var(--muted)]" />
               <h3 className="m-0 text-lg font-bold text-[#0f1a13]" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>Nenhuma oferta encontrada</h3>
               <p className="m-0 text-sm text-[var(--muted)]" style={{ fontFamily: "var(--font-dm), sans-serif" }}>Tente ajustar os filtros ou buscar por outro termo.</p>
               <button type="button" className="btn btn-primary mx-auto" style={{ width: "auto", paddingInline: 28 }} onClick={resetFilters}>

@@ -737,6 +737,8 @@ export function HomePageClient({ initialData }: HomePageClientProps) {
                         <img
                           src={partner.logoImage}
                           alt={partner.publicName ?? partner.name}
+                          loading="lazy"
+                          decoding="async"
                           className="h-12 w-12 shrink-0 rounded-xl object-cover"
                         />
                       ) : (

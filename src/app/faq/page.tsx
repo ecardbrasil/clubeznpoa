@@ -1,4 +1,10 @@
 import { PublicStaticPage } from "@/components/public-static-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Perguntas frequentes",
+  description: "Respostas para as dúvidas mais comuns sobre o ClubeZN.",
+};
 
 const faqItems = [
   {
