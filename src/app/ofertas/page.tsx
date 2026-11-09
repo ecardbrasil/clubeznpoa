@@ -1,6 +1,12 @@
 import { OffersPageClient } from "@/components/offers-page-client";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { OfferCardData } from "@/components/offer-card";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Ofertas e descontos na Zona Norte",
+  description: "Veja ofertas e descontos exclusivos de parceiros da Zona Norte de Porto Alegre e resgate com o ClubeZN.",
+};
 
 export const revalidate = 300;
 

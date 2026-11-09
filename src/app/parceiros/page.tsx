@@ -4,6 +4,12 @@ import { getData, initStorage } from "@/lib/storage";
 import { PublicPageHeader } from "@/components/public-page-header";
 import { PartnersListClient } from "@/components/partners-list-client";
 import type { Company } from "@/lib/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Parceiros",
+  description: "Conheça as empresas parceiras do ClubeZN na Zona Norte de Porto Alegre.",
+};
 
 export const revalidate = 3600;
 

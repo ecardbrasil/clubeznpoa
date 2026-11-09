@@ -29,6 +29,8 @@ const FeaturedOfferCard = React.forwardRef<HTMLDivElement, FeaturedOfferCardProp
           <div className="relative w-[40%] flex-shrink-0 overflow-hidden bg-[var(--panel)]">
             {hasImage ? (
               <img
+                loading="lazy"
+                decoding="async"
                 src={imageSrc}
                 alt={offer.title}
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -95,6 +97,8 @@ const FeaturedOfferCard = React.forwardRef<HTMLDivElement, FeaturedOfferCardProp
               <div className="flex items-center gap-2 min-w-0">
                 {offer.partnerLogoImage ? (
                   <img
+                loading="lazy"
+                decoding="async"
                     src={offer.partnerLogoImage}
                     alt={offer.companyName}
                     className="w-7 h-7 rounded-full object-cover bg-[var(--panel)] flex-shrink-0 border border-[var(--line)]"

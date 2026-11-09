@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { Flame, MapPin, Navigation } from "lucide-react";
 import type { Offer } from "@/lib/types";
 
 export type OfferCardData = Pick<
@@ -455,8 +456,8 @@ export function OfferCard({
               {offer.discountLabel}
             </span>
             {offer.isFeatured ? (
-              <span className="badge" style={{ background: "rgba(15,26,19,0.82)", color: "#c9f549", fontSize: 11, padding: "3px 9px", backdropFilter: "blur(4px)" }}>
-                🔥 Em alta
+              <span className="badge" style={{ background: "rgba(15,26,19,0.82)", color: "#c9f549", fontSize: 11, padding: "3px 9px", gap: 4, backdropFilter: "blur(4px)" }}>
+                <Flame size={12} aria-hidden="true" /> Em alta
               </span>
             ) : null}
           </div>
@@ -466,8 +467,8 @@ export function OfferCard({
           <div className="flex flex-wrap items-center gap-1.5 md:hidden">
             <span className="badge badge-accent" style={{ fontSize: 12, padding: "4px 10px" }}>{offer.discountLabel}</span>
             {offer.isFeatured ? (
-              <span className="badge" style={{ background: "rgba(15,26,19,0.85)", color: "#c9f549", fontSize: 11, padding: "3px 9px" }}>
-                🔥 Em alta
+              <span className="badge" style={{ background: "rgba(15,26,19,0.85)", color: "#c9f549", fontSize: 11, padding: "3px 9px", gap: 4 }}>
+                <Flame size={12} aria-hidden="true" /> Em alta
               </span>
             ) : null}
           </div>
@@ -656,8 +657,8 @@ export function OfferCard({
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   <span className="badge badge-accent" style={{ fontSize: 13 }}>{offer.discountLabel}</span>
                   {offer.isFeatured ? (
-                    <span className="badge" style={{ background: "rgba(15,26,19,0.85)", color: "#c9f549", fontSize: 12, backdropFilter: "blur(4px)" }}>
-                      🔥 Em alta
+                    <span className="badge" style={{ background: "rgba(15,26,19,0.85)", color: "#c9f549", fontSize: 12, gap: 4, backdropFilter: "blur(4px)" }}>
+                      <Flame size={12} aria-hidden="true" /> Em alta
                     </span>
                   ) : null}
                 </div>
@@ -668,14 +669,14 @@ export function OfferCard({
 
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   <span className="badge" style={{ background: "#f3f6f1", color: "var(--brand)", fontSize: 12, fontFamily: "var(--font-dm), sans-serif", fontWeight: 600 }}>
-                    📍 {offer.neighborhood}
+                    <MapPin size={13} aria-hidden="true" style={{ marginRight: 4 }} />{offer.neighborhood}
                   </span>
                   <span className="badge" style={{ background: "#f3f6f1", color: "var(--brand)", fontSize: 12, fontFamily: "var(--font-dm), sans-serif", fontWeight: 600 }}>
                     {offer.category}
                   </span>
                   {offer.partnerAddressLine ? (
                     <span className="badge" style={{ background: "#f3f6f1", color: "var(--brand)", fontSize: 12, fontFamily: "var(--font-dm), sans-serif", fontWeight: 600 }}>
-                      🗺{" "}
+                      <Navigation size={13} aria-hidden="true" style={{ marginRight: 4 }} />
                       {distanceLoading ? "calculando..." : distanceKm !== null ? `~${distanceKm.toFixed(1)} km` : "distância indisponível"}
                     </span>
                   ) : null}

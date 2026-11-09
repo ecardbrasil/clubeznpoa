@@ -1,4 +1,10 @@
 import { PublicStaticPage } from "@/components/public-static-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Termos de uso",
+  description: "Termos de uso da plataforma ClubeZN.",
+};
 
 export default function TermsPage() {
   return (

@@ -5,6 +5,12 @@ import { getHotOfferIdsFromSupabase } from "@/lib/utils";
 import { SobrePageClient } from "@/components/sobre-page-client";
 import type { OfferCardData } from "@/components/offer-card";
 import type { Company } from "@/lib/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sobre",
+  description: "Conheça o ClubeZN, clube de vantagens da Zona Norte de Porto Alegre.",
+};
 
 export const revalidate = 3600;
 

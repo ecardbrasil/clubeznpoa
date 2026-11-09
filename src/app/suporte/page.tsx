@@ -1,4 +1,10 @@
 import { PublicStaticPage } from "@/components/public-static-page";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Suporte",
+  description: "Fale com o suporte do ClubeZN.",
+};
 
 export default function SupportPage() {
   return (
